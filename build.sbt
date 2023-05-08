@@ -11,9 +11,16 @@ lazy val root = project
   .aggregate(maelstrom, echo)
 
 lazy val maelstrom = project
-  .in(file("maelstrom-framework"))
+  .in(file("zio-maelstrom"))
   .settings(
-    name := "maelstrom-framework"
+    name := "zio-maelstrom",
+    IDE
+    libraryDependencies ++= Seq(
+      Libs.zio,
+      Libs.zioStreams,
+      Libs.zioJson,
+      Libs.zioTest % Test
+    )
   )
 
 lazy val echo = project
