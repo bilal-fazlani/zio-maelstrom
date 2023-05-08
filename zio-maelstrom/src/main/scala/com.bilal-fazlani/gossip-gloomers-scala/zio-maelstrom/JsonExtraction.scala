@@ -79,8 +79,10 @@ object EscapingState:
   )
 
 object JsonExtraction:
-  def extract(input: String) = {
-    input.foldLeft[State](State.empty)((state, char) => {
+  def extract(input: String): State = extract(State.empty, input)
+
+  def extract(prev: State, input: String): State = {
+    input.foldLeft[State](prev)((state, char) => {
       char match {
         case '\\' => state.escpaeNext
         case '{'  => state.open
@@ -89,3 +91,4 @@ object JsonExtraction:
       }
     })
   }
+

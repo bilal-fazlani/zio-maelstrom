@@ -2,8 +2,8 @@ package com.bilalfazlani.gossipGloomersScala.zioMaelstrom
 
 import zio.test.*
 
-object JsonFramingTest extends ZIOSpecDefault {
-  val spec = suite("JsonFramingTest")(
+object JsonExtractionTest extends ZIOSpecDefault {
+  val spec = suite("JsonExtractionTest")(
     test("Extract sigle json from valid input") {
       val input = """{"name": "john"}"""
       val output = JsonExtraction.extract(input)
@@ -86,5 +86,40 @@ object JsonFramingTest extends ZIOSpecDefault {
           )
       )
     },
+    test("Use a previosly provided state to combine two complete json objects"){
+      val input1 = """{"name": "john"}"""
+      val output1 = JsonExtraction.extract(input1)
+      val input2 = """{"name": "doe"}"""
+      val output2 = JsonExtraction.extract(output1, input2)
+      assertTrue(
+        output2 ==
+          NonEscapingState(
+            inProgres = "",
+            jsonObjects =
+              Seq(Json("""{"name": "john"}"""), Json("""{"name": "doe"}""")),
+            openCount = 0,
+            closeCount = 0
+          )
+      )
+    },
+    test("Use a previosly provided state to combine two incomplete json objects with remainder and escape"){
+      val input1 = """{"name": "joh"""
+      val output1 = JsonExtraction.extract(input1)
+      val input2 = """n"}{"name": "doe"}{"name": \"""
+      val output2 = JsonExtraction.extract(output1, input2)
+      assertTrue(
+        output2 ==
+          EscapingState(
+            inProgres = """{"name": \""",
+            jsonObjects =
+              Seq(Json("""{"name": "john"}"""), Json("""{"name": "doe"}""")),
+            openCount = 1,
+            closeCount = 0
+          )
+      )
+    },
   )
 }
+
+
+//todo: space between jsons
