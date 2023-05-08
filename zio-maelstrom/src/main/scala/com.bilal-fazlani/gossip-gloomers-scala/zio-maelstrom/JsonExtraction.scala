@@ -1,12 +1,22 @@
 package com.bilalfazlani.gossipGloomersScala.zioMaelstrom
 
-case class Json(value: String)
+case class Json(in: String) {
+  val value = in.trim
+
+  override def equals(x: Any): Boolean =
+    x match {
+      case j: Json => this.value == j.value
+      case _       => false
+    }
+}
 
 trait State:
   def open: State
   def close: State
   def take(char: Char): State
   def escpaeNext: State
+
+  val jsonObjects: Seq[Json]
 
 object State:
   val empty = NonEscapingState("", Seq.empty, 0, 0)
@@ -91,4 +101,3 @@ object JsonExtraction:
       }
     })
   }
-

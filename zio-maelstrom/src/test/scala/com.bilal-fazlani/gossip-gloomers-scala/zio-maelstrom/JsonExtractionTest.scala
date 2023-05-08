@@ -86,7 +86,9 @@ object JsonExtractionTest extends ZIOSpecDefault {
           )
       )
     },
-    test("Use a previosly provided state to combine two complete json objects"){
+    test(
+      "Use a previosly provided state to combine two complete json objects"
+    ) {
       val input1 = """{"name": "john"}"""
       val output1 = JsonExtraction.extract(input1)
       val input2 = """{"name": "doe"}"""
@@ -102,7 +104,9 @@ object JsonExtractionTest extends ZIOSpecDefault {
           )
       )
     },
-    test("Use a previosly provided state to combine two incomplete json objects with remainder and escape"){
+    test(
+      "Use a previosly provided state to combine two incomplete json objects with remainder and escape"
+    ) {
       val input1 = """{"name": "joh"""
       val output1 = JsonExtraction.extract(input1)
       val input2 = """n"}{"name": "doe"}{"name": \"""
@@ -118,8 +122,38 @@ object JsonExtractionTest extends ZIOSpecDefault {
           )
       )
     },
+    test(
+      "there are spaces between json objects"
+    ) {
+      val input = """{"name": "john"} {"name": "doe"}"""
+      val output = JsonExtraction.extract(input)
+      assertTrue(
+        output ==
+          NonEscapingState(
+            inProgres = "",
+            jsonObjects =
+              Seq(Json("""{"name": "john"}"""), Json("""{"name": "doe"}""")),
+            openCount = 0,
+            closeCount = 0
+          )
+      )
+    },
+    test(
+      "there are new lines between json objects"
+    ) {
+      val input = """{"name": "john"}
+                    |{"name": "doe"}""".stripMargin
+      val output = JsonExtraction.extract(input)
+      assertTrue(
+        output ==
+          NonEscapingState(
+            inProgres = "",
+            jsonObjects =
+              Seq(Json("""{"name": "john"}"""), Json("""{"name": "doe"}""")),
+            openCount = 0,
+            closeCount = 0
+          )
+      )
+    }
   )
 }
-
-
-//todo: space between jsons
