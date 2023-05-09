@@ -9,6 +9,8 @@ import zio.stream.{ZStream, ZPipeline}
 import scala.io.StdIn
 import scala.annotation.targetName
 import java.nio.file.Path
+import zio.json.ast.Json
+import zio.json.ast.JsonCursor
 
 enum NodeInput:
   case StdIn
@@ -129,9 +131,13 @@ trait StatefulMaelstromNode[I <: MessageBody: JsonDecoder, O <: MessageBody: Jso
       .filter(line => line.trim != "")
       .takeWhile(line => line.trim != "q" && line.trim != "quit")
       .mapZIO { s =>
-        val either: Either[String, Message[I | MaelstromInit]] = JsonDecoder[Message[I]]
-          .decodeJson(s)
-          .orElse(JsonDecoder[Message[MaelstromInit]].decodeJson(s))
+        val either: Either[String, Message[MaelstromInit] | Message[I]] = for {
+          ast <- JsonDecoder[Json].decodeJson(s)
+          body <- ast.get(JsonCursor.field("body"))
+          typeStr <- body.get(JsonCursor.field("type")).flatMap(_.asString.toRight("type is not a string"))
+          a <- if typeStr == "init" then ast.`as`[Message[MaelstromInit]] else ast.`as`[Message[I]]
+        } yield a
+
         ZIO
           .fromEither(either)
           .mapError(e => InvalidInput(s, e))

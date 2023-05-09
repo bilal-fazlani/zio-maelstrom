@@ -5,11 +5,8 @@ import zio.json.*
 import zioMaelstrom.*
 import zioMaelstrom.protocol.*
 import zio.*
-import java.nio.file.Path
 
 object Main extends MaelstromNode[Generate, GenerateOk]:
-
-  override def nodeInput: NodeInput = NodeInput.FilePath(Path.of("unique-ids", "testing.txt"))
 
   def handle(in: Message[Generate]) =
     for {
