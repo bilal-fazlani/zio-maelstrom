@@ -15,7 +15,7 @@ import java.nio.file.Path
 
 object Main extends MaelstromNode[Echo, EchoOk]:
 
-  override lazy val nodeInput = NodeInput.FilePath(Path.of("echo", "testing.txt"))
+  // override lazy val nodeInput = NodeInput.FilePath(Path.of("echo", "testing.txt"))
 
   def handle(message: Message[Echo]) =
     for {
