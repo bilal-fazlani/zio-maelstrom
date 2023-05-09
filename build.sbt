@@ -1,6 +1,7 @@
 val scala3Version = "3.2.2"
 
 ThisBuild / scalaVersion := scala3Version
+ThisBuild / organization := "com.bilal-fazlani"
 
 lazy val root = project
   .in(file("."))
@@ -14,7 +15,6 @@ lazy val maelstrom = project
   .in(file("zio-maelstrom"))
   .settings(
     name := "zio-maelstrom",
-    IDE
     libraryDependencies ++= Seq(
       Libs.zio,
       Libs.zioStreams,
@@ -26,6 +26,7 @@ lazy val maelstrom = project
 lazy val echo = project
   .in(file("echo"))
   .settings(
-    name := "echo"
+    name := "echo",
+    Compile / mainClass := Some("com.bilalfazlani.gossipGloomersScala.echo.Main"),
   )
   .dependsOn(maelstrom)

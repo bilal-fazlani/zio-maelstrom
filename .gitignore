@@ -33,3 +33,5 @@ metals.sbt
 
 
 TestApp.scala
+.java-version
+*.j
