@@ -5,8 +5,12 @@ import zio.json.*
 import zioMaelstrom.*
 import zioMaelstrom.protocol.*
 import zio.*
+import java.nio.file.Path
 
 object Main extends MaelstromNode[Echo, EchoOk]:
+
+  override def nodeInput: NodeInput = NodeInput.FilePath(Path.of("echo", "testing.txt"))
+
   def handle(in: Message[Echo]) =
     for {
       newId <- Random.nextIntBetween(1, Int.MaxValue).map(MessageId.apply)
