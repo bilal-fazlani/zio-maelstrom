@@ -85,6 +85,3 @@ enum StandardErrorCode(code: Int, name: String, definite: Boolean, description: 
 // format: on
 
 case class CustomErrorCode(override val code: Int) extends ErrorCode(code, false)
-
-// given [T <: MessageBody: JsonDecoder]: JsonDecoder[Message[T]] = ???
-// given [T <: MessageBody: JsonEncoder]: JsonEncoder[Message[T]] = ???

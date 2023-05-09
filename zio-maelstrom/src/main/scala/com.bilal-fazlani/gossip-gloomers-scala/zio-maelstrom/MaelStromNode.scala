@@ -23,15 +23,14 @@ trait Debugger:
   def debugMessage(line: String): Task[Unit] =
     printLineError(line)
 
+
+case class InvalidInput(input: String, error: String) extends Exception  
+
 trait MaelstromNode[I <: MessageBody: JsonDecoder, O <: MessageBody: JsonEncoder]
     extends MessageOut[O],
       MessageHandler[I],
       Debugger,
       ZIOAppDefault:
-
-  def onInvalidJson(input: String, error: String): Task[Unit] =
-    val msg = s"error: $error, input: $input"
-    debugMessage(msg) *> ZIO.fail(Exception(msg))
 
   def nodeInput = NodeInput.StdIn
 
@@ -45,9 +44,16 @@ trait MaelstromNode[I <: MessageBody: JsonDecoder, O <: MessageBody: JsonEncoder
       .mapZIO(s =>
         ZIO
           .fromEither(JsonDecoder[Message[I]].decodeJson(s))
-          .tapError(onInvalidJson(s, _))
+          .mapError(e => InvalidInput(s, e))
       )
       .mapZIO(handle)
       .runCollect
+      .tapError{
+        case InvalidInput(input, error) => 
+          val msg = s"error: $error, input: $input"
+          debugMessage(msg) *> ZIO.fail(Exception(msg))
+        case e => 
+          debugMessage(e.toString) *> ZIO.fail(e)
+      }
       .exitCode
       .map(exit(_))
