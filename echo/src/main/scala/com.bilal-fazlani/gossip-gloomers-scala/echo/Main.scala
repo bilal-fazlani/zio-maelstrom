@@ -11,22 +11,17 @@ import zio.json.JsonCodec
 import zio.json.jsonField
 import zio.Task
 import zio.Random
+import java.nio.file.Path
 
 object Main extends MaelstromNode[Echo, EchoOk]:
 
-  // override lazy val nodeInput = NodeInput.File("testing.txt")
+  override lazy val nodeInput = NodeInput.FilePath(Path.of("echo", "testing.txt"))
 
   def handle(message: Message[Echo]) =
     for {
       _ <- debugMessage(s"handling message: $message")
-      newMessageId <- Random.nextIntBetween(1, Int.MaxValue)
-      _ <- send(
-        Message(
-          source = message.destination,
-          destination = message.source,
-          EchoOk(echo = message.body.echo, msg_id = MessageId(newMessageId), in_reply_to = message.body.msg_id)
-        )
-      )
+      newMessageId <- Random.nextIntBetween(1, Int.MaxValue).map(MessageId.apply)
+      _ <- message reply EchoOk(echo = message.body.echo, msg_id = newMessageId, in_reply_to = message.body.msg_id)
     } yield ()
 
 @jsonDiscriminator("type")
@@ -48,7 +43,6 @@ case class EchoOk(
     msg_id: MessageId,
     in_reply_to: MessageId,
     `type`: String = "echo_ok"
-) extends MessageBody,
-      MessageWithId,
+) extends MessageWithId,
       MessageWithReply
     derives JsonCodec

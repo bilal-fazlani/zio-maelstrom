@@ -3,7 +3,7 @@ import scala.sys.process._
 
 val scala3Version = "3.2.2"
 
-resolvers ++= Resolver.sonatypeOssRepos("snapshots")
+ThisBuild / resolvers ++= Resolver.sonatypeOssRepos("snapshots")
 
 ThisBuild / scalaVersion := scala3Version
 ThisBuild / organization := "com.bilal-fazlani"
@@ -43,11 +43,13 @@ bootstrap := {
       Seq(
         "cs",
         "bootstrap",
-        "-r", "sonatype:snapshots",
+        "-r",
+        "sonatype:snapshots",
         "--standalone",
         s"com.bilal-fazlani:${projectName}_3:0.1.0-SNAPSHOT",
         "-f",
-        "-o", s"$projectName.j"
+        "-o",
+        s"$projectName.j"
       )
     )
     process !

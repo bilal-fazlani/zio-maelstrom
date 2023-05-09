@@ -29,18 +29,18 @@ trait MessageWithReply extends MessageBody:
 @jsonHint("init")
 case class MaelstromInit(
     msg_id: MessageId,
+    node_id: NodeId,
+    node_ids: Seq[NodeId],
     `type`: String = "init"
 ) extends MessageWithId
     derives JsonDecoder
 
 @jsonHint("init_ok")
 case class MaelstromInitOk(
-    msg_id: MessageId,
     in_reply_to: MessageId,
     `type`: String = "init_ok"
-) extends MessageWithReply,
-      MessageWithId
-    derives JsonDecoder
+) extends MessageWithReply
+    derives JsonEncoder
 
 @jsonHint("error")
 case class MaelstromError(
