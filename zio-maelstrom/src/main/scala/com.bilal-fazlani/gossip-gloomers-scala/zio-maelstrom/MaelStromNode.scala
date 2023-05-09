@@ -16,7 +16,7 @@ enum NodeInput:
   case FilePath(path: Path)
 
 trait MessageHandler[I <: MessageBody: JsonDecoder]:
-  def handle(message: Message[I]): Task[Unit]
+  def handle(message: Message[I]): ZIO[Ref[NodeState], Throwable, Unit]
 
 trait Debugger:
   def debugMessage(line: String): Task[Unit] =
@@ -32,6 +32,8 @@ enum NodeState:
 case class InvalidInput(input: String, error: String) extends Exception
 case class InitializationNotFinished() extends Exception
 
+private val nodeState = ZLayer.fromZIO(Ref.make[NodeState](NodeState.Initialising))
+
 trait MaelstromNode[I <: MessageBody: JsonDecoder, O <: MessageBody: JsonEncoder]
     extends MessageHandler[I],
       Debugger,
@@ -40,28 +42,26 @@ trait MaelstromNode[I <: MessageBody: JsonDecoder, O <: MessageBody: JsonEncoder
   def nodeInput = NodeInput.StdIn
 
   extension (to: NodeId)
-
-    def send(body: O): Task[Unit] =
+    def send(body: O): ZIO[Ref[NodeState], Throwable, Unit] =
       for {
         myNodeId <- me
         _ <- sendInternal(Message(myNodeId, to, body))
       } yield ()
 
     @targetName("sendInfix")
-    infix def !(body: O): Task[Unit] = send(body)
+    infix def !(body: O): ZIO[Ref[NodeState], Throwable, Unit] = send(body)
 
   extension (message: Message[I])
-
-    def reply(body: O): Task[Unit] =
+    def reply(body: O): ZIO[Ref[NodeState], Throwable, Unit] =
       for {
         myNodeId <- me
         _ <- sendInternal(Message(myNodeId, message.source, body))
       } yield ()
 
     @targetName("replyInfix")
-    infix def :<-(body: O): Task[Unit] = reply(body)
+    infix def :<-(body: O): ZIO[Ref[NodeState], Throwable, Unit] = reply(body)
 
-  protected def broadcastAll(body: O): Task[Unit] =
+  protected def broadcastAll(body: O): ZIO[Ref[NodeState], Throwable, Unit] =
     for {
       myNodeId <- me
       others <- others
@@ -81,23 +81,25 @@ trait MaelstromNode[I <: MessageBody: JsonDecoder, O <: MessageBody: JsonEncoder
     val message = Message(me, to, MaelstromInitOk(in_reply_to))
     printLine(message.toJson.green) *> debugMessage(s"sent message: $message")
 
-  private val state = Ref.make[NodeState](NodeState.Initialising)
+  def me: ZIO[Ref[NodeState], InitializationNotFinished, NodeId] = ZIO.serviceWithZIO[Ref[NodeState]](state =>
+    state.get.flatMap {
+      case NodeState.Initialising          => ZIO.fail(InitializationNotFinished())
+      case NodeState.Initialised(me, _, _) => ZIO.succeed(me)
+    }
+  )
 
-  def me: IO[InitializationNotFinished, NodeId] = state.flatMap(_.get.flatMap {
-    case NodeState.Initialising          => ZIO.fail(InitializationNotFinished())
-    case NodeState.Initialised(me, _, _) => ZIO.succeed(me)
-  })
+  def others: ZIO[Ref[NodeState], InitializationNotFinished, Seq[NodeId]] = ZIO.serviceWithZIO[Ref[NodeState]](state =>
+    state.get.flatMap {
+      case NodeState.Initialising         => ZIO.fail(InitializationNotFinished())
+      case NodeState.Initialised(_, o, _) => ZIO.succeed(o)
+    }
+  )
 
-  def others: IO[InitializationNotFinished, Seq[NodeId]] = state.flatMap(_.get.flatMap {
-    case NodeState.Initialising              => ZIO.fail(InitializationNotFinished())
-    case NodeState.Initialised(_, others, _) => ZIO.succeed(others)
-  })
-
-  private def init(msg: Message[MaelstromInit]): Task[Unit] =
+  private def init(msg: Message[MaelstromInit]): RIO[Ref[NodeState], Unit] =
     for {
       _ <- debugMessage(s"handling message: $msg")
-      st <- state
-      initialized <- st.modify[Boolean] {
+      state <- ZIO.service[Ref[NodeState]]
+      initialized <- state.modify[Boolean] {
         case NodeState.Initialising =>
           (true, NodeState.Initialised[Unit](msg.body.node_id, msg.body.node_ids.filter(_ != msg.body.node_id), ()))
         case s @ NodeState.Initialised(me, others, state) => (false, s)
@@ -143,3 +145,4 @@ trait MaelstromNode[I <: MessageBody: JsonDecoder, O <: MessageBody: JsonEncoder
           errorMessage(e.toString) *> ZIO.fail(e)
       }
       .foldZIO(e => exit(ExitCode.failure), _ => exit(ExitCode.success))
+      .provide(nodeState)
