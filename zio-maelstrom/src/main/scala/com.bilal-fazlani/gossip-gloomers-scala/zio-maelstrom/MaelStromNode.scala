@@ -1,7 +1,7 @@
 package com.bilalfazlani.gossipGloomersScala
 package zioMaelstrom
 
-import protocol.{given, *}
+import protocol.*
 import zio.Console.*
 import zio.*
 import zio.json.*
@@ -9,7 +9,6 @@ import zio.stream.{ZStream, ZPipeline}
 import scala.io.StdIn
 import scala.annotation.targetName
 import java.nio.file.Path
-import zio.internal.ansi.AnsiStringOps
 
 enum NodeInput:
   case StdIn
@@ -34,10 +33,7 @@ case class InitializationNotFinished() extends Exception
 
 private val nodeState = ZLayer.fromZIO(Ref.make[NodeState](NodeState.Initialising))
 
-trait MaelstromNode[I <: MessageBody: JsonDecoder, O <: MessageBody: JsonEncoder]
-    extends MessageHandler[I],
-      Debugger,
-      ZIOAppDefault:
+trait MaelstromNode[I <: MessageBody: JsonDecoder, O <: MessageBody: JsonEncoder] extends MessageHandler[I], Debugger, ZIOAppDefault:
 
   def nodeInput = NodeInput.StdIn
 
@@ -119,7 +115,8 @@ trait MaelstromNode[I <: MessageBody: JsonDecoder, O <: MessageBody: JsonEncoder
 
   def run =
     inputStream
-      .takeWhile(line => line.trim != "" && line.trim != "q" && line.trim != "quit")
+      .filter(line => line.trim != "")
+      .takeWhile(line => line.trim != "q" && line.trim != "quit")
       .mapZIO { s =>
         val either: Either[String, Message[I | MaelstromInit]] = JsonDecoder[Message[I]]
           .decodeJson(s)
