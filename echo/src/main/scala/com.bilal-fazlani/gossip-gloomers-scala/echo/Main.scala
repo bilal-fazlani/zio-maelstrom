@@ -7,20 +7,27 @@ import zioMaelstrom.*
 import zioMaelstrom.protocol.*
 import zio.json.jsonHint
 import zio.json.jsonDiscriminator
-import scala.util.Random
 import zio.json.JsonCodec
 import zio.json.jsonField
+import zio.Task
+import zio.Random
 
 object Main extends MaelstromNode[Echo, EchoOk]:
+
+  override val nodeInput = NodeInput.File("testing.txt")
+
   def handle(message: Message[Echo]) =
-    debugMessage(s"handling message: $message") *>
-      send(
+    for {
+      _ <- debugMessage(s"handling message: $message")
+      newMessageId <- Random.nextIntBetween(1, Int.MaxValue)
+      _ <- send(
         Message(
-          source = NodeId("A"),
-          destination = NodeId("B"),
-          EchoOk(echo = message.body.echo, msg_id = MessageId(Random.nextInt), in_reply_to = message.body.msg_id)
+          source = message.destination,
+          destination = message.source,
+          EchoOk(echo = message.body.echo, msg_id = MessageId(newMessageId), in_reply_to = message.body.msg_id)
         )
       )
+    } yield ()
 
 @jsonDiscriminator("type")
 sealed trait MyProtocol extends MessageBody
