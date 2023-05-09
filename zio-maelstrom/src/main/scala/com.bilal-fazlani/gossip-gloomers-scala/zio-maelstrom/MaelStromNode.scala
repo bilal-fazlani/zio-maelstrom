@@ -20,10 +20,10 @@ trait MessageHandler[I <: MessageBody: JsonDecoder]:
 
 trait Debugger:
   def debugMessage(line: String): Task[Unit] =
-    printLineError(line.yellow)
+    printLineError(line)
 
   def errorMessage(line: String): Task[Unit] =
-    printLineError(line.red)
+    printLineError(line)
 
 enum NodeState:
   case Initialising
@@ -75,11 +75,11 @@ trait MaelstromNode[I <: MessageBody: JsonDecoder, O <: MessageBody: JsonEncoder
     } yield ()
 
   private def sendInternal(message: Message[O]): Task[Unit] =
-    printLine(message.toJson.green) *> debugMessage(s"sent message: $message")
+    printLine(message.toJson) *> debugMessage(s"sent message: $message")
 
   private def sendInitOk(me: NodeId, to: NodeId, in_reply_to: MessageId): Task[Unit] =
     val message = Message(me, to, MaelstromInitOk(in_reply_to))
-    printLine(message.toJson.green) *> debugMessage(s"sent message: $message")
+    printLine(message.toJson) *> debugMessage(s"sent message: $message")
 
   def me: ZIO[Ref[NodeState], InitializationNotFinished, NodeId] = ZIO.serviceWithZIO[Ref[NodeState]](state =>
     state.get.flatMap {

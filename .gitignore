@@ -36,3 +36,4 @@ TestApp.scala
 .java-version
 *.j
 *.txt
+store/
