@@ -33,9 +33,9 @@ trait MaelstromNode[I <: MessageBody: JsonDecoder, O <: MessageBody: JsonEncoder
     val msg = s"error: $error, input: $input"
     debugMessage(msg) *> this.exit(ExitCode.failure)
 
-  val nodeInput = NodeInput.StdIn
+  def nodeInput = NodeInput.StdIn
 
-  private val inputStream = nodeInput match
+  private def inputStream = nodeInput match
     case NodeInput.StdIn      => ZStream.fromInputStream(java.lang.System.in).via(ZPipeline.utfDecode)
     case NodeInput.File(path) => ZStream.fromFileName(path, 4096).via(ZPipeline.utfDecode).via(ZPipeline.splitLines)
 

@@ -14,7 +14,7 @@ import zio.Random
 
 object Main extends MaelstromNode[Echo, EchoOk]:
 
-  override val nodeInput = NodeInput.File("testing.txt")
+  override lazy val nodeInput = NodeInput.File("testing.txt")
 
   def handle(message: Message[Echo]) =
     for {
