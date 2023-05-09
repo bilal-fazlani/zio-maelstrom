@@ -8,9 +8,11 @@ case class Json(in: String) {
       case j: Json => this.value == j.value
       case _       => false
     }
+
+  override def toString(): String = s"Json($value)"  
 }
 
-trait State:
+sealed trait State:
   def open: State
   def close: State
   def take(char: Char): State
