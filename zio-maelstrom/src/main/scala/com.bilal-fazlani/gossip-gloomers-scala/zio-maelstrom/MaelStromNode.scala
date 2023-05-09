@@ -14,8 +14,8 @@ enum NodeInput:
   case StdIn
   case FilePath(path: Path)
 
-trait MessageHandler[I <: MessageBody: JsonDecoder]:
-  def handle(message: Message[I]): ZIO[Ref[NodeState], Throwable, Unit]
+trait MessageHandler[I <: MessageBody: JsonDecoder, S: Tag]:
+  def handle(message: Message[I]): ZIO[Ref[NodeState[S]], Throwable, Unit]
 
 trait Debugger:
   def debugMessage(line: String): Task[Unit] =
@@ -24,51 +24,62 @@ trait Debugger:
   def errorMessage(line: String): Task[Unit] =
     printLineError(line)
 
-enum NodeState:
-  case Initialising
-  case Initialised[A](me: NodeId, others: Seq[NodeId], state: A)
+sealed trait NodeState[+S]
+object NodeState:
+  case object Initialising extends NodeState[Nothing]
+  case class Initialised[S](me: NodeId, others: Seq[NodeId], state: S) extends NodeState[S]
 
 case class InvalidInput(input: String, error: String) extends Exception
-case class InitializationNotFinished() extends Exception
+case class UnsupportedOperationWhileInitializing(operationName: String) extends Exception
 
-private val nodeState = ZLayer.fromZIO(Ref.make[NodeState](NodeState.Initialising))
+private def nodeState[S: Tag] = ZLayer.fromZIO(Ref.make[NodeState[S]](NodeState.Initialising))
 
-trait MaelstromNode[I <: MessageBody: JsonDecoder, O <: MessageBody: JsonEncoder] extends MessageHandler[I], Debugger, ZIOAppDefault:
+type MaelstromNode[I <: MessageBody, O <: MessageBody] = StatefulMaelstromNode[I, O, Unit]
+
+trait StatefulMaelstromNode[I <: MessageBody: JsonDecoder, O <: MessageBody: JsonEncoder, S: Tag: EmptyState]
+    extends MessageHandler[I, S],
+      Debugger,
+      ZIOAppDefault:
+
+  private def withState[R, E, A](operationName: String)(f: NodeState.Initialised[S] => ZIO[R, E, A]): ZIO[R & Ref[NodeState[S]], E | Throwable, A] =
+    for {
+      stateRef <- ZIO.service[Ref[NodeState[S]]]
+      state <- stateRef.get
+      a <- state match {
+        case NodeState.Initialising      => ZIO.fail(UnsupportedOperationWhileInitializing(operationName))
+        case s: NodeState.Initialised[_] => f(s.asInstanceOf[NodeState.Initialised[S]])
+      }
+    } yield a
 
   def nodeInput = NodeInput.StdIn
 
   extension (to: NodeId)
-    def send(body: O): ZIO[Ref[NodeState], Throwable, Unit] =
-      for {
-        myNodeId <- me
-        _ <- sendInternal(Message(myNodeId, to, body))
-      } yield ()
+    def send(body: O): ZIO[Ref[NodeState[S]], Throwable, Unit] =
+      withState("send") { state =>
+        sendInternal(Message(state.me, to, body))
+      }
 
     @targetName("sendInfix")
-    infix def !(body: O): ZIO[Ref[NodeState], Throwable, Unit] = send(body)
+    infix def !(body: O): ZIO[Ref[NodeState[S]], Throwable, Unit] = send(body)
 
   extension (message: Message[I])
-    def reply(body: O): ZIO[Ref[NodeState], Throwable, Unit] =
-      for {
-        myNodeId <- me
-        _ <- sendInternal(Message(myNodeId, message.source, body))
-      } yield ()
+    def reply(body: O): ZIO[Ref[NodeState[S]], Throwable, Unit] =
+      withState("reply") { state =>
+        sendInternal(Message(state.me, message.source, body))
+      }
 
     @targetName("replyInfix")
-    infix def :<-(body: O): ZIO[Ref[NodeState], Throwable, Unit] = reply(body)
+    infix def :<-(body: O): ZIO[Ref[NodeState[S]], Throwable, Unit] = reply(body)
 
-  protected def broadcastAll(body: O): ZIO[Ref[NodeState], Throwable, Unit] =
-    for {
-      myNodeId <- me
-      others <- others
-      _ <- ZIO.foreachPar(others)(_ ! body)
-    } yield ()
+  protected def broadcastAll(body: O): ZIO[Ref[NodeState[S]], Throwable, Unit] =
+    withState("broadcastAll") { state =>
+      ZIO.foreachPar(state.others)(_ ! body).unit
+    }
 
   protected def broadcastTo(others: Seq[NodeId], body: O) =
-    for {
-      myNodeId <- me
-      _ <- ZIO.foreachPar(others)(_ ! body)
-    } yield ()
+    withState("broadcastTo") { state =>
+      ZIO.foreachPar(others)(_ ! body).unit
+    }
 
   private def sendInternal(message: Message[O]): Task[Unit] =
     printLine(message.toJson) *> debugMessage(s"sent message: $message")
@@ -77,27 +88,27 @@ trait MaelstromNode[I <: MessageBody: JsonDecoder, O <: MessageBody: JsonEncoder
     val message = Message(me, to, MaelstromInitOk(in_reply_to))
     printLine(message.toJson) *> debugMessage(s"sent message: $message")
 
-  def me: ZIO[Ref[NodeState], InitializationNotFinished, NodeId] = ZIO.serviceWithZIO[Ref[NodeState]](state =>
+  def me: ZIO[Ref[NodeState[S]], UnsupportedOperationWhileInitializing, NodeId] = ZIO.serviceWithZIO[Ref[NodeState[S]]](state =>
     state.get.flatMap {
-      case NodeState.Initialising          => ZIO.fail(InitializationNotFinished())
-      case NodeState.Initialised(me, _, _) => ZIO.succeed(me)
+      case NodeState.Initialising      => ZIO.fail(UnsupportedOperationWhileInitializing("me"))
+      case s: NodeState.Initialised[_] => ZIO.succeed(s.me)
     }
   )
 
-  def others: ZIO[Ref[NodeState], InitializationNotFinished, Seq[NodeId]] = ZIO.serviceWithZIO[Ref[NodeState]](state =>
+  def others: ZIO[Ref[NodeState[S]], UnsupportedOperationWhileInitializing, Seq[NodeId]] = ZIO.serviceWithZIO[Ref[NodeState[S]]](state =>
     state.get.flatMap {
-      case NodeState.Initialising         => ZIO.fail(InitializationNotFinished())
+      case NodeState.Initialising         => ZIO.fail(UnsupportedOperationWhileInitializing("others"))
       case NodeState.Initialised(_, o, _) => ZIO.succeed(o)
     }
   )
 
-  private def init(msg: Message[MaelstromInit]): RIO[Ref[NodeState], Unit] =
+  private def init(msg: Message[MaelstromInit]): RIO[Ref[NodeState[S]], Unit] =
     for {
       _ <- debugMessage(s"handling message: $msg")
-      state <- ZIO.service[Ref[NodeState]]
+      state <- ZIO.service[Ref[NodeState[S]]]
       initialized <- state.modify[Boolean] {
         case NodeState.Initialising =>
-          (true, NodeState.Initialised[Unit](msg.body.node_id, msg.body.node_ids.filter(_ != msg.body.node_id), ()))
+          (true, NodeState.Initialised[S](msg.body.node_id, msg.body.node_ids.filter(_ != msg.body.node_id), EmptyState[S]))
         case s @ NodeState.Initialised(me, others, state) => (false, s)
       }
       _ <-
@@ -136,8 +147,8 @@ trait MaelstromNode[I <: MessageBody: JsonDecoder, O <: MessageBody: JsonEncoder
         case InvalidInput(input, error) =>
           val msg = s"error: $error, input: $input"
           errorMessage(msg) *> ZIO.fail(Exception(msg))
-        case InitializationNotFinished() =>
-          errorMessage("operation unavailable when initializing") *> ZIO.fail(InitializationNotFinished())
+        case e @ UnsupportedOperationWhileInitializing(operationName) =>
+          errorMessage(s"'$operationName' operation is not supported while node is initializing") *> ZIO.fail(e)
         case e =>
           errorMessage(e.toString) *> ZIO.fail(e)
       }

@@ -36,7 +36,7 @@ usefulTasks := Seq(
 lazy val bootstrap = taskKey[Unit]("Create a fat jar file")
 
 bootstrap := {
-  val projectsToPlublish = Seq("echo")
+  val projectsToPlublish = Seq("echo", "unique-ids")
 
   projectsToPlublish.foreach { projectName =>
     val process = Process(
@@ -62,7 +62,7 @@ lazy val root = project
     name := "gossip-glomers-scala",
     publish / skip := true
   )
-  .aggregate(maelstrom, echo)
+  .aggregate(maelstrom, echo, uniqueIds)
 
 lazy val maelstrom = project
   .in(file("zio-maelstrom"))
@@ -81,5 +81,13 @@ lazy val echo = project
   .settings(
     name := "echo",
     Compile / mainClass := Some("com.bilalfazlani.gossipGloomersScala.echo.Main")
+  )
+  .dependsOn(maelstrom)
+
+lazy val uniqueIds = project
+  .in(file("unique-ids"))
+  .settings(
+    name := "unique-ids",
+    Compile / mainClass := Some("com.bilalfazlani.gossipGloomersScala.uniqueIds.Main")
   )
   .dependsOn(maelstrom)
