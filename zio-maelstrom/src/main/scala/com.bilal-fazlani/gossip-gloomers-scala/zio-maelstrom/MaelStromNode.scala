@@ -31,7 +31,7 @@ trait MaelstromNode[I <: MessageBody: JsonDecoder, O <: MessageBody: JsonEncoder
 
   def onInvalidJson(input: String, error: String): Task[Unit] =
     val msg = s"error: $error, input: $input"
-    debugMessage(msg) *> this.exit(ExitCode.failure)
+    debugMessage(msg) *> ZIO.fail(Exception(msg))
 
   def nodeInput = NodeInput.StdIn
 
@@ -41,12 +41,13 @@ trait MaelstromNode[I <: MessageBody: JsonDecoder, O <: MessageBody: JsonEncoder
 
   def run =
     inputStream
-      // .takeWhile(line => line.trim != "q" && line.trim != "quit")
+      .takeWhile(line => line.trim != "q" && line.trim != "quit")
       .mapZIO(s =>
         ZIO
           .fromEither(JsonDecoder[Message[I]].decodeJson(s))
-          .mapError(onInvalidJson(s, _))
+          .tapError(onInvalidJson(s, _))
       )
       .mapZIO(handle)
       .runCollect
-      .debug
+      .exitCode
+      .map(exit(_))
