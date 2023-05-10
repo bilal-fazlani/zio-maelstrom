@@ -7,6 +7,7 @@ import zio.json.jsonDiscriminator
 import zio.json.{JsonEncoder, JsonDecoder}
 import zio.json.jsonAliases
 import zio.json.jsonHint
+import zio.json.JsonCodec
 
 case class Message[+Body <: MessageBody](
     @jsonField("src")
@@ -49,7 +50,7 @@ case class MaelstromError(
     text: String,
     `type`: String = "error"
 ) extends MessageWithReply
-    derives JsonDecoder
+    derives JsonCodec
 
 opaque type NodeId = String
 object NodeId:
@@ -85,3 +86,15 @@ enum StandardErrorCode(code: Int, name: String, definite: Boolean, description: 
 // format: on
 
 case class CustomErrorCode(override val code: Int) extends ErrorCode(code, false)
+
+extension (m: Message[MessageWithId])
+  def makeError(code: ErrorCode, text: String): Message[MaelstromError] =
+    Message[MaelstromError](
+      source = m.destination,
+      destination = m.source,
+      body = MaelstromError(
+        in_reply_to = m.body.msg_id,
+        code = code.code,
+        text = text
+      )
+    )
