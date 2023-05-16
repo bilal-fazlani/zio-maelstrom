@@ -33,6 +33,7 @@ metals.sbt
 
 
 TestApp.scala
+BlogSamples.scala
 .java-version
 *.j
 *.txt

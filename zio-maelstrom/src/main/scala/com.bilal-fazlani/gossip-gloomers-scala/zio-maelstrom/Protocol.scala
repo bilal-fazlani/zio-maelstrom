@@ -4,10 +4,12 @@ package protocol
 
 import zio.json.{jsonField}
 import zio.json.jsonDiscriminator
-import zio.json.{JsonEncoder, JsonDecoder}
+import zio.json.{JsonEncoder, JsonDecoder, JsonCodec}
 import zio.json.jsonAliases
 import zio.json.jsonHint
 import zio.json.JsonCodec
+import zio.json.ast.Json
+import zio.Tag
 
 case class Message[+Body <: MessageBody](
     @jsonField("src")
@@ -15,8 +17,8 @@ case class Message[+Body <: MessageBody](
     @jsonField("dest")
     destination: NodeId,
     body: Body
-) derives JsonEncoder,
-      JsonDecoder
+) derives JsonDecoder,
+      JsonEncoder
 
 trait MessageBody:
   val `type`: String
@@ -35,6 +37,25 @@ case class MaelstromInit(
     `type`: String = "init"
 ) extends MessageWithId
     derives JsonDecoder
+
+object MaelstromInit {
+  private def parseInit(msg: GenericMessage): Either[String, Message[MaelstromInit]] =
+    if msg.isOfType("init")
+    then
+      msg.body.toRight("init body is missing").flatMap { body =>
+        JsonDecoder[MaelstromInit].fromJsonAST(body).map { init =>
+          Message(
+            source = msg.src,
+            destination = msg.dest,
+            body = init
+          )
+        }
+      }
+    else Left("message is not of type 'init'")
+
+  def parseInitUnsafe(msg: GenericMessage): Message[MaelstromInit] =
+    parseInit(msg).getOrElse(throw new Exception("message is not of type 'init'"))
+}
 
 @jsonHint("init_ok")
 case class MaelstromInitOk(
@@ -88,7 +109,7 @@ enum StandardErrorCode(code: Int, name: String, definite: Boolean, description: 
 case class CustomErrorCode(override val code: Int) extends ErrorCode(code, false)
 
 extension (m: Message[MessageWithId])
-  def makeError(code: ErrorCode, text: String): Message[MaelstromError] =
+  def makeErrorMessage(code: ErrorCode, text: String): Message[MaelstromError] =
     Message[MaelstromError](
       source = m.destination,
       destination = m.source,

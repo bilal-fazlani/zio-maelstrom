@@ -80,7 +80,7 @@ lazy val echo = project
   .in(file("echo"))
   .settings(
     name := "echo",
-    Compile / mainClass := Some("com.bilalfazlani.gossipGloomersScala.echo.Main")
+    Compile / mainClass := Some("example.echo.Main")
   )
   .dependsOn(maelstrom)
 
@@ -88,6 +88,6 @@ lazy val uniqueIds = project
   .in(file("unique-ids"))
   .settings(
     name := "unique-ids",
-    Compile / mainClass := Some("com.bilalfazlani.gossipGloomersScala.uniqueIds.Main")
+    Compile / mainClass := Some("example.uniqueIds.Main")
   )
   .dependsOn(maelstrom)

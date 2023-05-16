@@ -19,6 +19,7 @@ extension (parent: Json)
 
 object GenericDetails {
   val empty = GenericDetails(None, None, None)
+
   given JsonDecoder[GenericDetails] = JsonDecoder[Json].mapOrFail[GenericDetails](ast =>
     for {
       obj <- ast.asObject.toRight("message body is not a json object")
@@ -33,7 +34,8 @@ case class GenericMessage(
     src: NodeId,
     dest: NodeId,
     details: GenericDetails,
-    body: Option[Json]
+    body: Option[Json],
+    raw: Json
 ):
   def isOfType(tpe: String) = details.`type`.contains(tpe)
 
@@ -57,7 +59,25 @@ object GenericMessage {
       src <- obj.getChild[NodeId]("src")
       dest <- obj.getChild[NodeId]("dest")
       body <- obj.getChildOptional[Json]("body")
-      details <- body.fold(Right(GenericDetails.empty))(JsonDecoder[GenericDetails].fromJsonAST(_))
-    } yield GenericMessage(src, dest, details, body)
+      details <- body.fold(Right(GenericDetails.empty))(body => JsonDecoder[GenericDetails].fromJsonAST(body))
+    } yield GenericMessage(src, dest, details, body, ast)
   )
 }
+
+trait GenericDecoder[A <: MessageBody: JsonDecoder]:
+  def decode(msg: GenericMessage): Either[String, Message[A]]
+
+object GenericDecoder:
+  def apply[A <: MessageBody: JsonDecoder](using decoder: GenericDecoder[A]): GenericDecoder[A] = decoder
+  given [A <: MessageBody: JsonDecoder]: GenericDecoder[A] = new GenericDecoder[A]:
+    def decode(msg: GenericMessage): Either[String, Message[A]] =
+      for {
+        body <- msg.body.toRight("message body is missing")
+        message <- JsonDecoder[A].fromJsonAST(body).map { a =>
+          Message(
+            source = msg.src,
+            destination = msg.dest,
+            body = a
+          )
+        }
+      } yield message
