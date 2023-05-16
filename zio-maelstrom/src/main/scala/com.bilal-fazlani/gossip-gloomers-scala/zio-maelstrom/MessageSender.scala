@@ -19,7 +19,7 @@ trait MessageSender:
   def broadcastTo[A <: MessageBody: JsonEncoder](others: Seq[NodeId], body: A): Task[Unit]
 
 object MessageSender:
-  val live = ZLayer.fromFunction(MessageSenderLive.apply)
+  val live: ZLayer[Debugger & Context & MessageTransport, Nothing, MessageSenderLive] = ZLayer.fromFunction(MessageSenderLive.apply)
 
 case class MessageSenderLive(debugger: Debugger, context: Context, transporter: MessageTransport) extends MessageSender:
   def send[A <: MessageBody: JsonEncoder](body: A, to: NodeId) =

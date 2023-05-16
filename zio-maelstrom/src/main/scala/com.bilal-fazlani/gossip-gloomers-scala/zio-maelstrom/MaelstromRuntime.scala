@@ -32,19 +32,17 @@ object MaelstromRuntime:
     .filter(line => line.trim != "")
       .takeWhile(line => line.trim != "q")
 
-    //need to inject layers for:
-    // 1. Debugger.live
-    // 2. MessageSender.live
-    // 3. Context (from .initialize call)
-    // 4. Initializer.live
-
-    val result: ZIO[Scope & R, Throwable, Unit] = ZIO
-      .serviceWithZIO[Initializer](_.initialize(inputStream))
-      .flatMap { case (context, remainder) =>
-        consumeMessages(context, remainder, app)
-      }
-
-    result
+    for {
+      initResult <- Initializer.initialize(inputStream)
+      remainder = initResult._2
+      context = initResult._1
+      _ <- consumeMessages(context, remainder, app).provideSome[Scope & R](
+        ZLayer.succeed(context),
+        Debugger.live,
+        MessageSender.live,
+        MessageTransport.live,
+      )
+    } yield ()
 
   private def consumeMessages[R: Tag, I <: MessageBody: JsonDecoder](
       context: Context,

@@ -9,7 +9,7 @@ trait Debugger:
   def debugMessage(line: String): Task[Unit]
 
 object Debugger:
-  val live = ZLayer.succeed(DebuggerLive)
+  val live: ZLayer[Any, Nothing, Debugger] = ZLayer.succeed(DebuggerLive)
 
 case object DebuggerLive extends Debugger:
   def debugMessage(line: String): Task[Unit] = printLineError(line)

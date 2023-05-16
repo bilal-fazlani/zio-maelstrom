@@ -12,7 +12,7 @@ trait MessageTransport:
   def transport[A <: MessageBody : JsonEncoder](message: Message[A]): Task[Unit]
 
 object MessageTransport:
-  val live = ZLayer.fromFunction(MessageTransportLive.apply)
+  val live: ZLayer[Debugger, Nothing, MessageTransportLive] = ZLayer.fromFunction(MessageTransportLive.apply)
 
 case class MessageTransportLive(debugger: Debugger) extends MessageTransport:
   def transport[A <: MessageBody: JsonEncoder](message: Message[A]): Task[Unit] = 
