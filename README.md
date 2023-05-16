@@ -1,8 +1,8 @@
 ## zio-maelstrom
 
-A framework for building and running nodes for maelstrom simuations.
+A framework for building and running nodes for maelstrom simuations in scala.
 
-Uses [zio](https://zio.dev)
+Uses [ZIO](https://zio.dev)
 
 ## Echo example
 
