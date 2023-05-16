@@ -11,7 +11,7 @@ case class Generate(msg_id: MessageId, `type`: String) extends MessageWithId der
 case class GenerateOk(id: String, in_reply_to: MessageId, `type`: String = "generate_ok") extends MessageWithReply derives JsonEncoder
 
 object Main extends ZIOAppDefault:
-  val app = MaelstromAppR.collectMessages[Ref[Int], Generate] { case request =>
+  val app = MaelstromAppR.make[Ref[Int], Generate] { case request =>
     for {
       newId <- ZIO.serviceWithZIO[Ref[Int]](_.updateAndGet(_ + 1))
       context <- ZIO.service[Context]
