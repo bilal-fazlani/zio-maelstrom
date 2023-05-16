@@ -36,5 +36,4 @@ TestApp.scala
 BlogSamples.scala
 .java-version
 *.j
-*.txt
 store/

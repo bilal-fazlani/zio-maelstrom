@@ -22,7 +22,7 @@ object MaelstromRuntime:
   def run[R: Tag, I <: MessageBody: JsonDecoder](
       app: MaelstromAppR[R, I],
       nodeInput: NodeInput = NodeInput.StdIn
-  ) =
+  ): ZIO[Scope & R, Throwable, Unit] =
     val inputStream = (nodeInput match
       case NodeInput.StdIn =>
         ZStream.fromInputStream(java.lang.System.in).via(ZPipeline.utfDecode)
@@ -30,47 +30,36 @@ object MaelstromRuntime:
         ZStream.fromFile(path.toFile(), 4096).via(ZPipeline.utfDecode).via(ZPipeline.splitLines)
     )
     .filter(line => line.trim != "")
-      .takeWhile(line => line.trim != "q" && line.trim != "quit")
+      .takeWhile(line => line.trim != "q")
 
-    val initialized = ZIO.serviceWithZIO[Initializer](_.initialize(inputStream))
+    //need to inject layers for:
+    // 1. Debugger.live
+    // 2. MessageSender.live
+    // 3. Context (from .initialize call)
+    // 4. Initializer.live
 
-    val layer: ZLayer[Scope & Initializer, Throwable, Context & Remainder] =
-      ZLayer
-        .fromZIO(initialized)
-        .map(x => ZEnvironment(x.get._1) ++ ZEnvironment(x.get._2))
+    val result: ZIO[Scope & R, Throwable, Unit] = ZIO
+      .serviceWithZIO[Initializer](_.initialize(inputStream))
+      .flatMap { case (context, remainder) =>
+        consumeMessages(context, remainder, app)
+      }
 
-    val cLayer = layer.map(x => ZEnvironment(x.get[Context]))
-
-    val remLayer = layer.map(x => ZEnvironment(x.get[Remainder]))
-
-    val transportLayer = Debugger.live >>> MessageTransport.live
-
-    val initializerLayer = (Debugger.live ++ transportLayer) >>> Initializer.live
-    
-    val contextLayer = initializerLayer >>> cLayer
-
-    val remainderLayer = initializerLayer >>> remLayer
-
-    val messageSenderLayer = (Debugger.live ++ contextLayer) >>> (transportLayer >>> MessageSender.live)
-
-    consumeMessages(app).provideSomeLayer[R & Scope](Debugger.live ++ messageSenderLayer ++ contextLayer ++ remainderLayer)
+    result
 
   private def consumeMessages[R: Tag, I <: MessageBody: JsonDecoder](
+      context: Context,
+      remainder: Remainder,
       app: MaelstromAppR[R, I]
-  ): ZIO[Debugger & MessageSender & Remainder & Context & R, Throwable, Unit] =
-    for {
-      context <- ZIO.service[Context]
-      genericMessageStream <- ZIO.service[Remainder]
-      result <- genericMessageStream
-        .mapZIO(genericMessage =>
-          ZIO
-            .fromEither(GenericDecoder[I].decode(genericMessage))
-            .mapError(e => InvalidInput(genericMessage, e))
-            .tapError(e => handleInvalidInput(e, context))
-        )
-        .mapZIO(message => app.handle(message))
-        .runDrain
-    } yield result
+  ): ZIO[Debugger & MessageSender & Context & R, Throwable, Unit] =
+    remainder
+      .mapZIO(genericMessage =>
+        ZIO
+          .fromEither(GenericDecoder[I].decode(genericMessage))
+          .mapError(e => InvalidInput(genericMessage, e))
+          .tapError(e => handleInvalidInput(e, context))
+      )
+      .mapZIO(message => app handle message)
+      .runDrain
 
   private def handleInvalidInput(invalidInput: InvalidInput, context: Context): ZIO[Debugger & MessageSender, Throwable, Unit] =
     val maybeResponse: Option[MaelstromError] = invalidInput.input.details.msg_id.map { msgId =>
