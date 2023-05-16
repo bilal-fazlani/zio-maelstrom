@@ -10,7 +10,16 @@ import zio.json.JsonDecoder
 import zio.stream.ZSink
 import zio.ZLayer
 
+trait Initializer:
+  def initialize(inputStream: ZStream[Any, Throwable, String]): ZIO[Scope, Throwable, (Context, ZStream[Any, Throwable, GenericMessage])]
+
 object Initializer:
+  def initialize(inputStream: ZStream[Any, Throwable, String]): ZIO[Scope & Initializer, Throwable, (Context, ZStream[Any, Throwable, GenericMessage])] =
+    ZIO.serviceWithZIO[Initializer](_.initialize(inputStream))
+
+  val live = ZLayer.fromFunction(InitializerLive.apply)
+
+case class InitializerLive(debugger: Debugger, transport: MessageTransport) extends Initializer:
   def initialize(inputStream: ZStream[Any, Throwable, String]): ZIO[Scope, Throwable, (Context, ZStream[Any, Throwable, GenericMessage])] =
     inputStream
       .map(str => (str, JsonDecoder[GenericMessage].decodeJson(str)))
@@ -32,7 +41,7 @@ object Initializer:
         // cant reply to anyone. just log the error
         // in this case, this stream will never end and node will be in initialising state forever
         case (input, Left(error)) =>
-          ZIO.serviceWithZIO[Debugger](_.debugMessage(s"expected init message. recieved invalid input. error: $error, input: $input") as None)
+          debugger.debugMessage(s"expected init message. recieved invalid input. error: $error, input: $input") as None
       }
       .takeUntil(_.isDefined)
       .collectSome // keep only init message
@@ -43,34 +52,23 @@ object Initializer:
       .collect(Exception("no init message received")) { case (Some(genericMessage), remainder) =>
         (Context(MaelstromInit.parseInitUnsafe(genericMessage)), remainder)
       }
-      .provideSome[Scope](Debugger.live, MessageTransport.live)
 
   private def handleInit(message: Message[MaelstromInit]) =
     val replyMessage: Message[MaelstromInitOk] = Message[MaelstromInitOk](message.destination, message.source, MaelstromInitOk(message.body.msg_id))
     for {
-      debugger <- ZIO.service[Debugger]
-      transport <- ZIO.service[MessageTransport]
       _ <- debugger.debugMessage(s"handling init message: $message")
       _ <- transport.transport(replyMessage)
       _ <- debugger.debugMessage("initialised")
     } yield ()
 
   private def handleInitDecoding(genericMessage: GenericMessage) =
-    for {
-      debugger <- ZIO.service[Debugger]
-      transport <- ZIO.service[MessageTransport]
-      _ <- debugger.debugMessage(s"could not decode init message $genericMessage")
-      _ <- genericMessage
+    debugger.debugMessage(s"could not decode init message $genericMessage") *>
+      genericMessage
         .makeError(StandardErrorCode.MalformedRequest, "init message is malformed")
         .fold(ZIO.unit)(transport.transport(_))
-    } yield ()
 
   private def handleMessageOtherThanInit(message: GenericMessage) =
-    for {
-      debugger <- ZIO.service[Debugger]
-      transport <- ZIO.service[MessageTransport]
-      _ <- debugger.debugMessage(s"could not process message $message because node ${message.dest} is not initialised yet")
-      _ <- message
+    debugger.debugMessage(s"could not process message $message because node ${message.dest} is not initialised yet") *>
+      message
         .makeError(StandardErrorCode.TemporarilyUnavailable, s"node ${message.dest} is not initialised yet")
         .fold(ZIO.unit)(transport.transport(_))
-    } yield ()
