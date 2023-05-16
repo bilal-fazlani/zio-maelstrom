@@ -10,6 +10,7 @@ Uses [ZIO](https://zio.dev)
 //Define the message types
 case class Echo(echo: String, msg_id: MessageId, `type`: String) 
     extends MessageWithId derives JsonDecoder
+    
 case class EchoOk(echo: String, in_reply_to: MessageId, `type`: String = "echo_ok") 
     extends MessageWithReply derives JsonEncoder
 
