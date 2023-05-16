@@ -1,8 +1,26 @@
-## sbt project compiled with Scala 3
+## zio-maelstrom
 
-### Usage
+A framework for building and running nodes for maelstrom simuations.
 
-This is a normal sbt project. You can compile code with `sbt compile`, run it with `sbt run`, and `sbt console` will start a Scala 3 REPL.
+Uses [zio](https://zio.dev)
 
-For more information on the sbt-dotty plugin, see the
-[scala3-example-project](https://github.com/scala/scala3-example-project/blob/main/README.md).
+## Echo example
+
+```scala
+//Define the message types
+case class Echo(echo: String, msg_id: MessageId, `type`: String) 
+    extends MessageWithId derives JsonDecoder
+case class EchoOk(echo: String, in_reply_to: MessageId, `type`: String = "echo_ok") 
+    extends MessageWithReply derives JsonEncoder
+
+
+object Main extends ZIOAppDefault:
+  //Define the node behaviour
+  val app = MaelstromApp.make[Echo](
+    in => in reply EchoOk(echo = in.body.echo, in_reply_to = in.body.msg_id)
+  )
+
+  //Run the node
+  val run = MaelstromRuntime run app
+```
+
