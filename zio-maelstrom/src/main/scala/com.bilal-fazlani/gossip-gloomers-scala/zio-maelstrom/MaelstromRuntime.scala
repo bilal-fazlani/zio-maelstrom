@@ -32,16 +32,19 @@ object MaelstromRuntime:
     .filter(line => line.trim != "")
       .takeWhile(line => line.trim != "q")
 
+    def layers(context: Context) = {
+      val contextLayer = ZLayer.succeed(context)
+      val debuggerLayer = Debugger.live
+      val messageTransportLayer = debuggerLayer >>> MessageTransport.live
+      val messageSenderLayer = (contextLayer ++ debuggerLayer ++ messageTransportLayer) >>> MessageSender.live
+      messageSenderLayer ++ messageTransportLayer ++ debuggerLayer ++ contextLayer
+    }
+
     for {
       initResult <- Initializer.initialize(inputStream)
       remainder = initResult._2
       context = initResult._1
-      _ <- consumeMessages(context, remainder, app).provideSome[Scope & R](
-        ZLayer.succeed(context),
-        Debugger.live,
-        MessageSender.live,
-        MessageTransport.live,
-      )
+      _ <- consumeMessages(context, remainder, app).provideSomeLayer[Scope & R](layers(context))
     } yield ()
 
   private def consumeMessages[R: Tag, I <: MessageBody: JsonDecoder](
