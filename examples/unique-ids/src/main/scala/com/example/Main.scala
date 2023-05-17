@@ -1,8 +1,8 @@
 package example
 package uniqueIds
 
-import com.bilalfazlani.gossipGloomersScala.zioMaelstrom.protocol.*
-import com.bilalfazlani.gossipGloomersScala.zioMaelstrom.*
+import com.bilalfazlani.zioMaelstrom.protocol.*
+import com.bilalfazlani.zioMaelstrom.*
 import zio.json.{JsonDecoder, JsonEncoder}
 import zio.*
 

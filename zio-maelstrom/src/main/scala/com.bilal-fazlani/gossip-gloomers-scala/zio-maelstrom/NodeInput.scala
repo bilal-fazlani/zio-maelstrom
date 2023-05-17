@@ -1,5 +1,4 @@
-package com.bilalfazlani.gossipGloomersScala
-package zioMaelstrom
+package com.bilalfazlani.zioMaelstrom
 
 import protocol.*
 import java.nio.file.Path

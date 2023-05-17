@@ -1,13 +1,7 @@
-package com.bilalfazlani.gossipGloomersScala
-package zioMaelstrom
+package com.bilalfazlani.zioMaelstrom
 package protocol
 
-import zio.json.{jsonField}
-import zio.json.jsonDiscriminator
-import zio.json.{JsonEncoder, JsonDecoder, JsonCodec}
-import zio.json.jsonAliases
-import zio.json.jsonHint
-import zio.json.JsonCodec
+import zio.json.*
 import zio.json.ast.Json
 import zio.Tag
 

@@ -1,5 +1,4 @@
-package com.bilalfazlani.gossipGloomersScala
-package zioMaelstrom
+package com.bilalfazlani.zioMaelstrom
 package protocol
 
 import zio.json.ast.Json

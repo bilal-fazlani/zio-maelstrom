@@ -77,17 +77,19 @@ lazy val maelstrom = project
   )
 
 lazy val echo = project
-  .in(file("echo"))
+  .in(file("examples/echo"))
   .settings(
     name := "echo",
+    publish / skip := true,
     Compile / mainClass := Some("example.echo.Main")
   )
   .dependsOn(maelstrom)
 
 lazy val uniqueIds = project
-  .in(file("unique-ids"))
+  .in(file("examples/unique-ids"))
   .settings(
     name := "unique-ids",
+    publish / skip := true,
     Compile / mainClass := Some("example.uniqueIds.Main")
   )
   .dependsOn(maelstrom)

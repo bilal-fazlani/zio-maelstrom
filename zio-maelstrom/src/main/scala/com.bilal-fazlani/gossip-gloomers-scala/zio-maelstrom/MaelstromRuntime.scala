@@ -1,12 +1,11 @@
-package com.bilalfazlani.gossipGloomersScala
-package zioMaelstrom
+package com.bilalfazlani.zioMaelstrom
 
 import zio.{ZIO, ZLayer, Tag, Scope}
 import protocol.MessageBody
 import zio.json.JsonDecoder
 import protocol.*
 import zio.stream.*
-import com.bilalfazlani.gossipGloomersScala.zioMaelstrom.Initializer
+import com.bilalfazlani.zioMaelstrom.Initializer
 import zio.ZEnvironment
 
 trait MaelstromRuntime:

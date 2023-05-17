@@ -1,10 +1,8 @@
-package com.bilalfazlani.gossipGloomersScala
-package zioMaelstrom
+package com.bilalfazlani.zioMaelstrom
 
 import java.nio.file.Path
-import com.bilalfazlani.gossipGloomersScala.zioMaelstrom.protocol.*
+import protocol.*
 import zio.ZIO
-import com.bilalfazlani.gossipGloomersScala.zioMaelstrom.MessageSender
 import zio.json.JsonEncoder
 
 extension (s: String) infix def /(string: String): Path = Path.of(s, string)
