@@ -35,7 +35,7 @@ usefulTasks := Seq(
 
 lazy val bootstrap = taskKey[Unit]("Create a fat jar file")
 
-private def isCI = sys.env.get("CI").nonEmpty
+lazy val isCI = sys.env.get("CI").nonEmpty
 
 bootstrap := {
   val projectsToPlublish = Seq("echo", "unique-ids")
