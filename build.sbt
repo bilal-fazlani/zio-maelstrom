@@ -35,6 +35,8 @@ usefulTasks := Seq(
 
 lazy val bootstrap = taskKey[Unit]("Create a fat jar file")
 
+private def isCI = sys.env.get("CI").nonEmpty
+
 bootstrap := {
   val projectsToPlublish = Seq("echo", "unique-ids")
 
@@ -59,7 +61,7 @@ bootstrap := {
 lazy val root = project
   .in(file("."))
   .settings(
-    name := "gossip-glomers-scala",
+    name := "zio-maelstrom-root",
     publish / skip := true
   )
   .aggregate(maelstrom, echo, uniqueIds)
@@ -80,8 +82,8 @@ lazy val echo = project
   .in(file("examples/echo"))
   .settings(
     name := "echo",
-    publish / skip := true,
-    Compile / mainClass := Some("example.echo.Main")
+    publish / skip := isCI,
+    Compile / mainClass := Some("com.example.echo.Main")
   )
   .dependsOn(maelstrom)
 
@@ -89,7 +91,7 @@ lazy val uniqueIds = project
   .in(file("examples/unique-ids"))
   .settings(
     name := "unique-ids",
-    publish / skip := true,
-    Compile / mainClass := Some("example.uniqueIds.Main")
+    publish / skip := isCI,
+    Compile / mainClass := Some("com.example.uniqueIds.Main")
   )
   .dependsOn(maelstrom)

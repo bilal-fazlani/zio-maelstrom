@@ -1,5 +1,4 @@
-package com.example
-package echo
+package com.example.echo
 
 import zio.json.*
 import zio.*

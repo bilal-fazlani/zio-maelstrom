@@ -1,5 +1,4 @@
-package example
-package uniqueIds
+package com.example.uniqueIds
 
 import com.bilalfazlani.zioMaelstrom.protocol.*
 import com.bilalfazlani.zioMaelstrom.*

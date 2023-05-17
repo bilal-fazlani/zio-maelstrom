@@ -31,6 +31,9 @@ case class InitializerLive(debugger: Debugger, transport: MessageTransport) exte
       }
       .find(_._3)
       .peel(ZSink.head)
+      .tap { case (a, remainder) =>
+        remainder.runCollect.flatMap(collected => debugger.debugMessage(s"debug remainder: $collected"))
+      }
       .flatMap {
         // happy case: found init message
         case (Some(input, Right(genericMessage), _), remainder) =>

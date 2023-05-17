@@ -43,6 +43,7 @@ object MaelstromRuntime:
     (for {
       initResult <- Initializer.initialize(inputStream)
       remainder = initResult._2
+      _ <- remainder.runCollect.flatMap(remaining => zio.Console.printLineError(s"remaining: ${remaining.toList}"))
       context = initResult._1
       _ <- consumeMessages(context, remainder, app).provideSomeLayer[Scope & R & Debugger & MessageTransport](layers(context))
     } yield ())
@@ -54,6 +55,7 @@ object MaelstromRuntime:
       app: MaelstromAppR[R, I]
   ): ZIO[Debugger & MessageSender & Context & R, Throwable, Unit] =
     remainder
+      // .tap(g => ZIO.serviceWithZIO[Debugger](_.debugMessage(s"received: $g")))
       .mapZIO(genericMessage =>
         ZIO
           .fromEither(GenericDecoder[I].decode(genericMessage))
