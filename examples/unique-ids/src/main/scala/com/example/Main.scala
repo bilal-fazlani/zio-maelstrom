@@ -17,4 +17,4 @@ object Main extends ZIOAppDefault:
       _ <- request reply GenerateOk(id = s"${context.me}_$newId", in_reply_to = request.body.msg_id)
     } yield ()
   }
-  val run = (MaelstromRuntime run app).provideSome[Scope](ZLayer.fromZIO(Ref.make(0)))
+  val run = (MaelstromRuntime run app).provide(ZLayer.fromZIO(Ref.make(0)))

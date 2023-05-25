@@ -1,6 +1,6 @@
 package com.bilalfazlani.zioMaelstrom
 
-import zio.{ZIO, ZLayer, Tag, Scope}
+import zio.{ZIO, ZLayer, Tag}
 import protocol.MessageBody
 import zio.json.JsonDecoder
 import protocol.*
@@ -12,7 +12,7 @@ trait MaelstromRuntime:
   def run[R: Tag, I <: MessageBody: JsonDecoder](
       app: MaelstromAppR[R, I],
       nodeInput: NodeInput
-  ): ZIO[Scope & R, Throwable, Unit]
+  ): ZIO[R, Throwable, Unit]
 
 object MaelstromRuntime:
   private type Remainder = ZStream[Any, Throwable, GenericMessage]
@@ -21,7 +21,7 @@ object MaelstromRuntime:
   def run[R: Tag, I <: MessageBody: JsonDecoder](
       app: MaelstromAppR[R, I],
       nodeInput: NodeInput = NodeInput.StdIn
-  ): ZIO[Scope & R, Throwable, Unit] =
+  ): ZIO[R, Throwable, Unit] =
     val inputStream = (nodeInput match
       case NodeInput.StdIn =>
         ZStream.fromInputStream(java.lang.System.in).via(ZPipeline.utfDecode)
@@ -40,14 +40,15 @@ object MaelstromRuntime:
       messageSenderLayer ++ contextLayer
     }
 
-    (for {
-      initResult <- Initializer.initialize(inputStream)
-      remainder = initResult._2
-      _ <- remainder.runCollect.flatMap(remaining => zio.Console.printLineError(s"remaining: ${remaining.toList}"))
-      context = initResult._1
-      _ <- consumeMessages(context, remainder, app).provideSomeLayer[Scope & R & Debugger & MessageTransport](layers(context))
-    } yield ())
-      .provideSomeLayer[R & Scope](Debugger.live ++ (Debugger.live >>> MessageTransport.live) ++ initializerLayer)
+    ZIO
+      .scoped(for {
+        initResult <- Initializer.initialize(inputStream)
+        remainder = initResult._2
+        _ <- remainder.runCollect.flatMap(remaining => zio.Console.printLineError(s"remaining: ${remaining.toList}"))
+        context = initResult._1
+        _ <- consumeMessages(context, remainder, app).provideSomeLayer[R & Debugger & MessageTransport](layers(context))
+      } yield ())
+      .provideSomeLayer[R](Debugger.live ++ (Debugger.live >>> MessageTransport.live) ++ initializerLayer)
 
   private def consumeMessages[R: Tag, I <: MessageBody: JsonDecoder](
       context: Context,

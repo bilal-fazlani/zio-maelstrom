@@ -32,7 +32,7 @@ metals.sbt
 /.worksheet/
 
 
-TestApp.scala
+TestApp*.scala
 BlogSamples.scala
 .java-version
 *.j

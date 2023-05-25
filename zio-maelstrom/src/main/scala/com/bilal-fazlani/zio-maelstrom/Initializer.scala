@@ -1,13 +1,9 @@
 package com.bilalfazlani.zioMaelstrom
 
 import protocol.*
-import zio.Task
-import zio.ZIO
-import zio.stream.ZStream
-import zio.Scope
+import zio.*
+import zio.stream.{ZStream, ZSink}
 import zio.json.JsonDecoder
-import zio.stream.ZSink
-import zio.ZLayer
 
 trait Initializer:
   def initialize(inputStream: ZStream[Any, Throwable, String]): ZIO[Scope, Throwable, (Context, ZStream[Any, Throwable, GenericMessage])]
