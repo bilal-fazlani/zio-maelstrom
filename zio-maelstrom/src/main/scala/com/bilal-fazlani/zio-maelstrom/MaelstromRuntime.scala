@@ -1,12 +1,12 @@
 package com.bilalfazlani.zioMaelstrom
 
-import zio.{ZIO, ZLayer, Tag}
+import zio.*
 import protocol.MessageBody
 import zio.json.JsonDecoder
 import protocol.*
 import zio.stream.*
 import com.bilalfazlani.zioMaelstrom.Initializer
-import zio.ZEnvironment
+import java.io.IOException
 
 trait MaelstromRuntime:
   def run[R: Tag, I <: MessageBody: JsonDecoder](
@@ -22,14 +22,21 @@ object MaelstromRuntime:
       app: MaelstromAppR[R, I],
       nodeInput: NodeInput = NodeInput.StdIn
   ): ZIO[R, Throwable, Unit] =
-    val inputStream = (nodeInput match
-      case NodeInput.StdIn =>
-        ZStream.fromInputStream(java.lang.System.in).via(ZPipeline.utfDecode)
-      case NodeInput.FilePath(path) =>
-        ZStream.fromFile(path.toFile(), 4096).via(ZPipeline.utfDecode).via(ZPipeline.splitLines)
-    )
-    .filter(line => line.trim != "")
-      .takeWhile(line => line.trim != "q")
+    val inputStream = ZStream.unwrap {
+      (nodeInput match
+        case NodeInput.StdIn =>
+          ZIO.serviceWithZIO[Debugger](_.debugMessage("using StdIn")) as
+            ZStream.fromInputStream(java.lang.System.in).via(ZPipeline.utfDecode)
+        case NodeInput.FilePath(path) =>
+          ZIO.serviceWithZIO[Debugger](_.debugMessage(s"using FilePath($path)")) as
+            ZStream.fromFile(path.toFile(), 4096).via(ZPipeline.utfDecode).via(ZPipeline.splitLines)
+      )
+      .map { strm =>
+        strm.filter(line => line.trim != "")
+          .takeWhile(line => line.trim != "q")
+      }
+    }
+    
 
     val debuggerLayer = Debugger.live
     val messageTransportLayer = debuggerLayer >>> MessageTransport.live
@@ -44,11 +51,16 @@ object MaelstromRuntime:
       .scoped(for {
         initResult <- Initializer.initialize(inputStream)
         remainder = initResult._2
-        _ <- remainder.runCollect.flatMap(remaining => zio.Console.printLineError(s"remaining: ${remaining.toList}"))
+        // _ <- remainder.runCollect.flatMap(remaining => zio.Console.printLineError(s"remaining: ${remaining.toList}"))
         context = initResult._1
         _ <- consumeMessages(context, remainder, app).provideSomeLayer[R & Debugger & MessageTransport](layers(context))
       } yield ())
       .provideSomeLayer[R](Debugger.live ++ (Debugger.live >>> MessageTransport.live) ++ initializerLayer)
+
+    // val printHeadSink = ZSink.take[String](1).mapZIO(x => Console.printLine(s"HEAD > ${x.toList.head}"))
+    // val printSink = ZSink.foreach[Any, IOException, String](line => Console.printLine(s"PEELED > ${line}"))
+
+    // inputStream >>> (printHeadSink zip printSink)
 
   private def consumeMessages[R: Tag, I <: MessageBody: JsonDecoder](
       context: Context,

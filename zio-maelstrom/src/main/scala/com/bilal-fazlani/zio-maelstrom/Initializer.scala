@@ -4,32 +4,59 @@ import protocol.*
 import zio.*
 import zio.stream.{ZStream, ZSink}
 import zio.json.JsonDecoder
+import zio.stream.ZPipeline
 
 trait Initializer:
-  def initialize(inputStream: ZStream[Any, Throwable, String]): ZIO[Scope, Throwable, (Context, ZStream[Any, Throwable, GenericMessage])]
+  def initialize[R](inputStream: ZStream[R, Throwable, String]): ZIO[R & Scope, Throwable, (Context, ZStream[Any, Throwable, GenericMessage])]
 
 object Initializer:
-  def initialize(
-      inputStream: ZStream[Any, Throwable, String]
-  ): ZIO[Scope & Initializer, Throwable, (Context, ZStream[Any, Throwable, GenericMessage])] =
+  def initialize[R](
+      inputStream: ZStream[R, Throwable, String]
+  ): ZIO[R & Scope & Initializer, Throwable, (Context, ZStream[Any, Throwable, GenericMessage])] =
     ZIO.serviceWithZIO[Initializer](_.initialize(inputStream))
 
   val live = ZLayer.fromFunction(InitializerLive.apply)
 
 case class InitializerLive(debugger: Debugger, transport: MessageTransport) extends Initializer:
-  def initialize(inputStream: ZStream[Any, Throwable, String]): ZIO[Scope, Throwable, (Context, ZStream[Any, Throwable, GenericMessage])] =
+
+  // val initSink: ZSink[Any, Throwable, String, Context, String] =
+  //   val pipeline =
+  //     ZPipeline
+  //       .map[String, (String, Either[String, GenericMessage])] { str =>
+  //         (str, JsonDecoder[GenericMessage].decodeJson(str))
+  //       }
+  //       .map[(String, Either[String, GenericMessage], Boolean)] {
+  //         case (str, Right(genericMessage)) => (str, Right(genericMessage), genericMessage isOfType "init")
+  //         case (str, Left(error))           => (str, Left(error), false)
+  //       }
+  //       .mapZIO {
+  //         case (input, Right(genericMessage), _) =>
+  //           val initMessage = JsonDecoder[Message[MaelstromInit]].decodeJson(input)
+  //           initMessage match
+  //             case Right(initMessage) =>
+  //               handleInit(initMessage) as Context(initMessage)
+  //             case Left(error) =>
+  //               handleInitDecodingError(genericMessage) *>
+  //                 ZIO.fail(new Exception("init message decoding failed"))
+  //         case (input, Left(error), _) =>
+  //           handleInitDecodingError(input) *>
+  //             ZIO.fail(new Exception("message decoding failed"))
+  //       }
+
+  //   pipeline >>> ZSink.head
+
+    // val dd = ZSink.from
+
+    // pipeline >>> (ZSink.head)
+
+  def initialize[R](inputStream: ZStream[R, Throwable, String]): ZIO[R & Scope, Throwable, (Context, ZStream[Any, Throwable, GenericMessage])] =
     inputStream
-      .tap(str => debugger.debugMessage(s"received LINE message: $str"))
       .map(str => (str, JsonDecoder[GenericMessage].decodeJson(str)))
       .map[(String, Either[String, GenericMessage], Boolean)] {
         case (str, Right(genericMessage)) => (str, Right(genericMessage), genericMessage isOfType "init")
         case (str, Left(error))           => (str, Left(error), false)
       }
-      .find(_._3)
       .peel(ZSink.head)
-      .tap { case (a, remainder) =>
-        remainder.runCollect.flatMap(collected => debugger.debugMessage(s"debug remainder: $collected"))
-      }
       .flatMap {
         // happy case: found init message
         case (Some(input, Right(genericMessage), _), remainder) =>
@@ -76,3 +103,6 @@ case class InitializerLive(debugger: Debugger, transport: MessageTransport) exte
       genericMessage
         .makeError(StandardErrorCode.MalformedRequest, "init message is malformed")
         .fold(ZIO.unit)(transport.transport(_))
+
+  private def handleInitDecodingError(str: String) =
+    debugger.debugMessage(s"could not decode init message $str")
