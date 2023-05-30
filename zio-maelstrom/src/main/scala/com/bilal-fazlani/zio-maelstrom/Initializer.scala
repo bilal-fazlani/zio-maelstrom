@@ -7,19 +7,19 @@ import zio.json.JsonDecoder
 import zio.stream.ZPipeline
 
 trait Initializer:
-  def initialize[R](inputStream: ZStream[R, Nothing, String]): ZIO[R & Scope, Nothing, (Context, ZStream[Any, Nothing, GenericMessage])]
+  def initialize[R](inputStream: ZStream[R, Nothing, String]): ZIO[R & Scope, Nothing, (Context, MessageStream)]
 
 object Initializer:
   def initialize[R](
       inputStream: ZStream[R, Nothing, String]
-  ): ZIO[R & Scope & Initializer, Nothing, (Context, ZStream[Any, Nothing, GenericMessage])] =
+  ): ZIO[R & Scope & Initializer, Nothing, (Context, MessageStream)] =
     ZIO.serviceWithZIO[Initializer](_.initialize(inputStream))
 
   val live = ZLayer.fromFunction(InitializerLive.apply)
 
 case class InitializerLive(logger: Logger, transport: MessageTransport) extends Initializer:
 
-  def initialize[R](inputStream: ZStream[R, Nothing, String]): ZIO[R & Scope, Nothing, (Context, ZStream[Any, Nothing, GenericMessage])] =
+  def initialize[R](inputStream: ZStream[R, Nothing, String]): ZIO[R & Scope, Nothing, (Context, MessageStream)] =
     inputStream
       .map(str => (str, JsonDecoder[GenericMessage].decodeJson(str)))
       .map[(String, Either[String, GenericMessage], Boolean)] {

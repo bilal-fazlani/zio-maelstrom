@@ -5,14 +5,25 @@ import protocol.MessageBody
 import zio.json.JsonDecoder
 import protocol.*
 import zio.stream.*
+import com.bilalfazlani.zioMaelstrom.MessageHandler
+
+private type MessageStream = ZStream[Any, Nothing, GenericMessage]
 
 object MaelstromRuntime:
-  private type Remainder = ZStream[Any, Nothing, GenericMessage]
 
-  private case class InvalidInput(input: GenericMessage, error: String) extends Exception
   def run[R: Tag, I <: MessageBody: JsonDecoder](
       app: MaelstromAppR[R, I]
   ): ZIO[R & Settings, Nothing, Unit] =
+
+    val loggerLayer = Logger.live
+    val messageTransportLayer = loggerLayer >>> MessageTransport.live
+    val initializerLayer = (loggerLayer ++ messageTransportLayer) >>> Initializer.live
+    def layers(context: Context) = {
+      val contextLayer = ZLayer.succeed(context)
+      val messageSenderLayer = (contextLayer ++ messageTransportLayer) >>> MessageSender.live
+      messageSenderLayer ++ contextLayer
+    }
+
     val inputStream = ZStream
       .unwrap(for {
         settings <- ZIO.service[Settings]
@@ -30,54 +41,12 @@ object MaelstromRuntime:
       } yield strm)
       .orDie
 
-    val loggerLayer = Logger.live
-    val messageTransportLayer = loggerLayer >>> MessageTransport.live
-    val initializerLayer = (loggerLayer ++ messageTransportLayer) >>> Initializer.live
-    def layers(context: Context) = {
-      val contextLayer = ZLayer.succeed(context)
-      val messageSenderLayer = (contextLayer ++ messageTransportLayer) >>> MessageSender.live
-      messageSenderLayer ++ contextLayer
-    }
-
     ZIO
       .scoped(for {
         initResult <- Initializer.initialize(inputStream)
         remainder = initResult._2
         context = initResult._1
-        _ <- consumeMessages(context, remainder, app).provideSomeLayer[R & Settings & Logger & MessageTransport](layers(context))
+        _ <- MessageHandler.handle(remainder, app).provideSomeLayer[R & Settings & Logger & MessageTransport](layers(context))
       } yield ())
       .provideSomeLayer[R & Settings](Logger.live ++ (Logger.live >>> MessageTransport.live) ++ initializerLayer)
 
-  private def consumeMessages[R: Tag, I <: MessageBody: JsonDecoder](
-      context: Context,
-      remainder: Remainder,
-      app: MaelstromAppR[R, I]
-  ): ZIO[Logger & MessageSender & Context & R, Nothing, Unit] =
-    remainder
-      .mapZIO(genericMessage =>
-        ZIO
-          .fromEither(GenericDecoder[I].decode(genericMessage))
-          .mapError(e => InvalidInput(genericMessage, e))
-          .flatMap(message => app handle message)
-          .catchAll(e => handleInvalidInput(e, context))
-      )
-      .runDrain
-
-  private def handleInvalidInput(invalidInput: InvalidInput, context: Context): ZIO[Logger & MessageSender, Nothing, Unit] =
-    val maybeResponse: Option[MaelstromError] = invalidInput.input.details.msg_id.map { msgId =>
-      val errorCode = StandardErrorCode.MalformedRequest
-      MaelstromError(
-        in_reply_to = msgId,
-        code = StandardErrorCode.MalformedRequest.code,
-        text = s"invalid input: $invalidInput"
-      )
-    }
-    for {
-      logger <- ZIO.service[Logger]
-      _ <- logger.error(s"invalid input from ${invalidInput.input.src}")
-      sender <- ZIO.service[MessageSender]
-      _ <- maybeResponse match {
-        case Some(errorMessageBody) => sender.send(errorMessageBody, invalidInput.input.src).ignore
-        case None                   => ZIO.unit // if there was no msg id in msg, you can't send a reply
-      }
-    } yield ()
