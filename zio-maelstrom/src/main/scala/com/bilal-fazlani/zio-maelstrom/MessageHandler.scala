@@ -14,10 +14,9 @@ object MessageHandler:
       .mapZIO(genericMessage =>
         ZIO
           .fromEither(GenericDecoder[I].decode(genericMessage))
+          .tap(message => Logger.info(s"received ${message.body} from ${message.source}"))
           .mapError(e => InvalidInput(genericMessage, e))
-          .flatMap { message =>
-            Logger.info(s"received message: ${message.body} from ${message.source}") *> (app handle message)
-          }
+          .flatMap(message => app handle message)
           .catchAll(e => handleInvalidInput(e))
       )
       .runDrain

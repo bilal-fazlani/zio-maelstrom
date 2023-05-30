@@ -11,4 +11,4 @@ case class EchoOk(echo: String, in_reply_to: MessageId, `type`: String = "echo_o
 
 object Main extends ZIOAppDefault:
   val app = MaelstromApp.make[Echo](in => in reply EchoOk(echo = in.body.echo, in_reply_to = in.body.msg_id))
-  val run = MaelstromRuntime.run(app).provide(ZLayer.succeed(Settings()))
+  val run = MaelstromRuntime.run(app).provide(Settings.default)

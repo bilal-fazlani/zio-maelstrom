@@ -16,6 +16,7 @@ object Logger:
 case class LoggerLive(settings: Settings) extends Logger:
   import com.bilalfazlani.rainbowcli.*
   given colorContext: ColorContext = ColorContext(settings.enableColoredOutput)
-  def info(line: String): UIO[Unit] = printLineError(line.yellow).orDie
+
+  def info(line: String): UIO[Unit] = printLineError(line).orDie
 
   def error(line: String): UIO[Unit] = printLineError(line.red).orDie

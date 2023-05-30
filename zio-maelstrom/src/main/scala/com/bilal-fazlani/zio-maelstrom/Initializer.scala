@@ -63,7 +63,7 @@ case class InitializerLive(logger: Logger, transport: MessageTransport) extends 
   private def handleInit(message: Message[MaelstromInit]) =
     val replyMessage: Message[MaelstromInitOk] = Message[MaelstromInitOk](message.destination, message.source, MaelstromInitOk(message.body.msg_id))
     for {
-      _ <- logger.info(s"handling init message: $message")
+      _ <- logger.info(s"received ${message.body} from ${message.source}")
       _ <- transport.transport(replyMessage)
       _ <- logger.info("initialised")
     } yield ()

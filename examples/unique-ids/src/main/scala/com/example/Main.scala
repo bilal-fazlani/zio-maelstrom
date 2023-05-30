@@ -18,12 +18,7 @@ object Main extends ZIOAppDefault:
     } yield ()
   }
 
-  val settings = ZLayer.succeed(
-    Settings(
-      nodeInput = NodeInput.FilePath("examples" / "echo" / "simulation.txt"),
-      enableColoredOutput = true
-    )
-  )
+  val settings = Settings.custom(NodeInput.FilePath("examples" / "unique-ids" / "simulation.txt"), true)
 
   val run = (MaelstromRuntime run app)
-              .provide(settings, ZLayer.fromZIO(Ref.make(0)))
+    .provide(settings, ZLayer.fromZIO(Ref.make(0)))
