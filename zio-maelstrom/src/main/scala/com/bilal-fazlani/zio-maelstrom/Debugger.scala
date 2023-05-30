@@ -1,14 +1,18 @@
 package com.bilalfazlani.zioMaelstrom
 
-import zio.Task
+import zio.*
 import zio.Console.*
-import zio.ZLayer
 
 trait Debugger:
-  def debugMessage(line: String): Task[Unit]
+  def debugMessage(line: String): UIO[Unit]
+  def errorMessage(line: String): UIO[Unit]
 
 object Debugger:
-  val live: ZLayer[Any, Nothing, Debugger] = ZLayer.succeed(DebuggerLive)
+  val live: ZLayer[Settings, Nothing, Debugger] = ZLayer.fromFunction(DebuggerLive.apply)
 
-case object DebuggerLive extends Debugger:
-  def debugMessage(line: String): Task[Unit] = printLineError(line)
+case class DebuggerLive(settings: Settings) extends Debugger:
+  import com.bilalfazlani.rainbowcli.*
+  given colorContext: ColorContext = ColorContext(settings.enableColoredOutput)
+  def debugMessage(line: String): UIO[Unit] = printLineError(line.yellow).orDie
+
+  def errorMessage(line: String): UIO[Unit] = printLineError(line.red).orDie

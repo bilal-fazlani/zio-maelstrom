@@ -8,35 +8,24 @@ import zio.stream.*
 import com.bilalfazlani.zioMaelstrom.Initializer
 import java.io.IOException
 
-trait MaelstromRuntime:
-  def run[R: Tag, I <: MessageBody: JsonDecoder](
-      app: MaelstromAppR[R, I],
-      nodeInput: NodeInput
-  ): ZIO[R, Throwable, Unit]
-
 object MaelstromRuntime:
-  private type Remainder = ZStream[Any, Throwable, GenericMessage]
+  private type Remainder = ZStream[Any, Nothing, GenericMessage]
 
   private case class InvalidInput(input: GenericMessage, error: String) extends Exception
   def run[R: Tag, I <: MessageBody: JsonDecoder](
       app: MaelstromAppR[R, I],
-      nodeInput: NodeInput = NodeInput.StdIn
-  ): ZIO[R, Throwable, Unit] =
-    val inputStream = ZStream.unwrap {
-      (nodeInput match
-        case NodeInput.StdIn =>
-          ZIO.serviceWithZIO[Debugger](_.debugMessage("using StdIn")) as
-            ZStream.fromInputStream(java.lang.System.in).via(ZPipeline.utfDecode)
-        case NodeInput.FilePath(path) =>
-          ZIO.serviceWithZIO[Debugger](_.debugMessage(s"using FilePath($path)")) as
-            ZStream.fromFile(path.toFile(), 4096).via(ZPipeline.utfDecode).via(ZPipeline.splitLines)
-      )
-      .map { strm =>
-        strm.filter(line => line.trim != "")
-          .takeWhile(line => line.trim != "q")
-      }
-    }
-    
+  ): ZIO[R & Settings, Nothing, Unit] =
+    val inputStream = ZStream.unwrap(for {
+      settings <- ZIO.service[Settings]
+      debugger <- ZIO.service[Debugger]
+      nodeInput = settings.nodeInput
+      _ <- if nodeInput == NodeInput.StdIn then debugger.debugMessage("using StdIn")
+          else debugger.debugMessage(s"using FilePath(${nodeInput.asInstanceOf[NodeInput.FilePath].path})")
+      strm = (if nodeInput == NodeInput.StdIn then ZStream.fromInputStream(java.lang.System.in).via(ZPipeline.utfDecode)
+                    else ZStream.fromFile(nodeInput.asInstanceOf[NodeInput.FilePath].path.toFile(), 4096).via(ZPipeline.utfDecode).via(ZPipeline.splitLines))
+                    .filter(line => line.trim != "")
+                    .takeWhile(line => line.trim != "q")
+    } yield strm).orDie
 
     val debuggerLayer = Debugger.live
     val messageTransportLayer = debuggerLayer >>> MessageTransport.live
@@ -51,34 +40,27 @@ object MaelstromRuntime:
       .scoped(for {
         initResult <- Initializer.initialize(inputStream)
         remainder = initResult._2
-        // _ <- remainder.runCollect.flatMap(remaining => zio.Console.printLineError(s"remaining: ${remaining.toList}"))
         context = initResult._1
-        _ <- consumeMessages(context, remainder, app).provideSomeLayer[R & Debugger & MessageTransport](layers(context))
+        _ <- consumeMessages(context, remainder, app).provideSomeLayer[R & Settings & Debugger & MessageTransport](layers(context))
       } yield ())
-      .provideSomeLayer[R](Debugger.live ++ (Debugger.live >>> MessageTransport.live) ++ initializerLayer)
-
-    // val printHeadSink = ZSink.take[String](1).mapZIO(x => Console.printLine(s"HEAD > ${x.toList.head}"))
-    // val printSink = ZSink.foreach[Any, IOException, String](line => Console.printLine(s"PEELED > ${line}"))
-
-    // inputStream >>> (printHeadSink zip printSink)
+      .provideSomeLayer[R & Settings](Debugger.live ++ (Debugger.live >>> MessageTransport.live) ++ initializerLayer)
 
   private def consumeMessages[R: Tag, I <: MessageBody: JsonDecoder](
       context: Context,
       remainder: Remainder,
       app: MaelstromAppR[R, I]
-  ): ZIO[Debugger & MessageSender & Context & R, Throwable, Unit] =
+  ): ZIO[Debugger & MessageSender & Context & R, Nothing, Unit] =
     remainder
-      // .tap(g => ZIO.serviceWithZIO[Debugger](_.debugMessage(s"received: $g")))
       .mapZIO(genericMessage =>
         ZIO
           .fromEither(GenericDecoder[I].decode(genericMessage))
           .mapError(e => InvalidInput(genericMessage, e))
-          .tapError(e => handleInvalidInput(e, context))
+          .flatMap(message => app handle message)
+          .catchAll(e => handleInvalidInput(e, context))
       )
-      .mapZIO(message => app handle message)
       .runDrain
 
-  private def handleInvalidInput(invalidInput: InvalidInput, context: Context): ZIO[Debugger & MessageSender, Throwable, Unit] =
+  private def handleInvalidInput(invalidInput: InvalidInput, context: Context): ZIO[Debugger & MessageSender, Nothing, Unit] =
     val maybeResponse: Option[MaelstromError] = invalidInput.input.details.msg_id.map { msgId =>
       val errorCode = StandardErrorCode.MalformedRequest
       MaelstromError(
@@ -92,7 +74,7 @@ object MaelstromRuntime:
       _ <- debugger.debugMessage(s"invalid input from ${invalidInput.input.src}")
       sender <- ZIO.service[MessageSender]
       _ <- maybeResponse match {
-        case Some(errorMessageBody) => sender.send(errorMessageBody, invalidInput.input.src)
-        case None                   => ZIO.unit // if there was no msg id in msg, you can send a reply
+        case Some(errorMessageBody) => sender.send(errorMessageBody, invalidInput.input.src).ignore
+        case None                   => ZIO.unit // if there was no msg id in msg, you can't send a reply
       }
     } yield ()

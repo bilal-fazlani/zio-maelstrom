@@ -72,6 +72,7 @@ lazy val maelstrom = project
     name := "zio-maelstrom",
     libraryDependencies ++= Seq(
       Libs.zio,
+      Libs.rainbowCli,
       Libs.zioStreams,
       Libs.zioJson,
       Libs.zioTest % Test

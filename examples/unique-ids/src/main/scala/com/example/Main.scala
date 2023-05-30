@@ -17,4 +17,13 @@ object Main extends ZIOAppDefault:
       _ <- request reply GenerateOk(id = s"${context.me}_$newId", in_reply_to = request.body.msg_id)
     } yield ()
   }
-  val run = (MaelstromRuntime.run(app, NodeInput.FilePath("examples" / "echo" / "simulation.txt"))).provide(ZLayer.fromZIO(Ref.make(0)))
+
+  val settings = ZLayer.succeed(
+    Settings(
+      nodeInput = NodeInput.FilePath("examples" / "echo" / "simulation.txt"),
+      enableColoredOutput = true
+    )
+  )
+
+  val run = (MaelstromRuntime run app)
+              .provide(settings, ZLayer.fromZIO(Ref.make(0)))

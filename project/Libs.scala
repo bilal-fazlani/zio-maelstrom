@@ -8,4 +8,5 @@ object Libs {
   lazy val zioStreams = ZIO %% "zio-streams" % zioVersion
   lazy val zioTest = ZIO %% "zio-test" % zioVersion
   lazy val zioJson = ZIO %% "zio-json" % "0.5.0"
+  lazy val rainbowCli = "com.bilal-fazlani" %% "rainbowcli" % "3.0.1"
 }
