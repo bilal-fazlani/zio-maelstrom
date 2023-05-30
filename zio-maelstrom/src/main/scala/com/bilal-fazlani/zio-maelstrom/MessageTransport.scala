@@ -9,12 +9,11 @@ trait MessageTransport:
   def transport[A <: MessageBody: JsonEncoder](message: Message[A]): UIO[Unit]
 
 object MessageTransport:
-  val live: ZLayer[Debugger & Settings, Nothing, MessageTransportLive] = ZLayer.fromFunction(MessageTransportLive.apply)
+  val live: ZLayer[Logger & Settings, Nothing, MessageTransportLive] = ZLayer.fromFunction(MessageTransportLive.apply)
 
-case class MessageTransportLive(debugger: Debugger, settings: Settings) extends MessageTransport:
+case class MessageTransportLive(logger: Logger, settings: Settings) extends MessageTransport:
   def transport[A <: MessageBody: JsonEncoder](message: Message[A]): UIO[Unit] =
     import com.bilalfazlani.rainbowcli.*
     given colorContext: ColorContext = ColorContext(settings.enableColoredOutput)
-    (Console.printLine(message.toJson.bold) 
-      *> debugger.debugMessage(s"sent message: ${message.body} to ${message.destination}"))
-      .orDie
+    (Console.printLine(message.toJson.bold)
+      *> logger.info(s"sent message: ${message.body} to ${message.destination}")).orDie

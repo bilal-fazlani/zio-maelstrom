@@ -17,7 +17,7 @@ object Initializer:
 
   val live = ZLayer.fromFunction(InitializerLive.apply)
 
-case class InitializerLive(debugger: Debugger, transport: MessageTransport) extends Initializer:
+case class InitializerLive(logger: Logger, transport: MessageTransport) extends Initializer:
 
   def initialize[R](inputStream: ZStream[R, Nothing, String]): ZIO[R & Scope, Nothing, (Context, ZStream[Any, Nothing, GenericMessage])] =
     inputStream
@@ -40,7 +40,7 @@ case class InitializerLive(debugger: Debugger, transport: MessageTransport) exte
                   // this item is after init message,
                   // but it could be a valid json of generic message
                   // so we can only log a message and ignore it
-                  debugger.debugMessage(s"expected a valid input message message. recieved invalid input. error: $error, input: $str") *> ZIO.none
+                  logger.error(s"expected a valid input message message. recieved invalid input. error: $error, input: $str") *> ZIO.none
               }.collectSome)
             // if decoding failed, send an error message to sender and log error
             // because this was promised to be a init message, but was not,
@@ -52,7 +52,7 @@ case class InitializerLive(debugger: Debugger, transport: MessageTransport) exte
           // same case as above, but this time, we dont have a generic message
           // so we cant send an error message to sender
           // we will have to shut down the node
-          debugger.debugMessage(s"expected init message. recieved invalid input. error: $error, input: $input") *>
+          logger.error(s"expected init message. recieved invalid input. error: $error, input: $input") *>
             ZIO.die(new Exception("init message decoding failed"))
         case (None, _) =>
           // if we don't have a some yet, it means we didn't get any init message
@@ -63,16 +63,13 @@ case class InitializerLive(debugger: Debugger, transport: MessageTransport) exte
   private def handleInit(message: Message[MaelstromInit]) =
     val replyMessage: Message[MaelstromInitOk] = Message[MaelstromInitOk](message.destination, message.source, MaelstromInitOk(message.body.msg_id))
     for {
-      _ <- debugger.debugMessage(s"handling init message: $message")
+      _ <- logger.info(s"handling init message: $message")
       _ <- transport.transport(replyMessage)
-      _ <- debugger.debugMessage("initialised")
+      _ <- logger.info("initialised")
     } yield ()
 
   private def handleInitDecodingError(genericMessage: GenericMessage) =
-    debugger.debugMessage(s"could not decode init message $genericMessage") *>
+    logger.error(s"could not decode init message $genericMessage") *>
       genericMessage
         .makeError(StandardErrorCode.MalformedRequest, "init message is malformed")
         .fold(ZIO.unit)(transport.transport(_))
-
-  private def handleInitDecodingError(str: String) =
-    debugger.debugMessage(s"could not decode init message $str")

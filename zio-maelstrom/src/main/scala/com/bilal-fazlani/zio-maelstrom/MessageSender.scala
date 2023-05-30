@@ -15,9 +15,9 @@ trait MessageSender:
   def broadcastTo[A <: MessageBody: JsonEncoder](others: Seq[NodeId], body: A): UIO[Unit]
 
 object MessageSender:
-  val live: ZLayer[Debugger & Context & MessageTransport, Nothing, MessageSenderLive] = ZLayer.fromFunction(MessageSenderLive.apply)
+  val live: ZLayer[Context & MessageTransport, Nothing, MessageSenderLive] = ZLayer.fromFunction(MessageSenderLive.apply)
 
-case class MessageSenderLive(debugger: Debugger, context: Context, transporter: MessageTransport) extends MessageSender:
+case class MessageSenderLive(context: Context, transporter: MessageTransport) extends MessageSender:
   def send[A <: MessageBody: JsonEncoder](body: A, to: NodeId) =
     val message: Message[A] = Message[A](
       source = context.me,
