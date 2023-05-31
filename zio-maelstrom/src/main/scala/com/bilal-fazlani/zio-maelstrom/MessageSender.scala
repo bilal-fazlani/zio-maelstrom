@@ -29,6 +29,13 @@ object MessageSender:
   def send[A <: MessageBody: JsonEncoder](body: A, to: NodeId): URIO[MessageSender, Unit] =
     ZIO.serviceWithZIO[MessageSender](_.send(body, to))
 
+  def ask[I <: MessageWithId: JsonEncoder, O <: MessageWithReply: JsonDecoder](
+      body: I,
+      to: NodeId,
+      timeout: Duration
+  ): ZIO[MessageSender, ResponseError, O] =
+    ZIO.serviceWithZIO[MessageSender](_.ask(body, to, timeout))
+
   def reply[I <: MessageWithId, O <: MessageWithReply: JsonEncoder](message: Message[I], reply: O): URIO[MessageSender, Unit] =
     ZIO.serviceWithZIO[MessageSender](_.reply(message, reply))
 
