@@ -1,4 +1,5 @@
 - [ ] Separate init from receive messages
-- [ ] Ask pattern
 - [ ] Create documentation
 - [ ] Add more examples
+- [ ] Tests
+- [X] Ask pattern
