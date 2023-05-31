@@ -4,10 +4,10 @@ package protocol
 import zio.json.ast.Json
 import zio.json.JsonDecoder
 
-case class GenericDetails(
-    `type`: Option[String],
-    msg_id: Option[MessageId],
-    in_reply_to: Option[MessageId]
+private case class GenericDetails(
+    messageType: Option[String],
+    messageId: Option[MessageId],
+    inReplyTo: Option[MessageId]
 )
 
 extension (parent: Json)
@@ -16,7 +16,7 @@ extension (parent: Json)
   private def getChild[A: JsonDecoder](field: String): Either[String, A] =
     parent.asObject.flatMap(_.get(field)).fold(Left(s"missing field '$field'"))(json => JsonDecoder[A].fromJsonAST(json))
 
-object GenericDetails {
+private object GenericDetails {
   val empty = GenericDetails(None, None, None)
 
   given JsonDecoder[GenericDetails] = JsonDecoder[Json].mapOrFail[GenericDetails](ast =>
@@ -32,16 +32,18 @@ object GenericDetails {
 case class GenericMessage(
     src: NodeId,
     dest: NodeId,
-    details: GenericDetails,
+    messageType: Option[String],
+    messageId: Option[MessageId],
+    inReplyTo: Option[MessageId],
     body: Option[Json],
     raw: Json
 ):
-  def isOfType(tpe: String) = details.`type`.contains(tpe)
+  def isOfType(tpe: String) = messageType.contains(tpe)
 
-  def isResponse = details.in_reply_to.isDefined
+  def isResponse = inReplyTo.isDefined
 
   def makeError(code: ErrorCode, text: String): Option[Message[MaelstromError]] =
-    details.msg_id.map { msgid =>
+    messageId.map { msgid =>
       Message[MaelstromError](
         source = dest,
         destination = src,
@@ -61,7 +63,7 @@ object GenericMessage {
       dest <- obj.getChild[NodeId]("dest")
       body <- obj.getChildOptional[Json]("body")
       details <- body.fold(Right(GenericDetails.empty))(body => JsonDecoder[GenericDetails].fromJsonAST(body))
-    } yield GenericMessage(src, dest, details, body, ast)
+    } yield GenericMessage(src, dest, details.messageType, details.messageId, details.inReplyTo, body, ast)
   )
 }
 

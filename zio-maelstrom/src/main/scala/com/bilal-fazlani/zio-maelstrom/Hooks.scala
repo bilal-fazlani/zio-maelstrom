@@ -3,17 +3,15 @@ package com.bilalfazlani.zioMaelstrom
 import zio.*
 import protocol.*
 import zio.concurrent.ConcurrentMap
-import zio.json.JsonEncoder
-import zio.json.JsonDecoder
 
 trait Hooks:
-  def awaitMessage[A <: MessageWithReply: JsonDecoder](
+  def awaitMessage(
       messageId: MessageId,
       remote: NodeId,
       timeout: Duration
-  ): IO[ResponseError, Message[A]]
+  ): IO[ResponseError, GenericMessage]
 
-  def complete[I <: MessageWithReply: JsonDecoder](message: GenericMessage): ZIO[Any, Nothing, Unit]
+  def complete(message: GenericMessage): ZIO[Any, Nothing, Unit]
 
 object Hooks:
   val live: ZLayer[Any, Nothing, HooksLive] = {
@@ -25,24 +23,21 @@ private case class MessageCorrelation(messageId: MessageId, remote: NodeId)
 
 case class HooksLive(hooks: ConcurrentMap[MessageCorrelation, Promise[ResponseError, GenericMessage]]) extends Hooks:
 
-  def awaitMessage[A <: MessageWithReply: JsonDecoder](messageId: MessageId, remote: NodeId, timeout: Duration): IO[ResponseError, Message[A]] =
+  def awaitMessage(messageId: MessageId, remote: NodeId, timeout: Duration): IO[ResponseError, GenericMessage] =
     for {
       promise <- Promise.make[ResponseError, GenericMessage]
       _ <- suspend(messageId, remote, promise, timeout)
       genericMessage <- promise.await
-      responseMessage <- ZIO
-        .fromEither(JsonDecoder[Message[A]].fromJsonAST(genericMessage.raw))
-        .mapError(e => ResponseError.DecodingError(e, genericMessage))
-    } yield responseMessage
+    } yield genericMessage
 
-  def complete[I <: MessageWithReply: JsonDecoder](message: GenericMessage): ZIO[Any, Nothing, Unit] =
+  def complete(message: GenericMessage): ZIO[Any, Nothing, Unit] =
     // .get is used here because we know that the message is a reply
-    val correlation = MessageCorrelation(message.details.in_reply_to.get, message.src)
+    val correlation = MessageCorrelation(message.inReplyTo.get, message.src)
     for {
       promise <- hooks.remove(correlation)
       _ <- promise match {
-        case Some(p) => p.succeed(message) as Some(message)
-        case None    => ZIO.succeed(None)
+        case Some(p) => p.succeed(message).unit
+        case None    => ZIO.unit
       }
     } yield ()
 

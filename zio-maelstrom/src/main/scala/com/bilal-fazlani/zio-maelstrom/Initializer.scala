@@ -65,5 +65,4 @@ case class InitializerLive(logger: Logger, transport: MessageTransport) extends 
         .fold(ZIO.unit)(transport.transport(_))
 
   private def splitStream(messageStream: MessageStream): ZIO[Scope, Nothing, Inputs] =
-    def isResponse(message: GenericMessage) = message.details.in_reply_to.isDefined
-    messageStream.partition(isResponse, 1024).map(inputs => Inputs(inputs._1, inputs._2))
+    messageStream.partition(_.isResponse, 1024).map(inputs => Inputs(inputs._1, inputs._2))

@@ -52,7 +52,11 @@ case class MessageSenderLive(context: Context, transport: MessageTransport, hook
       to: NodeId,
       timeout: Duration
   ): IO[ResponseError, O] =
-    send(body, to).flatMap(_ => hooks.awaitMessage(body.msg_id, to, timeout).map(_.body))
+    for {
+      _ <- send(body, to)
+      response <- hooks.awaitMessage(body.msg_id, to, timeout)
+      decoded <- ZIO.fromEither(JsonDecoder[Message[O]].fromJsonAST(response.raw)).mapError(e => ResponseError.DecodingError(e, response))
+    } yield decoded.body
 
   def reply[I <: MessageWithId, O <: MessageWithReply: JsonEncoder](message: Message[I], reply: O): UIO[Unit] =
     send(reply, message.source)

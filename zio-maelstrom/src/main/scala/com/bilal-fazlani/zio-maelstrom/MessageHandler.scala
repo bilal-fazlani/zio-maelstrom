@@ -4,7 +4,7 @@ import protocol.*
 import zio.*
 import zio.json.JsonDecoder
 
-object MessageHandler: // extends MessageHandler:
+object MessageHandler:
   def handle[R: Tag, I <: MessageBody: JsonDecoder](
       messageStream: MessageStream,
       app: MaelstromAppR[R, I]
@@ -24,7 +24,7 @@ object MessageHandler: // extends MessageHandler:
   private case class InvalidInput(input: GenericMessage, error: String)
 
   private def handleInvalidInput(invalidInput: InvalidInput): ZIO[Logger & MessageSender, Nothing, Unit] =
-    val maybeResponse: Option[MaelstromError] = invalidInput.input.details.msg_id.map { msgId =>
+    val maybeResponse: Option[MaelstromError] = invalidInput.input.messageId.map { msgId =>
       val errorCode = StandardErrorCode.MalformedRequest
       MaelstromError(
         in_reply_to = msgId,

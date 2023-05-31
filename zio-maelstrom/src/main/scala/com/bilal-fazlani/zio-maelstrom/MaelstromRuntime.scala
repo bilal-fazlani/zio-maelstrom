@@ -5,7 +5,6 @@ import protocol.MessageBody
 import zio.json.JsonDecoder
 import protocol.*
 import zio.stream.*
-import com.bilalfazlani.zioMaelstrom.MessageHandler
 
 private type MessageStream = ZStream[Any, Nothing, GenericMessage]
 
@@ -24,19 +23,21 @@ object MaelstromRuntime:
       val messageSenderLayer = (contextLayer ++ messageTransportLayer ++ hooksLayer) >>> MessageSender.live
       messageSenderLayer ++ contextLayer
     }
-    def responseHandlerLayers = {
-      loggerLayer >>> ResponseHandler.live
-    }
+    def responseHandlerLayers = (loggerLayer ++ hooksLayer) >>> ResponseHandler.live
 
     ZIO
       .scoped(for {
         inputs <- MessageTransport.readInput
         initResult <- Initializer.initialize(inputs)
         InitResult(context, Inputs(responseStream, messageStream)) = initResult
-        _ <- 
-            MessageHandler.handle(messageStream, app)
-              .provideSomeLayer[R & Settings & Logger & MessageTransport](messageHandlerLayers(context))
-              .race(ResponseHandler.handle(responseStream)
-              .provideSomeLayer[Settings](responseHandlerLayers))
+        _ <-
+          MessageHandler
+            .handle(messageStream, app)
+            .provideSomeLayer[R & Settings & Logger & MessageTransport](messageHandlerLayers(context))
+            .race(
+              ResponseHandler
+                .handle(responseStream)
+                .provideSomeLayer[Settings](responseHandlerLayers)
+            )
       } yield ())
       .provideSomeLayer[R & Settings](Logger.live ++ (Logger.live >>> MessageTransport.live) ++ initializerLayer)
