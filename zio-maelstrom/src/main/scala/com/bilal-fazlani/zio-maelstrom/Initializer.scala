@@ -10,50 +10,33 @@ case class Inputs(
     responseStream: MessageStream,
     messageStream: MessageStream
 )
+
 case class InitResult(context: Context, inputs: Inputs)
 
 trait Initializer:
-  def initialize[R](inputStream: ZStream[R, Nothing, String]): ZIO[R & Scope, Nothing, InitResult]
+  def initialize[R](inputs: Inputs): ZIO[R & Scope, Nothing, InitResult]
 
 object Initializer:
   def initialize[R](
-      inputStream: ZStream[R, Nothing, String]
+      inputs: Inputs
   ): ZIO[R & Scope & Initializer, Nothing, InitResult] =
-    ZIO.serviceWithZIO[Initializer](_.initialize(inputStream))
+    ZIO.serviceWithZIO[Initializer](_.initialize(inputs))
 
   val live: ZLayer[Logger & MessageTransport, Nothing, Initializer] = ZLayer.fromFunction(InitializerLive.apply)
 
 case class InitializerLive(logger: Logger, transport: MessageTransport) extends Initializer:
 
-  def initialize[R](inputStream: ZStream[R, Nothing, String]): ZIO[R & Scope, Nothing, InitResult] =
-    inputStream
-      .map(str => (str, JsonDecoder[GenericMessage].decodeJson(str)))
-      .map[(String, Either[String, GenericMessage], Boolean)] {
-        case (str, Right(genericMessage)) => (str, Right(genericMessage), genericMessage isOfType "init")
-        case (str, Left(error))           => (str, Left(error), false)
-      }
+  def initialize[R](inputs: Inputs): ZIO[R & Scope, Nothing, InitResult] =
+    inputs.messageStream
       .peel(ZSink.head)
       .flatMap {
         // happy case: found init message
-        case (Some(input, Right(genericMessage), _), remainder) =>
-          val initMessage = JsonDecoder[Message[MaelstromInit]].decodeJson(input)
+        case (Some(genericMessage), remainder) =>
+          val initMessage = JsonDecoder[Message[MaelstromInit]].fromJsonAST(genericMessage.raw)
           initMessage match
             // when decoded, send it to init handler
             case Right(initMessage) =>
-              (handleInit(initMessage) as (Context(initMessage), remainder.collectZIO {
-                case (_, Right(genericMessage), _) =>
-                  ZIO.succeed(Some(genericMessage))
-                case (str, Left(error), _) =>
-                  // this item is after init message,
-                  // but it should be a valid json of generic message
-                  // so we can only log a message and ignore it
-                  logger.error(s"expected a valid input message message. recieved invalid input. error: $error, input: $str")
-                    *> ZIO.none
-              }.collectSome))
-                .flatMap((context, messageStream) =>
-                  splitStream(messageStream)
-                    .map(inputs => InitResult(context, inputs))
-                )
+              handleInit(initMessage) as InitResult(Context(initMessage), Inputs(inputs.responseStream, remainder))
 
             // if decoding failed, send an error message to sender and log error
             // because this was promised to be a init message, but was not,
@@ -61,12 +44,6 @@ case class InitializerLive(logger: Logger, transport: MessageTransport) extends 
             case Left(error) =>
               handleInitDecodingError(genericMessage) *>
                 ZIO.die(new Exception("init message decoding failed"))
-        case (Some(input, Left(error), _), messageStream) =>
-          // same case as above, but this time, we dont have a generic message
-          // so we cant send an error message to sender
-          // we will have to shut down the node
-          logger.error(s"expected init message. recieved invalid input. error: $error, input: $input") *>
-            ZIO.die(new Exception("init message decoding failed"))
         case (None, _) =>
           // if we don't have a some yet, it means we didn't get any init message
           // since we can't proceed without init message, its safe to fail the program

@@ -5,22 +5,36 @@ import protocol.*
 import zio.json.{JsonEncoder, EncoderOps}
 import zio.stream.{ZStream, ZPipeline}
 import com.bilalfazlani.rainbowcli.*
+import zio.json.JsonDecoder
 
 trait MessageTransport:
   def transport[A <: MessageBody: JsonEncoder](message: Message[A]): UIO[Unit]
-  val readInput: ZStream[Settings, Nothing, String]
+  val readInput: ZIO[Scope, Nothing, Inputs]
 
 object MessageTransport:
   val live: ZLayer[Logger & Settings, Nothing, MessageTransportLive] = ZLayer.fromFunction(MessageTransportLive.apply)
 
-  val readInput = ZStream.serviceWithStream[MessageTransport](_.readInput)
+  val readInput = ZIO.serviceWithZIO[MessageTransport](_.readInput)
 
 case class MessageTransportLive(logger: Logger, settings: Settings) extends MessageTransport:
-  val readInput = ZStream
+  private given ColorContext = ColorContext(settings.enableColoredOutput)
+  
+  case class InvalidInput(input: String, error: String)
+
+  val readInput = strings
+    .map(str => JsonDecoder[GenericMessage].decodeJson(str).left.map(e => InvalidInput(str, e)))
+    .tap{
+      case Left(errorMessage) => logger.error(s"could not read `${errorMessage.input}`, error: ${errorMessage.error}")
+      case Right(genericMessage) => ZIO.unit
+    }
+    .collectRight
+    .partition(_.isResponse, 1024)
+    .map(x => Inputs(x._1, x._2))
+
+  private val strings = 
+    val nodeInput = settings.nodeInput
+    ZStream
     .unwrap(for {
-      settings <- ZIO.service[Settings]
-      given ColorContext = ColorContext(settings.enableColoredOutput)
-      nodeInput = settings.nodeInput
       _ <- logger.info(s"using $nodeInput")
       strm = (nodeInput match {
         case NodeInput.StdIn          => ZStream.fromInputStream(java.lang.System.in).via(ZPipeline.utfDecode)

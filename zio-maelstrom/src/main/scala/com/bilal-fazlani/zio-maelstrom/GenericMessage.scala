@@ -38,6 +38,8 @@ case class GenericMessage(
 ):
   def isOfType(tpe: String) = details.`type`.contains(tpe)
 
+  def isResponse = details.in_reply_to.isDefined
+
   def makeError(code: ErrorCode, text: String): Option[Message[MaelstromError]] =
     details.msg_id.map { msgid =>
       Message[MaelstromError](

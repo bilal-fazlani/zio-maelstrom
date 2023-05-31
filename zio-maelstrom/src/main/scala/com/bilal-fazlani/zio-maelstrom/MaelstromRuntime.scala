@@ -29,7 +29,8 @@ object MaelstromRuntime:
 
     ZIO
       .scoped(for {
-        initResult <- Initializer.initialize(MessageTransport.readInput)
+        inputs <- MessageTransport.readInput
+        initResult <- Initializer.initialize(inputs)
         InitResult(context, Inputs(responseStream, messageStream)) = initResult
         _ <- 
             MessageHandler.handle(messageStream, app)
