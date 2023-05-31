@@ -18,17 +18,23 @@ object MaelstromRuntime:
     val loggerLayer = Logger.live
     val messageTransportLayer = loggerLayer >>> MessageTransport.live
     val initializerLayer = (loggerLayer ++ messageTransportLayer) >>> Initializer.live
-    def layers(context: Context) = {
+    def messageHandlerLayers(context: Context) = {
       val contextLayer = ZLayer.succeed(context)
       val messageSenderLayer = (contextLayer ++ messageTransportLayer) >>> MessageSender.live
       messageSenderLayer ++ contextLayer
+    }
+    def responseHandlerLayers = {
+      loggerLayer >>> ResponseHandler.live
     }
 
     ZIO
       .scoped(for {
         initResult <- Initializer.initialize(MessageTransport.readInput)
-        remainder = initResult._2
-        context = initResult._1
-        _ <- MessageHandler.handle(remainder, app).provideSomeLayer[R & Settings & Logger & MessageTransport](layers(context))
+        InitResult(context, Inputs(responseStream, messageStream)) = initResult
+        _ <- 
+            MessageHandler.handle(messageStream, app)
+              .provideSomeLayer[R & Settings & Logger & MessageTransport](messageHandlerLayers(context))
+              .race(ResponseHandler.handle(responseStream)
+              .provideSomeLayer[Settings](responseHandlerLayers))
       } yield ())
       .provideSomeLayer[R & Settings](Logger.live ++ (Logger.live >>> MessageTransport.live) ++ initializerLayer)

@@ -1,12 +1,21 @@
 package com.bilalfazlani.zioMaelstrom
 
 import protocol.*
-import zio.json.JsonEncoder
 import zio.*
-import zio.json.EncoderOps
+import zio.json.{EncoderOps, JsonEncoder, JsonDecoder}
+
+enum ResponseError:
+  case MessageTimeoutError(messageId: MessageId, remote: NodeId, timeout: Duration)
+  case DecodingError(error: String, message: GenericMessage)
 
 trait MessageSender:
   def send[A <: MessageBody: JsonEncoder](body: A, to: NodeId): UIO[Unit]
+
+  def ask[I <: MessageWithId: JsonEncoder, O <: MessageWithReply: JsonDecoder](
+      body: I,
+      to: NodeId,
+      timeout: Duration
+  ): IO[ResponseError, O]
 
   def reply[I <: MessageWithId, O <: MessageWithReply: JsonEncoder](message: Message[I], reply: O): UIO[Unit]
 
@@ -37,6 +46,19 @@ case class MessageSenderLive(context: Context, transporter: MessageTransport) ex
       body = body
     )
     transporter.transport(message)
+
+  def ask[I <: MessageWithId: JsonEncoder, O <: MessageWithReply: JsonDecoder](
+      body: I,
+      to: NodeId,
+      timeout: Duration
+  ): IO[ResponseError, O] =
+    val message: Message[I] = Message[I](
+      source = context.me,
+      destination = to,
+      body = body
+    )
+    // transporter.awaitMessage(body.msg_id, to, timeout)
+    ???
 
   def reply[I <: MessageWithId, O <: MessageWithReply: JsonEncoder](message: Message[I], reply: O): UIO[Unit] =
     send(reply, message.source)

@@ -1,17 +1,17 @@
 package com.bilalfazlani.zioMaelstrom
 
 import protocol.*
-import zio.ZIO
-import zio.Tag
+import zio.*
 import zio.json.JsonDecoder
 
-object MessageHandler:
+object MessageHandler: // extends MessageHandler:
   def handle[R: Tag, I <: MessageBody: JsonDecoder](
       messageStream: MessageStream,
       app: MaelstromAppR[R, I]
   ): ZIO[Context & MessageSender & Logger & R, Nothing, Unit] =
     messageStream
-      .mapZIO(genericMessage =>
+      // process messages in parallel
+      .mapZIOPar(1024)(genericMessage =>
         ZIO
           .fromEither(GenericDecoder[I].decode(genericMessage))
           .tap(message => Logger.info(s"received ${message.body} from ${message.source}"))

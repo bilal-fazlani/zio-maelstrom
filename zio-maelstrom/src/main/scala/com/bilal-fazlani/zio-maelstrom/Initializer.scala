@@ -6,20 +6,26 @@ import zio.stream.{ZStream, ZSink}
 import zio.json.JsonDecoder
 import zio.stream.ZPipeline
 
+case class Inputs(
+    responseStream: MessageStream,
+    messageStream: MessageStream
+)
+case class InitResult(context: Context, inputs: Inputs)
+
 trait Initializer:
-  def initialize[R](inputStream: ZStream[R, Nothing, String]): ZIO[R & Scope, Nothing, (Context, MessageStream)]
+  def initialize[R](inputStream: ZStream[R, Nothing, String]): ZIO[R & Scope, Nothing, InitResult]
 
 object Initializer:
   def initialize[R](
       inputStream: ZStream[R, Nothing, String]
-  ): ZIO[R & Scope & Initializer, Nothing, (Context, MessageStream)] =
+  ): ZIO[R & Scope & Initializer, Nothing, InitResult] =
     ZIO.serviceWithZIO[Initializer](_.initialize(inputStream))
 
-  val live = ZLayer.fromFunction(InitializerLive.apply)
+  val live: ZLayer[Logger & MessageTransport, Nothing, Initializer] = ZLayer.fromFunction(InitializerLive.apply)
 
 case class InitializerLive(logger: Logger, transport: MessageTransport) extends Initializer:
 
-  def initialize[R](inputStream: ZStream[R, Nothing, String]): ZIO[R & Scope, Nothing, (Context, MessageStream)] =
+  def initialize[R](inputStream: ZStream[R, Nothing, String]): ZIO[R & Scope, Nothing, InitResult] =
     inputStream
       .map(str => (str, JsonDecoder[GenericMessage].decodeJson(str)))
       .map[(String, Either[String, GenericMessage], Boolean)] {
@@ -34,21 +40,28 @@ case class InitializerLive(logger: Logger, transport: MessageTransport) extends 
           initMessage match
             // when decoded, send it to init handler
             case Right(initMessage) =>
-              handleInit(initMessage) as (Context(initMessage), remainder.collectZIO {
-                case (_, Right(genericMessage), _) => ZIO.succeed(Some(genericMessage))
-                case (str, Left(error), _)         =>
+              (handleInit(initMessage) as (Context(initMessage), remainder.collectZIO {
+                case (_, Right(genericMessage), _) =>
+                  ZIO.succeed(Some(genericMessage))
+                case (str, Left(error), _) =>
                   // this item is after init message,
-                  // but it could be a valid json of generic message
+                  // but it should be a valid json of generic message
                   // so we can only log a message and ignore it
-                  logger.error(s"expected a valid input message message. recieved invalid input. error: $error, input: $str") *> ZIO.none
-              }.collectSome)
+                  logger.error(s"expected a valid input message message. recieved invalid input. error: $error, input: $str")
+                    *> ZIO.none
+              }.collectSome))
+                .flatMap((context, messageStream) =>
+                  splitStream(messageStream)
+                    .map(inputs => InitResult(context, inputs))
+                )
+
             // if decoding failed, send an error message to sender and log error
             // because this was promised to be a init message, but was not,
             // we will have to shut down the node
             case Left(error) =>
               handleInitDecodingError(genericMessage) *>
                 ZIO.die(new Exception("init message decoding failed"))
-        case (Some(input, Left(error), _), remainder) =>
+        case (Some(input, Left(error), _), messageStream) =>
           // same case as above, but this time, we dont have a generic message
           // so we cant send an error message to sender
           // we will have to shut down the node
@@ -73,3 +86,7 @@ case class InitializerLive(logger: Logger, transport: MessageTransport) extends 
       genericMessage
         .makeError(StandardErrorCode.MalformedRequest, "init message is malformed")
         .fold(ZIO.unit)(transport.transport(_))
+
+  private def splitStream(messageStream: MessageStream): ZIO[Scope, Nothing, Inputs] =
+    def isResponse(message: GenericMessage) = message.details.in_reply_to.isDefined
+    messageStream.partition(isResponse, 1024).map(inputs => Inputs(inputs._1, inputs._2))

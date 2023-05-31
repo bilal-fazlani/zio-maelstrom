@@ -1,12 +1,13 @@
 import sbtwelcome._
 import scala.sys.process._
 
-val scala3Version = "3.2.2"
+val scala3Version = "3.3.0"
 
 ThisBuild / resolvers ++= Resolver.sonatypeOssRepos("snapshots")
 
 ThisBuild / scalaVersion := scala3Version
 ThisBuild / organization := "com.bilal-fazlani"
+
 
 logo :=
   raw"""
@@ -62,7 +63,8 @@ lazy val root = project
   .in(file("."))
   .settings(
     name := "zio-maelstrom-root",
-    publish / skip := true
+    publish / skip := true,
+    scalacOptions += "-Wunused:all"
   )
   .aggregate(maelstrom, echo, uniqueIds)
 
@@ -72,6 +74,7 @@ lazy val maelstrom = project
     name := "zio-maelstrom",
     libraryDependencies ++= Seq(
       Libs.zio,
+      Libs.zioConcurrent,
       Libs.rainbowCli,
       Libs.zioStreams,
       Libs.zioJson,

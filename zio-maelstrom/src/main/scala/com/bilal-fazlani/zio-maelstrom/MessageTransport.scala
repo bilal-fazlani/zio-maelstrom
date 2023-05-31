@@ -1,11 +1,9 @@
 package com.bilalfazlani.zioMaelstrom
 
-import protocol.*
-import zio.json.JsonEncoder
-import zio.json.EncoderOps
 import zio.*
-import zio.stream.ZStream
-import zio.stream.ZPipeline
+import protocol.*
+import zio.json.{JsonEncoder, EncoderOps}
+import zio.stream.{ZStream, ZPipeline}
 import com.bilalfazlani.rainbowcli.*
 
 trait MessageTransport:
