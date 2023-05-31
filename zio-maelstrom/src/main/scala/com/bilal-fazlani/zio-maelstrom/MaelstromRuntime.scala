@@ -16,11 +16,12 @@ object MaelstromRuntime:
   ): ZIO[R & Settings, Nothing, Unit] =
 
     val loggerLayer = Logger.live
+    val hooksLayer = Hooks.live
     val messageTransportLayer = loggerLayer >>> MessageTransport.live
     val initializerLayer = (loggerLayer ++ messageTransportLayer) >>> Initializer.live
     def messageHandlerLayers(context: Context) = {
       val contextLayer = ZLayer.succeed(context)
-      val messageSenderLayer = (contextLayer ++ messageTransportLayer) >>> MessageSender.live
+      val messageSenderLayer = (contextLayer ++ messageTransportLayer ++ hooksLayer) >>> MessageSender.live
       messageSenderLayer ++ contextLayer
     }
     def responseHandlerLayers = {

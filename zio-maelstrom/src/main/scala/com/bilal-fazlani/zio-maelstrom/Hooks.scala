@@ -4,63 +4,56 @@ import zio.*
 import protocol.*
 import zio.concurrent.ConcurrentMap
 import zio.json.JsonEncoder
+import zio.json.JsonDecoder
 
-opaque type Hooks = ConcurrentMap[MessageCorrelation, Promise[ResponseError, Message[?]]]
-
-object Hooks:
-  val apply: UIO[Hooks] = ConcurrentMap.empty[MessageId, Promise[ResponseError, Message[?]]].asInstanceOf
-  val live: ZLayer[Any, Nothing, Hooks] = ZLayer.fromZIO(apply)
-
-  def awaitMessage[A <: MessageWithReply: JsonEncoder](
-      messageId: MessageId,
-      from: NodeId,
-      timeout: Duration
-  ): ZIO[Hooks, ResponseError, Message[A]] =
-    ZIO.serviceWithZIO[Hooks](_.awaitMessage(messageId, from, timeout))
-
-  def add[I <: MessageWithReply](
+trait Hooks:
+  def awaitMessage[A <: MessageWithReply: JsonDecoder](
       messageId: MessageId,
       remote: NodeId,
-      promise: Promise[ResponseError, Message[I]],
-      messageTimeout: Duration
-  ): ZIO[Hooks, Nothing, Unit] =
-    ZIO.serviceWithZIO[Hooks](_.add(messageId, remote, promise, messageTimeout))
+      timeout: Duration
+  ): IO[ResponseError, Message[A]]
 
-  def success[I <: MessageWithReply](message: Message[I]): ZIO[Hooks, Nothing, Option[Message[I]]] =
-    ZIO.serviceWithZIO[Hooks](_.success(message))
+  def complete[I <: MessageWithReply: JsonDecoder](message: GenericMessage): ZIO[Any, Nothing, Unit]
+
+object Hooks:
+  val live: ZLayer[Any, Nothing, HooksLive] = {
+    val hooks = ZLayer.fromZIO(ConcurrentMap.empty[MessageCorrelation, Promise[ResponseError, GenericMessage]])
+    hooks >>> ZLayer.fromFunction(HooksLive.apply)
+  }
 
 private case class MessageCorrelation(messageId: MessageId, remote: NodeId)
 
-extension (hooks: Hooks)
-  def awaitMessage[A <: MessageWithReply: JsonEncoder](
-      messageId: MessageId,
-      from: NodeId,
-      timeout: Duration
-  ): IO[ResponseError, Message[A]] =
+case class HooksLive(hooks: ConcurrentMap[MessageCorrelation, Promise[ResponseError, GenericMessage]]) extends Hooks:
+
+  def awaitMessage[A <: MessageWithReply: JsonDecoder](messageId: MessageId, remote: NodeId, timeout: Duration): IO[ResponseError, Message[A]] =
     for {
-      promise <- Promise.make[ResponseError, Message[A]]
-      _ <- hooks.add(messageId, from, promise, timeout)
-      responseMessage <- promise.await
+      promise <- Promise.make[ResponseError, GenericMessage]
+      _ <- suspend(messageId, remote, promise, timeout)
+      genericMessage <- promise.await
+      responseMessage <- ZIO
+        .fromEither(JsonDecoder[Message[A]].fromJsonAST(genericMessage.raw))
+        .mapError(e => ResponseError.DecodingError(e, genericMessage))
     } yield responseMessage
 
-  def add[I <: MessageWithReply](
+  def complete[I <: MessageWithReply: JsonDecoder](message: GenericMessage): ZIO[Any, Nothing, Unit] =
+    // .get is used here because we know that the message is a reply
+    val correlation = MessageCorrelation(message.details.in_reply_to.get, message.src)
+    for {
+      promise <- hooks.remove(correlation)
+      _ <- promise match {
+        case Some(p) => p.succeed(message) as Some(message)
+        case None    => ZIO.succeed(None)
+      }
+    } yield ()
+
+  private def suspend[I <: MessageWithReply](
       messageId: MessageId,
       remote: NodeId,
-      promise: Promise[ResponseError, Message[I]],
+      promise: Promise[ResponseError, GenericMessage],
       messageTimeout: Duration
   ): UIO[Unit] =
     val correlation = MessageCorrelation(messageId, remote)
     hooks.put(correlation, promise.asInstanceOf).unit *> (timeout(correlation, messageTimeout).delay(messageTimeout))
-
-  def success[I <: MessageWithReply](message: Message[I]): UIO[Option[Message[I]]] =
-    val correlation = MessageCorrelation(message.body.in_reply_to, message.source)
-    for {
-      promise <- hooks.remove(correlation)
-      reponseMaybe <- promise match {
-        case Some(p) => p.succeed(message) as Some(message)
-        case None    => ZIO.succeed(None)
-      }
-    } yield reponseMaybe
 
   private def timeout(correlation: MessageCorrelation, timeout: Duration) =
     for {

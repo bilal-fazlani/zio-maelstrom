@@ -24,7 +24,7 @@ trait MessageSender:
   def broadcastTo[A <: MessageBody: JsonEncoder](others: Seq[NodeId], body: A): UIO[Unit]
 
 object MessageSender:
-  val live: ZLayer[Context & MessageTransport, Nothing, MessageSenderLive] = ZLayer.fromFunction(MessageSenderLive.apply)
+  val live: ZLayer[Context & MessageTransport & Hooks, Nothing, MessageSenderLive] = ZLayer.fromFunction(MessageSenderLive.apply)
 
   def send[A <: MessageBody: JsonEncoder](body: A, to: NodeId): URIO[MessageSender, Unit] =
     ZIO.serviceWithZIO[MessageSender](_.send(body, to))
@@ -38,27 +38,21 @@ object MessageSender:
   def broadcastTo[A <: MessageBody: JsonEncoder](others: Seq[NodeId], body: A): URIO[MessageSender, Unit] =
     ZIO.serviceWithZIO[MessageSender](_.broadcastTo(others, body))
 
-case class MessageSenderLive(context: Context, transporter: MessageTransport) extends MessageSender:
+case class MessageSenderLive(context: Context, transport: MessageTransport, hooks: Hooks) extends MessageSender:
   def send[A <: MessageBody: JsonEncoder](body: A, to: NodeId) =
     val message: Message[A] = Message[A](
       source = context.me,
       destination = to,
       body = body
     )
-    transporter.transport(message)
+    transport.transport(message)
 
   def ask[I <: MessageWithId: JsonEncoder, O <: MessageWithReply: JsonDecoder](
       body: I,
       to: NodeId,
       timeout: Duration
   ): IO[ResponseError, O] =
-    val message: Message[I] = Message[I](
-      source = context.me,
-      destination = to,
-      body = body
-    )
-    // transporter.awaitMessage(body.msg_id, to, timeout)
-    ???
+    send(body, to).flatMap(_ => hooks.awaitMessage(body.msg_id, to, timeout).map(_.body))
 
   def reply[I <: MessageWithId, O <: MessageWithReply: JsonEncoder](message: Message[I], reply: O): UIO[Unit] =
     send(reply, message.source)
