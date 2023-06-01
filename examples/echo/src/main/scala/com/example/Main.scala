@@ -5,16 +5,22 @@ import zio.*
 import com.bilalfazlani.zioMaelstrom.protocol.*
 import com.bilalfazlani.zioMaelstrom.*
 
+//------ echo -------
+
 case class Echo(echo: String, msg_id: MessageId, `type`: String) extends MessageWithId derives JsonDecoder
+
 case class EchoOk(echo: String, in_reply_to: MessageId, `type`: String = "echo_ok") extends MessageWithReply derives JsonEncoder
 
 object Main extends ZIOAppDefault:
-  val handler = receive[Echo](src ?=> { msg => msg reply EchoOk(echo = msg.echo, in_reply_to = msg.msg_id) })
+  val handler = receive[Echo] { msg =>
+    msg reply EchoOk(echo = msg.echo, in_reply_to = msg.msg_id)
+  }
+
   val run = handler.provideSome[Scope](MaelstromRuntime.live)
 
 //------ ping pong -------
 
-case class Ping(msg_id: MessageId, `type`: String = "ping") extends MessageWithId derives JsonEncoder
+case class Ping(msg_id: MessageId, `type`: String = "ping")      extends MessageWithId derives JsonEncoder
 case class Pong(in_reply_to: MessageId, `type`: String = "pong") extends MessageWithReply derives JsonDecoder
 
 object PingPong extends ZIOAppDefault:
@@ -42,9 +48,7 @@ case class AddOk(result: Int, in_reply_to: MessageId, `type`: String = "add_ok")
 case class SubtractOk(result: Int, in_reply_to: MessageId, `type`: String = "subtract_ok") extends MessageWithReply derives JsonEncoder
 
 object Calculator extends ZIOAppDefault:
-  val handler = receive[CalculatorMessage] {
+  val run = receive[CalculatorMessage] {
     case add: Add           => add reply AddOk(add.a + add.b, add.msg_id)
     case subtract: Subtract => subtract reply SubtractOk(subtract.a - subtract.b, subtract.msg_id)
-  }
-
-  val run = handler.provideSome[Scope](MaelstromRuntime.live)
+  }.provideSome[Scope](MaelstromRuntime.live)

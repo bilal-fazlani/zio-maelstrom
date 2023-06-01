@@ -11,11 +11,11 @@ trait MessageTransport:
   def transport[A <: MessageBody: JsonEncoder](message: Message[A]): UIO[Unit]
   def readInputs: ZIO[Scope, Nothing, Inputs]
 
-object MessageTransport:
+private[zioMaelstrom] object MessageTransport:
   val live: ZLayer[Logger & Settings, Nothing, MessageTransportLive] = ZLayer.fromFunction(MessageTransportLive.apply)
   val readInputs = ZIO.serviceWithZIO[MessageTransport](_.readInputs)
 
-case class MessageTransportLive(logger: Logger, settings: Settings) extends MessageTransport:
+private case class MessageTransportLive(logger: Logger, settings: Settings) extends MessageTransport:
   private given ColorContext = ColorContext(settings.enableColoredOutput)
 
   case class InvalidInput(input: String, error: String)

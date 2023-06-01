@@ -2,7 +2,6 @@ package com.bilalfazlani.zioMaelstrom
 package protocol
 
 import zio.json.*
-import zio.json.ast.Json
 import scala.annotation.targetName
 
 case class Message[+Body <: MessageBody](
@@ -71,8 +70,8 @@ opaque type NodeId = String
 
 object NodeId:
   def apply(id: String): NodeId = id
-  given JsonEncoder[NodeId] = JsonEncoder.string.contramap(identity)
-  given JsonDecoder[NodeId] = JsonDecoder.string.map(NodeId(_))
+  given JsonEncoder[NodeId]     = JsonEncoder.string.contramap(identity)
+  given JsonDecoder[NodeId]     = JsonDecoder.string.map(NodeId(_))
 
 opaque type MessageSource = NodeId
 
@@ -83,14 +82,14 @@ extension (s: MessageSource)
 object MessageSource:
   @targetName("messageSourceFromNodeId")
   def apply(id: NodeId): MessageSource = id
-  given JsonEncoder[MessageSource] = JsonEncoder.string.contramap(identity)
-  given JsonDecoder[MessageSource] = JsonDecoder.string.map(MessageSource(_))
+  given JsonEncoder[MessageSource]     = JsonEncoder.string.contramap(identity)
+  given JsonDecoder[MessageSource]     = JsonDecoder.string.map(MessageSource(_))
 
 opaque type MessageId = Int
 object MessageId:
   def apply(id: Int): MessageId = id
-  given JsonEncoder[MessageId] = JsonEncoder.int.contramap(identity)
-  given JsonDecoder[MessageId] = JsonDecoder.int.map(MessageId(_))
+  given JsonEncoder[MessageId]  = JsonEncoder.int.contramap(identity)
+  given JsonDecoder[MessageId]  = JsonDecoder.int.map(MessageId(_))
 
 sealed trait ErrorCode(val code: Int, val definite: Boolean)
 

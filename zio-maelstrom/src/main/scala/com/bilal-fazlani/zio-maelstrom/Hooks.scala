@@ -13,7 +13,7 @@ trait Hooks:
 
   def complete(message: GenericMessage): ZIO[Any, Nothing, Unit]
 
-object Hooks:
+private[zioMaelstrom] object Hooks:
   val live: ZLayer[Any, Nothing, HooksLive] = {
     val hooks = ZLayer.fromZIO(ConcurrentMap.empty[MessageCorrelation, Promise[ResponseError, GenericMessage]])
     hooks >>> ZLayer.fromFunction(HooksLive.apply)
@@ -21,7 +21,7 @@ object Hooks:
 
 private case class MessageCorrelation(messageId: MessageId, remote: NodeId)
 
-case class HooksLive(hooks: ConcurrentMap[MessageCorrelation, Promise[ResponseError, GenericMessage]]) extends Hooks:
+private case class HooksLive(hooks: ConcurrentMap[MessageCorrelation, Promise[ResponseError, GenericMessage]]) extends Hooks:
 
   def awaitMessage(messageId: MessageId, remote: NodeId, timeout: Duration): IO[ResponseError, GenericMessage] =
     for {

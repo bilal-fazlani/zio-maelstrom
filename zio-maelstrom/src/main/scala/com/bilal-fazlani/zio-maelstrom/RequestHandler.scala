@@ -6,8 +6,8 @@ import zio.json.JsonDecoder
 
 type Handler[R, I <: MessageBody] = (MessageSource, Context) ?=> I => ZIO[MaelstromRuntime & R, Nothing, Unit]
 
-object RequestHandler:
-  private[zioMaelstrom] def handleR[R, I <: MessageBody: JsonDecoder](
+private[zioMaelstrom] object RequestHandler:
+  def handleR[R, I <: MessageBody: JsonDecoder](
       handler: Handler[R, I]
   ): ZIO[MaelstromRuntime & R, Nothing, Unit] =
     for {
@@ -29,13 +29,12 @@ object RequestHandler:
         .runDrain
     } yield ()
 
-  private[zioMaelstrom] def handle[I <: MessageBody: JsonDecoder](handler: Handler[Any, I]): ZIO[MaelstromRuntime, Nothing, Unit] = handleR(handler)
+  def handle[I <: MessageBody: JsonDecoder](handler: Handler[Any, I]): ZIO[MaelstromRuntime, Nothing, Unit] = handleR(handler)
 
   private case class InvalidInput(input: GenericMessage, error: String)
 
   private def handleInvalidInput(invalidInput: InvalidInput): ZIO[Logger & MessageSender, Nothing, Unit] =
     val maybeResponse: Option[MaelstromError] = invalidInput.input.messageId.map { msgId =>
-      val errorCode = StandardErrorCode.MalformedRequest
       MaelstromError(
         in_reply_to = msgId,
         code = StandardErrorCode.MalformedRequest.code,

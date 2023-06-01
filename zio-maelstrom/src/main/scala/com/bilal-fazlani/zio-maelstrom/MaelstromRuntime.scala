@@ -1,12 +1,6 @@
 package com.bilalfazlani.zioMaelstrom
 
-import zio.*
-import protocol.MessageBody
-import zio.json.JsonDecoder
-import protocol.*
-import zio.stream.*
-
-private type MessageStream = ZStream[Any, Nothing, GenericMessage]
+import zio.{Scope, ZLayer}
 
 type MaelstromRuntime = Initialisation & MessageSender & Logger & ResponseHandler
 

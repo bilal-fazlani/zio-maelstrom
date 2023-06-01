@@ -8,7 +8,6 @@ ThisBuild / resolvers ++= Resolver.sonatypeOssRepos("snapshots")
 ThisBuild / scalaVersion := scala3Version
 ThisBuild / organization := "com.bilal-fazlani"
 
-
 logo :=
   raw"""
      |
@@ -22,8 +21,8 @@ logo :=
      |
      |""".stripMargin
 
-logoColor := scala.Console.BLUE
-aliasColor := scala.Console.GREEN
+logoColor        := scala.Console.BLUE
+aliasColor       := scala.Console.GREEN
 descriptionColor := scala.Console.YELLOW
 
 usefulTasks := Seq(
@@ -62,7 +61,7 @@ bootstrap := {
 lazy val root = project
   .in(file("."))
   .settings(
-    name := "zio-maelstrom-root",
+    name           := "zio-maelstrom-root",
     publish / skip := true,
     scalacOptions += "-Wunused:all"
   )
@@ -72,6 +71,7 @@ lazy val maelstrom = project
   .in(file("zio-maelstrom"))
   .settings(
     name := "zio-maelstrom",
+    scalacOptions += "-Wunused:all",
     libraryDependencies ++= Seq(
       Libs.zio,
       Libs.zioConcurrent,
@@ -86,7 +86,8 @@ lazy val echo = project
   .in(file("examples/echo"))
   .settings(
     name := "echo",
-    publish / skip := isCI,
+    scalacOptions += "-Wunused:all",
+    publish / skip      := isCI,
     Compile / mainClass := Some("com.example.echo.Main")
   )
   .dependsOn(maelstrom)
@@ -95,7 +96,8 @@ lazy val uniqueIds = project
   .in(file("examples/unique-ids"))
   .settings(
     name := "unique-ids",
-    publish / skip := isCI,
+    scalacOptions += "-Wunused:all",
+    publish / skip      := isCI,
     Compile / mainClass := Some("com.example.uniqueIds.Main")
   )
   .dependsOn(maelstrom)

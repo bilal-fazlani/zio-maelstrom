@@ -7,13 +7,13 @@ trait Logger:
   def info(line: String): UIO[Unit]
   def error(line: String): UIO[Unit]
 
-object Logger:
+private[zioMaelstrom] object Logger:
   val live: ZLayer[Settings, Nothing, Logger] = ZLayer.fromFunction(LoggerLive.apply)
 
   def info(line: String): URIO[Logger, Unit] = ZIO.serviceWithZIO[Logger](_.info(line))
   def error(line: String): URIO[Logger, Unit] = ZIO.serviceWithZIO[Logger](_.error(line))
 
-case class LoggerLive(settings: Settings) extends Logger:
+private case class LoggerLive(settings: Settings) extends Logger:
   import com.bilalfazlani.rainbowcli.*
   given colorContext: ColorContext = ColorContext(settings.enableColoredOutput)
 

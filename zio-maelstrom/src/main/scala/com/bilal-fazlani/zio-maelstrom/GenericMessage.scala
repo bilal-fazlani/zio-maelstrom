@@ -29,7 +29,7 @@ private object GenericDetails {
   )
 }
 
-case class GenericMessage(
+private[zioMaelstrom] case class GenericMessage(
     src: NodeId,
     dest: NodeId,
     messageType: Option[String],
@@ -55,7 +55,7 @@ case class GenericMessage(
       )
     }
 
-object GenericMessage {
+private[zioMaelstrom] object GenericMessage {
   given JsonDecoder[GenericMessage] = JsonDecoder[Json].mapOrFail[GenericMessage](ast =>
     for {
       obj <- ast.asObject.toRight("message is not a json object")
@@ -67,10 +67,10 @@ object GenericMessage {
   )
 }
 
-trait GenericDecoder[A <: MessageBody: JsonDecoder]:
+private[zioMaelstrom] trait GenericDecoder[A <: MessageBody: JsonDecoder]:
   def decode(msg: GenericMessage): Either[String, Message[A]]
 
-object GenericDecoder:
+private[zioMaelstrom] object GenericDecoder:
   def apply[A <: MessageBody: JsonDecoder](using decoder: GenericDecoder[A]): GenericDecoder[A] = decoder
   given [A <: MessageBody: JsonDecoder]: GenericDecoder[A] = new GenericDecoder[A]:
     def decode(msg: GenericMessage): Either[String, Message[A]] =
