@@ -38,7 +38,7 @@ lazy val bootstrap = taskKey[Unit]("Create a fat jar file")
 lazy val isCI = sys.env.get("CI").nonEmpty
 
 bootstrap := {
-  val projectsToPlublish = Seq("echo", "unique-ids")
+  val projectsToPlublish = Seq("echo", "unique-ids", "broadcast")
 
   projectsToPlublish.foreach { projectName =>
     val process = Process(
@@ -65,7 +65,7 @@ lazy val root = project
     publish / skip := true,
     scalacOptions += "-Wunused:all"
   )
-  .aggregate(maelstrom, echo, uniqueIds)
+  .aggregate(maelstrom, echo, uniqueIds, broadcast)
 
 lazy val maelstrom = project
   .in(file("zio-maelstrom"))
@@ -99,5 +99,15 @@ lazy val uniqueIds = project
     scalacOptions += "-Wunused:all",
     publish / skip      := isCI,
     Compile / mainClass := Some("com.example.uniqueIds.Main")
+  )
+  .dependsOn(maelstrom)
+
+lazy val broadcast = project
+  .in(file("examples/broadcast"))
+  .settings(
+    name := "broadcast",
+    scalacOptions += "-Wunused:all",
+    publish / skip      := isCI,
+    Compile / mainClass := Some("com.example.broadcast.Main")
   )
   .dependsOn(maelstrom)
