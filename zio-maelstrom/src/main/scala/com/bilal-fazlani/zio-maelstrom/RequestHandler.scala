@@ -4,9 +4,11 @@ import protocol.*
 import zio.*
 import zio.json.JsonDecoder
 
+type Handler[R, I <: MessageBody] = Message[I] => ZIO[MaelstromRuntime & R, Nothing, Unit]
+
 object RequestHandler:
-  def handle[R, I <: MessageBody: JsonDecoder](
-      app: MaelstromAppR[R, I]
+  private[zioMaelstrom] def handleR[R, I <: MessageBody: JsonDecoder](
+      handler: Handler[R, I]
   ): ZIO[MaelstromRuntime & R, Nothing, Unit] =
     for {
       initialisation <- ZIO.service[Initialisation]
@@ -17,11 +19,13 @@ object RequestHandler:
             .fromEither(GenericDecoder[I].decode(genericMessage))
             .tap(message => Logger.info(s"received ${message.body} from ${message.source}"))
             .mapError(e => InvalidInput(genericMessage, e))
-            .flatMap(message => app handle message)
+            .flatMap(message => handler apply message)
             .catchAll(e => handleInvalidInput(e))
         )
         .runDrain
     } yield ()
+
+  private[zioMaelstrom] def handle[I <: MessageBody: JsonDecoder](handler: Handler[Any, I]): ZIO[MaelstromRuntime, Nothing, Unit] = handleR(handler)
 
   private case class InvalidInput(input: GenericMessage, error: String)
 

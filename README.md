@@ -12,11 +12,10 @@ case class Echo(echo: String, msg_id: MessageId, `type`: String) extends Message
 
 case class EchoOk(echo: String, in_reply_to: MessageId, `type`: String = "echo_ok") extends MessageWithReply derives JsonEncoder
 
-object Main extends ZIOAppDefault:
+object EchoProgram extends ZIOAppDefault:
   //Define the node behaviour
-  val app = MaelstromApp.make[Echo](in => in reply EchoOk(echo = in.body.echo, in_reply_to = in.body.msg_id))
+  val handler = receive[Echo] { msg => msg reply EchoOk(echo = msg.body.echo, in_reply_to = msg.body.msg_id) }
 
   //Run the node
-  val run = MaelstromRuntime.run(app).provide(Settings.default)
+  val run = handler.provideSome[Scope](MaelstromRuntime.live)  
 ```
-

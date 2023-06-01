@@ -10,7 +10,8 @@ case class Generate(msg_id: MessageId, `type`: String) extends MessageWithId der
 case class GenerateOk(id: String, in_reply_to: MessageId, `type`: String = "generate_ok") extends MessageWithReply derives JsonEncoder
 
 object Main extends ZIOAppDefault:
-  val app = MaelstromAppR.make[Ref[Int], Generate] { case request =>
+  
+  val handler = receiveR[Ref[Int], Generate] { case request =>
     for {
       myNodeId <- me
       newId <- ZIO.serviceWithZIO[Ref[Int]](_.updateAndGet(_ + 1))
@@ -20,4 +21,4 @@ object Main extends ZIOAppDefault:
 
   val settings = Settings(NodeInput.FilePath("examples" / "unique-ids" / "simulation.txt"), true)
 
-  val run = MaelstromRuntime.run(app).provideSome[Scope](MaelstromRuntime.live(settings), ZLayer.fromZIO(Ref.make(0)))
+  val run = handler.provideSome[Scope](MaelstromRuntime.live(settings), ZLayer.fromZIO(Ref.make(0)))

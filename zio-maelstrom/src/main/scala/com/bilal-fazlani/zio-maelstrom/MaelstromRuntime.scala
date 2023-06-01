@@ -24,6 +24,3 @@ object MaelstromRuntime:
     )
 
   val live: ZLayer[Scope, Nothing, MaelstromRuntime] = live(Settings.default)
-
-  def run[R: Tag, I <: MessageBody: JsonDecoder](app: MaelstromAppR[R, I]): ZIO[MaelstromRuntime & R, Nothing, Unit] =
-    RequestHandler.handle(app) race ResponseHandler.handle

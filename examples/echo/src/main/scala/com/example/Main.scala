@@ -12,15 +12,17 @@ case class EchoOk(echo: String, in_reply_to: MessageId, `type`: String = "echo_o
 case class Ping(msg_id: MessageId, `type`: String = "ping") extends MessageWithId derives JsonEncoder
 case class Pong(in_reply_to: MessageId, `type`: String = "pong") extends MessageWithReply derives JsonDecoder
 
-object Main extends ZIOAppDefault:
-  // val app = MaelstromRuntime.run(MaelstromApp.make[Echo](in => in reply EchoOk(echo = in.body.echo, in_reply_to = in.body.msg_id)))
-
+object PingPong extends ZIOAppDefault:
   val ping = NodeId("c4")
-    .ask[Ping, Pong](Ping(MessageId(6)), 5.seconds)
+    .ask[Pong](Ping(MessageId(6)), 5.seconds)
     .flatMap(_ => logInfo(s"PONG RECEIVED"))
     .tapError(err => logError(s"ERROR: $err"))
     .catchAll(_ => ZIO.unit)
 
-  // (NodeId("c5") ask Ping(MessageId(123))).delay(2.seconds).forever
-
   val run = ping.provideSome[Scope](MaelstromRuntime.live)
+
+object Main extends ZIOAppDefault:
+  val handler = receive[Echo] { msg =>
+    msg reply EchoOk(echo = msg.body.echo, in_reply_to = msg.body.msg_id)
+  }
+  val run = handler.provideSome[Scope](MaelstromRuntime.live)
