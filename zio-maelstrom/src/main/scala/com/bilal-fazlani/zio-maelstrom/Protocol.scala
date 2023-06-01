@@ -60,7 +60,7 @@ case class MaelstromInitOk(
 @jsonHint("error")
 case class MaelstromError(
     in_reply_to: MessageId,
-    code: Int,
+    code: ErrorCode,
     text: String,
     `type`: String = "error"
 ) extends MessageWithReply
@@ -96,6 +96,8 @@ sealed trait ErrorCode(val code: Int, val definite: Boolean)
 object ErrorCode:
   def fromCode(code: Int): ErrorCode =
     StandardErrorCode.values.find(_.code == code).getOrElse(CustomErrorCode(code))
+  given JsonEncoder[ErrorCode] = JsonEncoder.int.contramap(_.code)
+  given JsonDecoder[ErrorCode] = JsonDecoder.int.map(fromCode)
 
 // format: off
 enum StandardErrorCode(code: Int, name: String, definite: Boolean, description: String) extends ErrorCode(code, definite):
@@ -121,7 +123,7 @@ extension (m: Message[MessageWithId])
       destination = m.source,
       body = MaelstromError(
         in_reply_to = m.body.msg_id,
-        code = code.code,
+        code = code,
         text = text
       )
     )

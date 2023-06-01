@@ -37,7 +37,7 @@ private[zioMaelstrom] object RequestHandler:
     val maybeResponse: Option[MaelstromError] = invalidInput.input.messageId.map { msgId =>
       MaelstromError(
         in_reply_to = msgId,
-        code = StandardErrorCode.MalformedRequest.code,
+        code = StandardErrorCode.MalformedRequest,
         text = s"invalid input: $invalidInput"
       )
     }

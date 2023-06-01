@@ -49,7 +49,7 @@ private[zioMaelstrom] case class GenericMessage(
         destination = src,
         body = MaelstromError(
           in_reply_to = msgid,
-          code = code.code,
+          code = code,
           text = text
         )
       )
