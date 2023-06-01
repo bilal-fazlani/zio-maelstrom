@@ -4,7 +4,7 @@ import protocol.*
 import zio.*
 import zio.json.JsonDecoder
 
-type Handler[R, I <: MessageBody] = Message[I] => ZIO[MaelstromRuntime & R, Nothing, Unit]
+type Handler[R, I <: MessageBody] = SourceId ?=> I => ZIO[MaelstromRuntime & R, Nothing, Unit]
 
 object RequestHandler:
   private[zioMaelstrom] def handleR[R, I <: MessageBody: JsonDecoder](
@@ -19,7 +19,10 @@ object RequestHandler:
             .fromEither(GenericDecoder[I].decode(genericMessage))
             .tap(message => Logger.info(s"received ${message.body} from ${message.source}"))
             .mapError(e => InvalidInput(genericMessage, e))
-            .flatMap(message => handler apply message)
+            .flatMap{ message => 
+              given SourceId = message.source.asSource
+              handler apply message.body
+            }
             .catchAll(e => handleInvalidInput(e))
         )
         .runDrain
@@ -41,7 +44,7 @@ object RequestHandler:
     for {
       _ <- Logger.error(s"invalid input: $invalidInput")
       _ <- maybeResponse match {
-        case Some(errorMessageBody) => MessageSender.send(errorMessageBody, invalidInput.input.src).ignore
+        case Some(errorMessageBody) => MessageSender.send(errorMessageBody, invalidInput.input.src.asDestination).ignore
         case None                   => ZIO.unit // if there was no msg id in msg, you can't send a reply
       }
     } yield ()

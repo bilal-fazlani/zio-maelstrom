@@ -10,14 +10,14 @@ case class Generate(msg_id: MessageId, `type`: String) extends MessageWithId der
 case class GenerateOk(id: String, in_reply_to: MessageId, `type`: String = "generate_ok") extends MessageWithReply derives JsonEncoder
 
 object Main extends ZIOAppDefault:
-  
-  val handler = receiveR[Ref[Int], Generate] { case request =>
-    for {
+
+  val handler = receiveR[Ref[Int], Generate](src ?=> { case request =>
+    (for {
       myNodeId <- me
       newId <- ZIO.serviceWithZIO[Ref[Int]](_.updateAndGet(_ + 1))
-      _ <- request reply GenerateOk(id = s"${myNodeId}_$newId", in_reply_to = request.body.msg_id)
-    } yield ()
-  }
+      _ <- request reply GenerateOk(id = s"${myNodeId}_$newId", in_reply_to = request.msg_id)
+    } yield ())
+  })
 
   val settings = Settings(NodeInput.FilePath("examples" / "unique-ids" / "simulation.txt"), true)
 
