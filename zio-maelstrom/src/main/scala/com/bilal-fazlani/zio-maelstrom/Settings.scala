@@ -1,9 +1,9 @@
 package com.bilalfazlani.zioMaelstrom
 
-case class Settings(nodeInput: NodeInput, enableColoredOutput: Boolean)
+enum DebugLogs:
+  case Plain, Colored, Disabled
+
+case class Settings(nodeInput: NodeInput, debugLogs: DebugLogs)
 
 object Settings:
-  val default = Settings(
-    nodeInput = NodeInput.StdIn,
-    enableColoredOutput = false
-  )
+  val default = Settings(nodeInput = NodeInput.StdIn, debugLogs = DebugLogs.Disabled)

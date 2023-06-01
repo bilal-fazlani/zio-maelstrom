@@ -1,4 +1,5 @@
 - [-] Ask pattern (not working ATM)
+- [ ] Add concurrency in settings
 - [ ] Multiple request-response can be started
 - [ ] Add more examples
 - [ ] Tests

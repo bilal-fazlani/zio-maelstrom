@@ -4,7 +4,6 @@ import zio.*
 import protocol.*
 import zio.json.{JsonEncoder, EncoderOps}
 import zio.stream.{ZStream, ZPipeline}
-import com.bilalfazlani.rainbowcli.*
 import zio.json.JsonDecoder
 
 trait MessageTransport:
@@ -16,7 +15,6 @@ private[zioMaelstrom] object MessageTransport:
   val readInputs = ZIO.serviceWithZIO[MessageTransport](_.readInputs)
 
 private case class MessageTransportLive(logger: Logger, settings: Settings) extends MessageTransport:
-  private given ColorContext = ColorContext(settings.enableColoredOutput)
 
   case class InvalidInput(input: String, error: String)
 
@@ -30,7 +28,7 @@ private case class MessageTransportLive(logger: Logger, settings: Settings) exte
           case NodeInput.FilePath(path) => ZStream.fromFile(path.toFile, 128).via(ZPipeline.utfDecode).via(ZPipeline.splitLines)
         })
           .filter(line => line.trim != "")
-          .tap(line => Console.printLineError(line.blue.onGreen.bold))
+          .tap(logger.logRequest)
           .takeWhile(line => line.trim != "q")
       } yield strm)
       .orDie
@@ -46,6 +44,5 @@ private case class MessageTransportLive(logger: Logger, settings: Settings) exte
     .map(x => Inputs(x._1, x._2))
 
   def transport[A <: MessageBody: JsonEncoder](message: Message[A]): UIO[Unit] =
-    given colorContext: ColorContext = ColorContext(settings.enableColoredOutput)
-    (Console.printLine(message.toJson.blue.onCyan.bold)
-      *> logger.info(s"sent ${message.body} to ${message.destination}")).orDie
+    logger.logResponse(message.toJson)
+      *> logger.info(s"sent ${message.body} to ${message.destination}")
