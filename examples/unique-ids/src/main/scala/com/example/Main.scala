@@ -11,13 +11,12 @@ case class GenerateOk(id: String, in_reply_to: MessageId, `type`: String = "gene
 
 object Main extends ZIOAppDefault:
 
-  val handler = receiveR[Ref[Int], Generate](src ?=> { case request =>
+  val handler = receiveR[Ref[Int], Generate] { case request =>
     (for {
-      myNodeId <- me
       newId <- ZIO.serviceWithZIO[Ref[Int]](_.updateAndGet(_ + 1))
       _ <- request reply GenerateOk(id = s"${myNodeId}_$newId", in_reply_to = request.msg_id)
     } yield ())
-  })
+  }
 
   val settings = Settings(NodeInput.FilePath("examples" / "unique-ids" / "simulation.txt"), true)
 

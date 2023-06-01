@@ -4,7 +4,7 @@ import protocol.*
 import zio.*
 import zio.json.JsonDecoder
 
-type Handler[R, I <: MessageBody] = MessageSource ?=> I => ZIO[MaelstromRuntime & R, Nothing, Unit]
+type Handler[R, I <: MessageBody] = (MessageSource, Context) ?=> I => ZIO[MaelstromRuntime & R, Nothing, Unit]
 
 object RequestHandler:
   private[zioMaelstrom] def handleR[R, I <: MessageBody: JsonDecoder](
@@ -21,6 +21,7 @@ object RequestHandler:
             .mapError(e => InvalidInput(genericMessage, e))
             .flatMap { message =>
               given MessageSource = MessageSource(message.source)
+              given Context       = initialisation.context
               handler apply message.body
             }
             .catchAll(e => handleInvalidInput(e))
