@@ -1,7 +1,7 @@
+- [-] Ask pattern (not working ATM)
 - [ ] Message Id is hardcoded to String
 - [ ] Multiple request-response can be started
 - [ ] Add more examples
 - [ ] Tests
 - [ ] Create documentation
 - [X] Separate init from receive messages
-- [X] Ask pattern

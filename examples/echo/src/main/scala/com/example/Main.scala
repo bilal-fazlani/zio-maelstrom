@@ -16,10 +16,11 @@ object Main extends ZIOAppDefault:
   // val app = MaelstromRuntime.run(MaelstromApp.make[Echo](in => in reply EchoOk(echo = in.body.echo, in_reply_to = in.body.msg_id)))
 
   val ping = NodeId("c4")
-    .ask[Ping, Pong](Ping(MessageId(6)), 1.minute)
+    .ask[Ping, Pong](Ping(MessageId(6)), 5.seconds)
     .flatMap(_ => logInfo(s"PONG RECEIVED"))
     .tapError(err => logError(s"ERROR: $err"))
+    .catchAll(_ => ZIO.unit)
 
   // (NodeId("c5") ask Ping(MessageId(123))).delay(2.seconds).forever
 
-  val run = ping.provideSome[Scope](MaelstromRuntime.live, Settings.custom(NodeInput.StdIn, true))
+  val run = ping.provideSome[Scope](MaelstromRuntime.live)

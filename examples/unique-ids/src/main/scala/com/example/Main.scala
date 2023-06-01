@@ -18,6 +18,6 @@ object Main extends ZIOAppDefault:
     } yield ()
   }
 
-  val settings = Settings.custom(NodeInput.FilePath("examples" / "unique-ids" / "simulation.txt"), true)
+  val settings = Settings(NodeInput.FilePath("examples" / "unique-ids" / "simulation.txt"), true)
 
-  val run = MaelstromRuntime.run(app).provideSome[Scope](MaelstromRuntime.live, settings, ZLayer.fromZIO(Ref.make(0)))
+  val run = MaelstromRuntime.run(app).provideSome[Scope](MaelstromRuntime.live(settings), ZLayer.fromZIO(Ref.make(0)))
