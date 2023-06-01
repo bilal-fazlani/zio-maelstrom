@@ -1,5 +1,6 @@
 - [-] Ask pattern (not working ATM)
 - [ ] Add concurrency in settings
+- [ ] Use union and compound types for message hierarchy. IN messages dont need "type"
 - [ ] Multiple request-response can be started
 - [ ] Add more examples
 - [ ] Tests
