@@ -18,7 +18,7 @@ case class Ping(msg_id: MessageId, `type`: String = "ping") extends MessageWithI
 case class Pong(in_reply_to: MessageId, `type`: String = "pong") extends MessageWithReply derives JsonDecoder
 
 object PingPong extends ZIOAppDefault:
-  val ping = DestinationId("c4")
+  val ping = NodeId("c4")
     .ask[Pong](Ping(MessageId(6)), 5.seconds)
     .flatMap(_ => logInfo(s"PONG RECEIVED"))
     .tapError(err => logError(s"ERROR: $err"))

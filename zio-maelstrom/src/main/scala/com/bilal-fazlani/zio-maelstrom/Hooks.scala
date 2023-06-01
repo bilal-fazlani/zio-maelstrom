@@ -7,7 +7,7 @@ import zio.concurrent.ConcurrentMap
 trait Hooks:
   def awaitMessage(
       messageId: MessageId,
-      remote: DestinationId,
+      remote: NodeId,
       timeout: Duration
   ): IO[ResponseError, GenericMessage]
 
@@ -23,7 +23,7 @@ private case class MessageCorrelation(messageId: MessageId, remote: NodeId)
 
 case class HooksLive(hooks: ConcurrentMap[MessageCorrelation, Promise[ResponseError, GenericMessage]]) extends Hooks:
 
-  def awaitMessage(messageId: MessageId, remote: DestinationId, timeout: Duration): IO[ResponseError, GenericMessage] =
+  def awaitMessage(messageId: MessageId, remote: NodeId, timeout: Duration): IO[ResponseError, GenericMessage] =
     for {
       promise <- Promise.make[ResponseError, GenericMessage]
       _ <- suspend(messageId, remote, promise, timeout)
@@ -43,7 +43,7 @@ case class HooksLive(hooks: ConcurrentMap[MessageCorrelation, Promise[ResponseEr
 
   private def suspend[I <: MessageWithReply](
       messageId: MessageId,
-      remote: DestinationId,
+      remote: NodeId,
       promise: Promise[ResponseError, GenericMessage],
       messageTimeout: Duration
   ): UIO[Unit] =
@@ -54,7 +54,7 @@ case class HooksLive(hooks: ConcurrentMap[MessageCorrelation, Promise[ResponseEr
     for {
       promise <- hooks.remove(correlation)
       _ <- promise match {
-        case Some(p) => p.fail(ResponseError.MessageTimeoutError(correlation.messageId, correlation.remote.asDestination, timeout))
+        case Some(p) => p.fail(ResponseError.MessageTimeoutError(correlation.messageId, correlation.remote, timeout))
         case None    => ZIO.unit
       }
     } yield ()

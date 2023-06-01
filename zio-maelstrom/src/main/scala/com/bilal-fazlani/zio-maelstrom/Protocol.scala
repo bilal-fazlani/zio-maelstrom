@@ -69,42 +69,22 @@ case class MaelstromError(
 
 opaque type NodeId = String
 
-extension (n: NodeId)
-  def asSource: SourceId = SourceId.fromNodeId(n)
-  def asDestination: DestinationId = DestinationId.fromNodeId(n)
-
 object NodeId:
   def apply(id: String): NodeId = id
   given JsonEncoder[NodeId] = JsonEncoder.string.contramap(identity)
   given JsonDecoder[NodeId] = JsonDecoder.string.map(NodeId(_))
 
-opaque type SourceId = NodeId
+opaque type MessageSource = NodeId
 
-extension (s: SourceId)
-  @targetName("sourceIdAsNodeId")
+extension (s: MessageSource)
+  @targetName("messageSourceAsNodeId")
   def nodeId: NodeId = s
-  @targetName("sourceIdAsDestination")
-  def toDestinationId: DestinationId = DestinationId.fromNodeId(s)
 
-object SourceId:
-  @targetName("sourceIdFromNodeId")
-  def fromNodeId(id: NodeId): SourceId = id
-  @targetName("sourceIdFromString")
-  def apply(id: String): SourceId = id
-  given JsonEncoder[SourceId] = JsonEncoder.string.contramap(identity)
-  given JsonDecoder[SourceId] = JsonDecoder.string.map(SourceId(_))
-
-opaque type DestinationId = NodeId
-
-extension (d: DestinationId) @targetName("destinationIdAsNodeId") def nodeId: NodeId = d
-
-object DestinationId:
-  @targetName("destinationIdFromNodeId")
-  def fromNodeId(id: NodeId): DestinationId = id
-  @targetName("destinationIdFromString")
-  def apply(id: String): DestinationId = id
-  given JsonEncoder[DestinationId] = JsonEncoder.string.contramap(identity)
-  given JsonDecoder[DestinationId] = JsonDecoder.string.map(DestinationId(_))
+object MessageSource:
+  @targetName("messageSourceFromNodeId")
+  def apply(id: NodeId): MessageSource = id
+  given JsonEncoder[MessageSource] = JsonEncoder.string.contramap(identity)
+  given JsonDecoder[MessageSource] = JsonDecoder.string.map(MessageSource(_))
 
 opaque type MessageId = Int
 object MessageId:
