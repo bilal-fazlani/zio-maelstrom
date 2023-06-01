@@ -18,8 +18,8 @@ extension (nodeId: NodeId)
 def broadcastAll[A <: MessageBody: JsonEncoder](body: A) = MessageSender.broadcastAll(body)
 def broadcastTo[A <: MessageBody: JsonEncoder](others: Seq[NodeId], body: A) = MessageSender.broadcastTo(others, body)
 
-def me = ZIO.service[Context].map(_.me)
-def others = ZIO.service[Context].map(_.others)
+def me = ZIO.service[Initialisation].map(_.context.me)
+def others = ZIO.service[Initialisation].map(_.context.others)
 
 def logInfo(message: => String) = Logger.info(message)
 def logError(message: => String) = Logger.error(message)

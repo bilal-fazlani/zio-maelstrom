@@ -3,17 +3,16 @@ package com.bilalfazlani.zioMaelstrom
 import zio.*
 
 trait ResponseHandler:
-  def handle(responseStream: MessageStream): ZIO[Any, Nothing, Unit]
+  val handle: ZIO[Any, Nothing, Unit]
 
 object ResponseHandler:
-  val live: ZLayer[Logger & Hooks, Nothing, ResponseHandlerLive] = ZLayer.fromFunction(ResponseHandlerLive.apply)
+  val live: ZLayer[Initialisation & Logger & Hooks, Nothing, ResponseHandler] = ZLayer.fromFunction(ResponseHandlerLive.apply)
 
-  def handle(responseStream: MessageStream): ZIO[ResponseHandler, Nothing, Unit] =
-    ZIO.serviceWithZIO[ResponseHandler](_.handle(responseStream))
+  val handle: ZIO[ResponseHandler, Nothing, Unit] = ZIO.serviceWithZIO[ResponseHandler](_.handle)
 
-case class ResponseHandlerLive(logger: Logger, hooks: Hooks) extends ResponseHandler:
-  def handle(responseStream: MessageStream): ZIO[Any, Nothing, Unit] =
-    responseStream
+case class ResponseHandlerLive(logger: Logger, hooks: Hooks, init: Initialisation) extends ResponseHandler:
+  val handle: ZIO[Any, Nothing, Unit] =
+    init.inputs.responseStream
       // process responses in parallel
-      .mapZIOPar(1024)(message => hooks.complete(message))
+      .mapZIOPar(1024)(hooks.complete)
       .runDrain

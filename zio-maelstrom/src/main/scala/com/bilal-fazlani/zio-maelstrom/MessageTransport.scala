@@ -9,11 +9,11 @@ import zio.json.JsonDecoder
 
 trait MessageTransport:
   def transport[A <: MessageBody: JsonEncoder](message: Message[A]): UIO[Unit]
-  def readInput: ZIO[Scope, Nothing, Inputs]
+  def readInputs: ZIO[Scope, Nothing, Inputs]
 
 object MessageTransport:
   val live: ZLayer[Logger & Settings, Nothing, MessageTransportLive] = ZLayer.fromFunction(MessageTransportLive.apply)
-  val readInput = ZIO.serviceWithZIO[MessageTransport](_.readInput)
+  val readInputs = ZIO.serviceWithZIO[MessageTransport](_.readInputs)
 
 case class MessageTransportLive(logger: Logger, settings: Settings) extends MessageTransport:
   private given ColorContext = ColorContext(settings.enableColoredOutput)
@@ -35,7 +35,7 @@ case class MessageTransportLive(logger: Logger, settings: Settings) extends Mess
       } yield strm)
       .orDie
 
-  val readInput = strings
+  val readInputs = strings
     .map(str => JsonDecoder[GenericMessage].decodeJson(str).left.map(e => InvalidInput(str, e)))
     .tap {
       case Left(errorMessage)    => logger.error(s"could not read `${errorMessage.input}`, error: ${errorMessage.error}")

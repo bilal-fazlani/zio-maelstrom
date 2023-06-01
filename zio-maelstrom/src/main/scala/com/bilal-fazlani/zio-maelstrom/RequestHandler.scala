@@ -4,22 +4,24 @@ import protocol.*
 import zio.*
 import zio.json.JsonDecoder
 
-object MessageHandler:
-  def handle[R: Tag, I <: MessageBody: JsonDecoder](
-      messageStream: MessageStream,
+object RequestHandler:
+  def handle[R, I <: MessageBody: JsonDecoder](
       app: MaelstromAppR[R, I]
-  ): ZIO[Context & MessageSender & Logger & R, Nothing, Unit] =
-    messageStream
-      // process messages in parallel
-      .mapZIOPar(1024)(genericMessage =>
-        ZIO
-          .fromEither(GenericDecoder[I].decode(genericMessage))
-          .tap(message => Logger.info(s"received ${message.body} from ${message.source}"))
-          .mapError(e => InvalidInput(genericMessage, e))
-          .flatMap(message => app handle message)
-          .catchAll(e => handleInvalidInput(e))
-      )
-      .runDrain
+  ): ZIO[MaelstromRuntime & R, Nothing, Unit] =
+    for {
+      initialisation <- ZIO.service[Initialisation]
+      _ <- initialisation.inputs.messageStream
+        // process messages in parallel
+        .mapZIOPar(1024)(genericMessage =>
+          ZIO
+            .fromEither(GenericDecoder[I].decode(genericMessage))
+            .tap(message => Logger.info(s"received ${message.body} from ${message.source}"))
+            .mapError(e => InvalidInput(genericMessage, e))
+            .flatMap(message => app handle message)
+            .catchAll(e => handleInvalidInput(e))
+        )
+        .runDrain
+    } yield ()
 
   private case class InvalidInput(input: GenericMessage, error: String)
 

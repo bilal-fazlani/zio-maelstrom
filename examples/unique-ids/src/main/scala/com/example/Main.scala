@@ -12,13 +12,12 @@ case class GenerateOk(id: String, in_reply_to: MessageId, `type`: String = "gene
 object Main extends ZIOAppDefault:
   val app = MaelstromAppR.make[Ref[Int], Generate] { case request =>
     for {
+      myNodeId <- me
       newId <- ZIO.serviceWithZIO[Ref[Int]](_.updateAndGet(_ + 1))
-      context <- ZIO.service[Context]
-      _ <- request reply GenerateOk(id = s"${context.me}_$newId", in_reply_to = request.body.msg_id)
+      _ <- request reply GenerateOk(id = s"${myNodeId}_$newId", in_reply_to = request.body.msg_id)
     } yield ()
   }
 
   val settings = Settings.custom(NodeInput.FilePath("examples" / "unique-ids" / "simulation.txt"), true)
 
-  val run = (MaelstromRuntime run app)
-    .provide(settings, ZLayer.fromZIO(Ref.make(0)))
+  val run = MaelstromRuntime.run(app).provideSome[Scope](MaelstromRuntime.live, settings, ZLayer.fromZIO(Ref.make(0)))

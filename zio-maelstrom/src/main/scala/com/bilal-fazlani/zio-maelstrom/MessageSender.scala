@@ -24,31 +24,31 @@ trait MessageSender:
   def broadcastTo[A <: MessageBody: JsonEncoder](others: Seq[NodeId], body: A): UIO[Unit]
 
 object MessageSender:
-  val live: ZLayer[Context & MessageTransport & Hooks, Nothing, MessageSenderLive] = ZLayer.fromFunction(MessageSenderLive.apply)
+  val live: ZLayer[Initialisation & MessageTransport & Hooks, Nothing, MessageSender] = ZLayer.fromFunction(MessageSenderLive.apply)
 
-  def send[A <: MessageBody: JsonEncoder](body: A, to: NodeId): URIO[MessageSender, Unit] =
+  private[zioMaelstrom] def send[A <: MessageBody: JsonEncoder](body: A, to: NodeId): URIO[MessageSender, Unit] =
     ZIO.serviceWithZIO[MessageSender](_.send(body, to))
 
-  def ask[I <: MessageWithId: JsonEncoder, O <: MessageWithReply: JsonDecoder](
+  private[zioMaelstrom] def ask[I <: MessageWithId: JsonEncoder, O <: MessageWithReply: JsonDecoder](
       body: I,
       to: NodeId,
       timeout: Duration
   ): ZIO[MessageSender, ResponseError, O] =
     ZIO.serviceWithZIO[MessageSender](_.ask(body, to, timeout))
 
-  def reply[I <: MessageWithId, O <: MessageWithReply: JsonEncoder](message: Message[I], reply: O): URIO[MessageSender, Unit] =
+  private[zioMaelstrom] def reply[I <: MessageWithId, O <: MessageWithReply: JsonEncoder](message: Message[I], reply: O): URIO[MessageSender, Unit] =
     ZIO.serviceWithZIO[MessageSender](_.reply(message, reply))
 
-  def broadcastAll[A <: MessageBody: JsonEncoder](body: A): URIO[MessageSender, Unit] =
+  private[zioMaelstrom] def broadcastAll[A <: MessageBody: JsonEncoder](body: A): URIO[MessageSender, Unit] =
     ZIO.serviceWithZIO[MessageSender](_.broadcastAll(body))
 
-  def broadcastTo[A <: MessageBody: JsonEncoder](others: Seq[NodeId], body: A): URIO[MessageSender, Unit] =
+  private[zioMaelstrom] def broadcastTo[A <: MessageBody: JsonEncoder](others: Seq[NodeId], body: A): URIO[MessageSender, Unit] =
     ZIO.serviceWithZIO[MessageSender](_.broadcastTo(others, body))
 
-case class MessageSenderLive(context: Context, transport: MessageTransport, hooks: Hooks) extends MessageSender:
+private[zioMaelstrom] case class MessageSenderLive(init: Initialisation, transport: MessageTransport, hooks: Hooks) extends MessageSender:
   def send[A <: MessageBody: JsonEncoder](body: A, to: NodeId) =
     val message: Message[A] = Message[A](
-      source = context.me,
+      source = init.context.me,
       destination = to,
       body = body
     )
@@ -69,7 +69,7 @@ case class MessageSenderLive(context: Context, transport: MessageTransport, hook
     send(reply, message.source)
 
   def broadcastAll[A <: MessageBody: JsonEncoder](body: A) =
-    broadcastTo(context.others, body)
+    broadcastTo(init.context.others, body)
 
   def broadcastTo[A <: MessageBody: JsonEncoder](others: Seq[NodeId], body: A) =
     ZIO.foreachPar(others)(to => send(body, to)).unit
