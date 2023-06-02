@@ -33,8 +33,8 @@ private[zioMaelstrom] object RequestHandler:
   private case class InvalidInput(input: GenericMessage, error: String)
 
   private def handleInvalidInput(invalidInput: InvalidInput): ZIO[Logger & MessageSender, Nothing, Unit] =
-    val maybeResponse: Option[MaelstromError] = invalidInput.input.messageId.map { msgId =>
-      MaelstromError(
+    val maybeResponse: Option[ErrorMessage] = invalidInput.input.messageId.map { msgId =>
+      ErrorMessage(
         in_reply_to = msgId,
         code = StandardErrorCode.MalformedRequest,
         text = s"invalid input: $invalidInput"

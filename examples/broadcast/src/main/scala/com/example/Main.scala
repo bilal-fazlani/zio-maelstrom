@@ -5,17 +5,18 @@ import zio.*
 import com.bilalfazlani.zioMaelstrom.protocol.*
 import com.bilalfazlani.zioMaelstrom.*
 
-@jsonDiscriminator("type") sealed trait BroadcastMessage                                          extends NeedsReply derives JsonDecoder
-@jsonHint("broadcast") case class Broadcast(message: Int, msg_id: MessageId)                      extends BroadcastMessage
+@jsonDiscriminator("type") sealed trait BroadcastMessage                                                   extends NeedsReply derives JsonDecoder
+@jsonHint("broadcast") case class Broadcast(message: Int, msg_id: MessageId, `type`: String = "broadcast") extends BroadcastMessage, Sendable
+    derives JsonEncoder
 @jsonHint("read") case class Read(msg_id: MessageId)                                              extends BroadcastMessage
 @jsonHint("topology") case class Topology(msg_id: MessageId, topology: Map[NodeId, List[NodeId]]) extends BroadcastMessage
 
-case class BroadcastOk(in_reply_to: MessageId, `type`: String = "broadcast_ok")           extends Sendable, Reply derives JsonEncoder
+case class BroadcastOk(in_reply_to: MessageId, `type`: String = "broadcast_ok")           extends Sendable, Reply derives JsonCodec
 case class ReadOk(messages: Seq[Int], in_reply_to: MessageId, `type`: String = "read_ok") extends Sendable, Reply derives JsonEncoder
 case class TopologyOk(in_reply_to: MessageId, `type`: String = "topology_ok")             extends Sendable, Reply derives JsonEncoder
 
 object Main extends ZIOAppDefault:
-  val settings = Settings(logFormat = LogFormat.Colored)
+  val settings = Settings(logFormat = LogFormat.Plain)
 
   case class State(messages: List[Int] = List.empty, neighbours: List[NodeId] = List.empty) {
     def addMessage(message: Int): State                = copy(messages = message +: messages)
@@ -23,11 +24,14 @@ object Main extends ZIOAppDefault:
   }
 
   val run = receiveR[Ref[State], BroadcastMessage] {
-    case msg @ Broadcast(message, messageId) =>
+    case msg @ Broadcast(message, messageId, _) =>
       for
-        state <- ZIO.serviceWithZIO[Ref[State]](_.get)
-        _     <- ZIO.serviceWithZIO[Ref[State]](_.getAndUpdate(_.addMessage(message)))
-        _     <- msg reply BroadcastOk(messageId)
+        state <- ZIO.serviceWithZIO[Ref[State]](_.updateAndGet(_.addMessage(message)))
+        _ <- ZIO
+          .foreachPar(state.neighbours)(_.ask[BroadcastOk](msg, 200.millis))
+          .catchAll(e => logError(e.toString))
+
+        _ <- msg reply BroadcastOk(messageId)
       yield ()
     case msg @ Read(messageId) =>
       for

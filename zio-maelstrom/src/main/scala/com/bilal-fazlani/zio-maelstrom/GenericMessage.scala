@@ -42,12 +42,14 @@ private[zioMaelstrom] case class GenericMessage(
 
   def isResponse = inReplyTo.isDefined
 
-  def makeError(code: ErrorCode, text: String): Option[Message[MaelstromError]] =
+  def isError = isOfType("error")
+
+  def makeError(code: ErrorCode, text: String): Option[Message[ErrorMessage]] =
     messageId.map { msgid =>
-      Message[MaelstromError](
+      Message[ErrorMessage](
         source = dest,
         destination = src,
-        body = MaelstromError(
+        body = ErrorMessage(
           in_reply_to = msgid,
           code = code,
           text = text

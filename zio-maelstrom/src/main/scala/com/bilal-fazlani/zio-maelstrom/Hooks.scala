@@ -5,7 +5,7 @@ import protocol.*
 import zio.concurrent.ConcurrentMap
 
 trait Hooks:
-  def awaitMessage(
+  def awaitRemote(
       messageId: MessageId,
       remote: NodeId,
       timeout: Duration
@@ -23,10 +23,10 @@ private case class MessageCorrelation(messageId: MessageId, remote: NodeId)
 
 private case class HooksLive(hooks: ConcurrentMap[MessageCorrelation, Promise[ResponseError, GenericMessage]]) extends Hooks:
 
-  def awaitMessage(messageId: MessageId, remote: NodeId, timeout: Duration): IO[ResponseError, GenericMessage] =
+  def awaitRemote(messageId: MessageId, remote: NodeId, timeout: Duration): IO[ResponseError, GenericMessage] =
     for {
-      promise <- Promise.make[ResponseError, GenericMessage]
-      _ <- suspend(messageId, remote, promise, timeout)
+      promise        <- Promise.make[ResponseError, GenericMessage]
+      _              <- suspend(messageId, remote, promise, timeout)
       genericMessage <- promise.await
     } yield genericMessage
 
@@ -54,7 +54,7 @@ private case class HooksLive(hooks: ConcurrentMap[MessageCorrelation, Promise[Re
     for {
       promise <- hooks.remove(correlation)
       _ <- promise match {
-        case Some(p) => p.fail(ResponseError.MessageTimeoutError(correlation.messageId, correlation.remote, timeout))
+        case Some(p) => p.fail(Timeout(correlation.messageId, correlation.remote, timeout))
         case None    => ZIO.unit
       }
     } yield ()

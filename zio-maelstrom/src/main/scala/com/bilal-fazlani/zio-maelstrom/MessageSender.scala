@@ -4,9 +4,10 @@ import protocol.*
 import zio.*
 import zio.json.{JsonEncoder, JsonDecoder}
 
-enum ResponseError:
-  case MessageTimeoutError(messageId: MessageId, remote: NodeId, timeout: Duration)
-  case DecodingError(error: String, message: GenericMessage)
+type ResponseError = ErrorMessage | DecodingFailure | Timeout
+
+case class Timeout(messageId: MessageId, remote: NodeId, timeout: Duration)
+case class DecodingFailure(error: String, message: GenericMessage)
 
 trait MessageSender:
   def send[A <: Sendable: JsonEncoder](body: A, to: NodeId): UIO[Unit]
@@ -60,9 +61,21 @@ private case class MessageSenderLive(init: Initialisation, transport: MessageTra
       timeout: Duration
   ): IO[ResponseError, Res] =
     for {
-      _        <- send(body, to)
-      response <- hooks.awaitMessage(body.msg_id, to, timeout)
-      decoded  <- ZIO.fromEither(JsonDecoder[Message[Res]].fromJsonAST(response.raw)).mapError(e => ResponseError.DecodingError(e, response))
+      _              <- send(body, to)
+      genericMessage <- hooks.awaitRemote(body.msg_id, to, timeout)
+      decoded <-
+        if genericMessage.isError then {
+          val error = JsonDecoder[Message[ErrorMessage]]
+            .fromJsonAST(genericMessage.raw)
+            .map(_.body)
+            .left
+            .map(e => DecodingFailure(e, genericMessage))
+          error.fold(ZIO.fail, ZIO.fail)
+        } else {
+          ZIO
+            .fromEither(JsonDecoder[Message[Res]].fromJsonAST(genericMessage.raw))
+            .mapError(e => DecodingFailure(e, genericMessage))
+        }
     } yield decoded.body
 
   def reply[Req <: NeedsReply, Res <: Sendable & Reply: JsonEncoder](message: Message[Req], reply: Res): UIO[Unit] =

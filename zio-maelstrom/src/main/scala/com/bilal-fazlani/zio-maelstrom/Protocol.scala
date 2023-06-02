@@ -22,7 +22,6 @@ trait NeedsReply:
 trait Reply:
   val in_reply_to: MessageId
 
-@jsonHint("init")
 case class MaelstromInit(
     msg_id: MessageId,
     node_id: NodeId,
@@ -49,7 +48,6 @@ object MaelstromInit {
     parseInit(msg).getOrElse(throw new Exception("message is not of type 'init'"))
 }
 
-@jsonHint("init_ok")
 case class MaelstromInitOk(
     in_reply_to: MessageId,
     `type`: String = "init_ok"
@@ -57,8 +55,7 @@ case class MaelstromInitOk(
     with Reply
     derives JsonEncoder
 
-@jsonHint("error")
-case class MaelstromError(
+case class ErrorMessage(
     in_reply_to: MessageId,
     code: ErrorCode,
     text: String,
@@ -90,9 +87,9 @@ object MessageSource:
 
 opaque type MessageId = Int
 object MessageId:
-  def apply(id: Int): MessageId = id
-  given JsonEncoder[MessageId]  = JsonEncoder.int.contramap(identity)
-  given JsonDecoder[MessageId]  = JsonDecoder.int.map(MessageId(_))
+  def apply(id: Int): MessageId     = id
+  given JsonEncoder[MessageId]      = JsonEncoder.int.contramap(identity)
+  given JsonDecoder[MessageId]      = JsonDecoder.int.map(MessageId(_))
   given JsonFieldEncoder[MessageId] = JsonFieldEncoder.int.contramap(identity)
   given JsonFieldDecoder[MessageId] = JsonFieldDecoder.int.map(MessageId(_))
 
@@ -122,11 +119,11 @@ enum StandardErrorCode(code: Int, definite: Boolean) extends ErrorCode(code, def
 case class CustomErrorCode(override val code: Int) extends ErrorCode(code, false)
 
 extension (m: Message[NeedsReply])
-  def makeErrorMessage(code: ErrorCode, text: String): Message[MaelstromError] =
-    Message[MaelstromError](
+  def makeErrorMessage(code: ErrorCode, text: String): Message[ErrorMessage] =
+    Message[ErrorMessage](
       source = m.destination,
       destination = m.source,
-      body = MaelstromError(
+      body = ErrorMessage(
         in_reply_to = m.body.msg_id,
         code = code,
         text = text
