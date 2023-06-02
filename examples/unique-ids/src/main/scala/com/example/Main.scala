@@ -5,12 +5,16 @@ import com.bilalfazlani.zioMaelstrom.*
 import zio.json.{JsonDecoder, JsonEncoder}
 import zio.*
 
-case class Generate(msg_id: MessageId, `type`: String) extends NeedsReply derives JsonDecoder
+// Define a message that needs a reply
+case class Generate(msg_id: MessageId) extends NeedsReply derives JsonDecoder
 
-case class GenerateOk(id: String, in_reply_to: MessageId, `type`: String = "generate_ok") extends Sendable, Reply derives JsonEncoder
+// Define reply message
+case class GenerateOk(id: String, in_reply_to: MessageId, `type`: String = "generate_ok") 
+  extends Sendable, Reply derives JsonEncoder
 
 object Main extends ZIOAppDefault:
 
+  // Define a handler for the message
   val handler = receiveR[Ref[Int], Generate] { case request =>
     for {
       newId <- ZIO.serviceWithZIO[Ref[Int]](_.updateAndGet(_ + 1))
@@ -18,4 +22,5 @@ object Main extends ZIOAppDefault:
     } yield ()
   }
 
+  // Run the handler
   val run = handler.provideSome[Scope](MaelstromRuntime.live(Settings.default), ZLayer.fromZIO(Ref.make(0)))
