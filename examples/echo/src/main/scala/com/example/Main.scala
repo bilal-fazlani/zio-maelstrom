@@ -12,11 +12,8 @@ case class Echo(echo: String, msg_id: MessageId, `type`: String) extends Message
 case class EchoOk(echo: String, in_reply_to: MessageId, `type`: String = "echo_ok") extends MessageWithReply derives JsonEncoder
 
 object Main extends ZIOAppDefault:
-  val handler = receive[Echo] { msg =>
-    msg reply EchoOk(echo = msg.echo, in_reply_to = msg.msg_id)
-  }
-
-  val run = handler.provideSome[Scope](MaelstromRuntime.live)
+  val echoHandler = receive[Echo](msg => msg reply EchoOk(echo = msg.echo, in_reply_to = msg.msg_id))
+  val run         = echoHandler.provideSome[Scope](MaelstromRuntime.live)
 
 //------ ping pong -------
 

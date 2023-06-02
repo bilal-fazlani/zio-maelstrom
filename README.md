@@ -14,8 +14,7 @@ case class EchoOk(echo: String, in_reply_to: MessageId, `type`: String = "echo_o
 
 object EchoProgram extends ZIOAppDefault:
   //Define the node behaviour
-  val handler = receive[Echo] { msg => msg reply EchoOk(echo = msg.body.echo, in_reply_to = msg.body.msg_id) }
-
+  val echoHandler = receive[Echo](msg => msg reply EchoOk(echo = msg.echo, in_reply_to = msg.msg_id))
   //Run the node
-  val run = handler.provideSome[Scope](MaelstromRuntime.live)  
+   val run         = echoHandler.provideSome[Scope](MaelstromRuntime.live)
 ```
