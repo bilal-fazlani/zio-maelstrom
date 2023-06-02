@@ -5,14 +5,15 @@ A library for building nodes for [maelstrom simulations](https://github.com/jeps
 ## Echo example
 
 ```scala
-//Define the message types
+// Define a message that needs a reply
 case class Echo(echo: String, msg_id: MessageId) extends NeedsReply derives JsonDecoder
 
+// Define reply message
 case class EchoOk(echo: String, in_reply_to: MessageId, `type`: String = "echo_ok") 
   extends Sendable, Reply derives JsonEncoder
 
 object EchoProgram extends ZIOAppDefault:
-  //Define the node behaviour
+  //Define a handler for the node
   val echoHandler = receive[Echo](
     msg => msg reply EchoOk(echo = msg.echo, in_reply_to = msg.msg_id)
   )
@@ -34,7 +35,7 @@ case class GenerateOk(id: String, in_reply_to: MessageId, `type`: String = "gene
 
 object Main extends ZIOAppDefault:
 
-  // Define a handler for the message
+  // Define a handler for the node
   val handler = receiveR[Ref[Int], Generate] { case request =>
     for {
       newId <- ZIO.serviceWithZIO[Ref[Int]](_.updateAndGet(_ + 1))
@@ -43,7 +44,7 @@ object Main extends ZIOAppDefault:
     } yield ()
   }
 
-  // Run the handler
+  // Run the node
   val run = handler.provideSome[Scope](
     MaelstromRuntime.live, 
     ZLayer.fromZIO(Ref.make(0))
