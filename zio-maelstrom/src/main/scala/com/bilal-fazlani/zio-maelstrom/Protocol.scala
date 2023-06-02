@@ -16,7 +16,7 @@ case class Message[+Body](
 trait Sendable:
   val `type`: String
 
-trait ReplyableTo:
+trait NeedsReply:
   val msg_id: MessageId
 
 trait Reply:
@@ -27,7 +27,7 @@ case class MaelstromInit(
     msg_id: MessageId,
     node_id: NodeId,
     node_ids: Seq[NodeId]
-) extends ReplyableTo
+) extends NeedsReply
     derives JsonDecoder
 
 object MaelstromInit {
@@ -117,7 +117,7 @@ enum StandardErrorCode(code: Int, definite: Boolean) extends ErrorCode(code, def
 
 case class CustomErrorCode(override val code: Int) extends ErrorCode(code, false)
 
-extension (m: Message[ReplyableTo])
+extension (m: Message[NeedsReply])
   def makeErrorMessage(code: ErrorCode, text: String): Message[MaelstromError] =
     Message[MaelstromError](
       source = m.destination,

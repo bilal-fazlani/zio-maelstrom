@@ -6,7 +6,7 @@ import com.bilalfazlani.zioMaelstrom.protocol.*
 import com.bilalfazlani.zioMaelstrom.*
 
 // IN MESSAGES
-@jsonDiscriminator("type") sealed trait CalculatorMessage                    extends ReplyableTo derives JsonDecoder
+@jsonDiscriminator("type") sealed trait CalculatorMessage                    extends NeedsReply derives JsonDecoder
 @jsonHint("add") case class Add(a: Int, b: Int, msg_id: MessageId)           extends CalculatorMessage derives JsonDecoder
 @jsonHint("subtract") case class Subtract(a: Int, b: Int, msg_id: MessageId) extends CalculatorMessage derives JsonDecoder
 

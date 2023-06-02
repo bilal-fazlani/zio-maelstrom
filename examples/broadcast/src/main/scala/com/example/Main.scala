@@ -6,7 +6,7 @@ import com.bilalfazlani.zioMaelstrom.protocol.*
 import com.bilalfazlani.zioMaelstrom.*
 
 @jsonDiscriminator("type")
-sealed trait BroadcastMessage extends ReplyableTo derives JsonDecoder
+sealed trait BroadcastMessage extends NeedsReply derives JsonDecoder
 
 @jsonHint("broadcast")
 case class Broadcast(message: Int, msg_id: MessageId) extends BroadcastMessage

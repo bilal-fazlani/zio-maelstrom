@@ -8,7 +8,7 @@ import zio.*
 extension (s: String) infix def /(string: String): Path = Path.of(s, string)
 extension (p: Path) infix def /(string: String): Path   = p resolve string
 
-extension [A <: ReplyableTo](message: A)
+extension [A <: NeedsReply](message: A)
   def reply[B <: Sendable & Reply: JsonEncoder](out: B)(using MessageSource) = MessageSender.send(out, NodeId(summon[MessageSource].nodeId))
 
 extension (nodeId: NodeId)
@@ -32,7 +32,7 @@ def src(using MessageSource): NodeId         = summon[MessageSource].nodeId
 //CONTEXTFUL - END
 
 final class AskPartiallyApplied[Res <: Reply](private val remote: NodeId) extends AnyVal {
-  def apply[Req <: Sendable & ReplyableTo: JsonEncoder](body: Req, timeout: Duration)(using
+  def apply[Req <: Sendable & NeedsReply: JsonEncoder](body: Req, timeout: Duration)(using
       JsonDecoder[Res]
   ): ZIO[MessageSender, ResponseError, Res] =
     MessageSender.ask[Req, Res](body, remote, timeout)
