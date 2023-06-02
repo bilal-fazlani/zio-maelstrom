@@ -70,9 +70,11 @@ case class MaelstromError(
 opaque type NodeId = String
 
 object NodeId:
-  def apply(id: String): NodeId = id
-  given JsonEncoder[NodeId]     = JsonEncoder.string.contramap(identity)
-  given JsonDecoder[NodeId]     = JsonDecoder.string.map(NodeId(_))
+  def apply(id: String): NodeId  = id
+  given JsonEncoder[NodeId]      = JsonEncoder.string.contramap(identity)
+  given JsonDecoder[NodeId]      = JsonDecoder.string.map(NodeId(_))
+  given JsonFieldEncoder[NodeId] = JsonFieldEncoder.string.contramap(identity)
+  given JsonFieldDecoder[NodeId] = JsonFieldDecoder.string.map(NodeId(_))
 
 opaque type MessageSource = NodeId
 
@@ -91,6 +93,8 @@ object MessageId:
   def apply(id: Int): MessageId = id
   given JsonEncoder[MessageId]  = JsonEncoder.int.contramap(identity)
   given JsonDecoder[MessageId]  = JsonDecoder.int.map(MessageId(_))
+  given JsonFieldEncoder[MessageId] = JsonFieldEncoder.int.contramap(identity)
+  given JsonFieldDecoder[MessageId] = JsonFieldDecoder.int.map(MessageId(_))
 
 sealed trait ErrorCode(val code: Int, val definite: Boolean)
 
