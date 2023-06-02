@@ -5,35 +5,50 @@ import zio.*
 import com.bilalfazlani.zioMaelstrom.protocol.*
 import com.bilalfazlani.zioMaelstrom.*
 
-@jsonDiscriminator("type")
-sealed trait BroadcastMessage extends NeedsReply derives JsonDecoder
+@jsonDiscriminator("type") sealed trait BroadcastMessage extends NeedsReply derives JsonDecoder
 
-@jsonHint("broadcast")
-case class Broadcast(message: Int, msg_id: MessageId) extends BroadcastMessage
+@jsonHint("broadcast") case class Broadcast(message: Int, msg_id: MessageId) extends BroadcastMessage
 
-@jsonHint("read")
-case class Read(msg_id: MessageId) extends BroadcastMessage
+@jsonHint("read") case class Read(msg_id: MessageId) extends BroadcastMessage
 
-@jsonHint("topology")
-case class Topology(msg_id: MessageId) extends BroadcastMessage
+@jsonHint("topology") case class Topology(msg_id: MessageId, topology: Map[NodeId, List[NodeId]]) extends BroadcastMessage
 
-case class BroadcastOk(in_reply_to: MessageId, `type`: String = "broadcast_ok") extends Sendable, Reply derives JsonEncoder
+object Topology:
+  given JsonDecoder[Map[NodeId, List[NodeId]]] = JsonDecoder[Map[String, List[String]]].map(_.map((k, v) => (NodeId(k), v.map(NodeId(_)))))
+  given JsonDecoder[Topology]                  = DeriveJsonDecoder.gen
 
+case class BroadcastOk(in_reply_to: MessageId, `type`: String = "broadcast_ok")           extends Sendable, Reply derives JsonEncoder
 case class ReadOk(messages: Seq[Int], in_reply_to: MessageId, `type`: String = "read_ok") extends Sendable, Reply derives JsonEncoder
-
-case class TopologyOk(in_reply_to: MessageId, `type`: String = "topology_ok") extends Sendable, Reply derives JsonEncoder
+case class TopologyOk(in_reply_to: MessageId, `type`: String = "topology_ok")             extends Sendable, Reply derives JsonEncoder
 
 object Main extends ZIOAppDefault:
-  val run = receiveR[Ref[List[Int]], BroadcastMessage] {
-    case broadcast: Broadcast =>
-      for {
-        _ <- ZIO.serviceWithZIO[Ref[List[Int]]](_.getAndUpdate(broadcast.message +: _))
-        _ <- broadcast reply BroadcastOk(broadcast.msg_id)
-      } yield ()
-    case read: Read =>
-      for {
-        messages <- ZIO.serviceWithZIO[Ref[List[Int]]](_.get)
-        _        <- read reply ReadOk(messages, read.msg_id)
-      } yield ()
-    case topology: Topology => topology reply TopologyOk(topology.msg_id)
-  }.provideSome[Scope](MaelstromRuntime.live, ZLayer.fromZIO(Ref.make(List.empty[Int])))
+  val settings = Settings(logFormat = LogFormat.Colored)
+
+  case class State(messages: List[Int] = List.empty, neighbours: List[NodeId] = List.empty) {
+    def addMessage(message: Int): State                = copy(messages = message +: messages)
+    def addNeighbours(neighbours: List[NodeId]): State = copy(neighbours = neighbours)
+  }
+
+  val run = receiveR[Ref[State], BroadcastMessage] {
+    case msg @ Broadcast(message, messageId) =>
+      for
+        state <- ZIO.serviceWithZIO[Ref[State]](_.get)
+        _     <- logInfo(s"demo info")
+        _     <- logError(s"demo error")
+        _     <- ZIO.serviceWithZIO[Ref[State]](_.getAndUpdate(_.addMessage(message)))
+        _     <- msg reply BroadcastOk(messageId)
+      yield ()
+    case msg @ Read(messageId) =>
+      for
+        myMessages <- ZIO.serviceWithZIO[Ref[State]](_.get.map(_.messages))
+        _          <- msg reply ReadOk(myMessages, messageId)
+      yield ()
+    case msg @ Topology(id, topology) =>
+      for
+        _ <- ZIO.serviceWithZIO[Ref[State]](_.getAndUpdate(_.addNeighbours(topology.get(myNodeId).getOrElse(List.empty))))
+        _ <- msg reply TopologyOk(id)
+      yield ()
+  }.provideSome[Scope](
+    MaelstromRuntime.live(settings),
+    ZLayer.fromZIO(Ref.make(State()))
+  )

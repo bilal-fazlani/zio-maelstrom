@@ -18,9 +18,10 @@ object Main extends ZIOAppDefault:
   val handler = receiveR[Ref[Int], Generate] { case request =>
     for {
       newId <- ZIO.serviceWithZIO[Ref[Int]](_.updateAndGet(_ + 1))
-      _     <- request reply GenerateOk(id = s"${myNodeId}_$newId", in_reply_to = request.msg_id)
+      combinedId = s"${myNodeId}_${newId}"
+      _     <- request reply GenerateOk(id = combinedId, in_reply_to = request.msg_id)
     } yield ()
   }
 
   // Run the handler
-  val run = handler.provideSome[Scope](MaelstromRuntime.live(Settings.default), ZLayer.fromZIO(Ref.make(0)))
+  val run = handler.provideSome[Scope](MaelstromRuntime.live, ZLayer.fromZIO(Ref.make(0)))

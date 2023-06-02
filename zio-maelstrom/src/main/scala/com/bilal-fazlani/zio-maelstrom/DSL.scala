@@ -18,7 +18,6 @@ extension (nodeId: NodeId)
 def getMyNodeId     = ZIO.service[Initialisation].map(_.context.me)
 def getOtherNodeIds = ZIO.service[Initialisation].map(_.context.others)
 
-def logDebug(message: => String) = Logger.debug(message)
 def logInfo(message: => String)  = Logger.info(message)
 def logError(message: => String) = Logger.error(message)
 

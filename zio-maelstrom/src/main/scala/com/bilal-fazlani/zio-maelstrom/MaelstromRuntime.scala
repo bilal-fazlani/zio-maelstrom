@@ -20,4 +20,4 @@ object MaelstromRuntime:
       )
     }
 
-  val live: ZLayer[Scope, Nothing, MaelstromRuntime] = live(Settings.default)
+  val live: ZLayer[Scope, Nothing, MaelstromRuntime] = live(Settings())

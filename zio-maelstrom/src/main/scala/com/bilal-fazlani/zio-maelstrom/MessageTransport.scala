@@ -28,7 +28,6 @@ private case class MessageTransportLive(logger: Logger, settings: Settings) exte
           case NodeInput.FilePath(path) => ZStream.fromFile(path.toFile, 128).via(ZPipeline.utfDecode).via(ZPipeline.splitLines)
         })
           .filter(line => line.trim != "")
-          .tap(logger.logInMessage)
           .takeWhile(line => line.trim != "q")
       } yield strm)
       .orDie
@@ -44,8 +43,4 @@ private case class MessageTransportLive(logger: Logger, settings: Settings) exte
     .map(x => Inputs(x._1, x._2))
 
   def transport[A <: Sendable: JsonEncoder](message: Message[A]): UIO[Unit] =
-    import com.bilalfazlani.rainbowcli.*
-    given colorContext: ColorContext = ColorContext(settings.logFormat == LogFormat.Colored)
-
-    Console.printLine(message.toJson.blue.onCyan.bold).orDie
-      *> logger.debug(s"sent ${message.body} to ${message.destination}")
+    Console.printLine(message.toJson).orDie

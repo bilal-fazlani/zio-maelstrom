@@ -17,7 +17,6 @@ private[zioMaelstrom] object RequestHandler:
         .mapZIOPar(1024)(genericMessage =>
           ZIO
             .fromEither(GenericDecoder[I].decode(genericMessage))
-            .tap(message => Logger.info(s"received ${message.body} from ${message.source}"))
             .mapError(e => InvalidInput(genericMessage, e))
             .flatMap { message =>
               given MessageSource = MessageSource(message.source)
