@@ -8,7 +8,7 @@ object MaelstromRuntime:
 
   def live(settings: Settings): ZLayer[Scope, Nothing, MaelstromRuntime] =
     ZLayer.succeed(settings) >>> {
-      val logger: ZLayer[Settings, Nothing, Logger] = if settings.debugLogs == DebugLogs.Disabled then Logger.disabled else Logger.active
+      val logger: ZLayer[Settings, Nothing, Logger] = if settings.logLevel == NodeLogLevel.Disabled then Logger.disabled else Logger.active
       ZLayer.makeSome[Scope & Settings, MaelstromRuntime](
         Initialisation.live,
         MessageSender.live,

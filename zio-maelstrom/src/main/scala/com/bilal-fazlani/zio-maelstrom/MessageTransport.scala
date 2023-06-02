@@ -45,7 +45,7 @@ private case class MessageTransportLive(logger: Logger, settings: Settings) exte
 
   def transport[A <: MessageBody: JsonEncoder](message: Message[A]): UIO[Unit] =
     import com.bilalfazlani.rainbowcli.*
-    given colorContext: ColorContext = ColorContext(settings.debugLogs == DebugLogs.Colored)
+    given colorContext: ColorContext = ColorContext(settings.logFormat == LogFormat.Colored)
 
     Console.printLine(message.toJson.blue.onCyan.bold).orDie
-      *> logger.info(s"sent ${message.body} to ${message.destination}")
+      *> logger.debug(s"sent ${message.body} to ${message.destination}")
