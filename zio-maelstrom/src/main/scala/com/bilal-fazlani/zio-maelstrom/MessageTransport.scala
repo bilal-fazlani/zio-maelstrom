@@ -7,7 +7,7 @@ import zio.stream.{ZStream, ZPipeline}
 import zio.json.JsonDecoder
 
 trait MessageTransport:
-  def transport[A <: MessageBody: JsonEncoder](message: Message[A]): UIO[Unit]
+  def transport[A <: Sendable: JsonEncoder](message: Message[A]): UIO[Unit]
   def readInputs: ZIO[Scope, Nothing, Inputs]
 
 private[zioMaelstrom] object MessageTransport:
@@ -43,7 +43,7 @@ private case class MessageTransportLive(logger: Logger, settings: Settings) exte
     .partition(_.isResponse, 1024)
     .map(x => Inputs(x._1, x._2))
 
-  def transport[A <: MessageBody: JsonEncoder](message: Message[A]): UIO[Unit] =
+  def transport[A <: Sendable: JsonEncoder](message: Message[A]): UIO[Unit] =
     import com.bilalfazlani.rainbowcli.*
     given colorContext: ColorContext = ColorContext(settings.logFormat == LogFormat.Colored)
 

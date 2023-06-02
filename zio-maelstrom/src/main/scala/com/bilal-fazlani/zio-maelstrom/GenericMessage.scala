@@ -21,9 +21,9 @@ private object GenericDetails {
 
   given JsonDecoder[GenericDetails] = JsonDecoder[Json].mapOrFail[GenericDetails](ast =>
     for {
-      obj <- ast.asObject.toRight("message body is not a json object")
-      tpe <- obj.getChildOptional[String]("type")
-      msgId <- obj.getChildOptional[MessageId]("msg_id")
+      obj       <- ast.asObject.toRight("message body is not a json object")
+      tpe       <- obj.getChildOptional[String]("type")
+      msgId     <- obj.getChildOptional[MessageId]("msg_id")
       inReplyTo <- obj.getChildOptional[MessageId]("in_reply_to")
     } yield GenericDetails(tpe, msgId, inReplyTo)
   )
@@ -58,21 +58,21 @@ private[zioMaelstrom] case class GenericMessage(
 private[zioMaelstrom] object GenericMessage {
   given JsonDecoder[GenericMessage] = JsonDecoder[Json].mapOrFail[GenericMessage](ast =>
     for {
-      obj <- ast.asObject.toRight("message is not a json object")
-      src <- obj.getChild[NodeId]("src")
-      dest <- obj.getChild[NodeId]("dest")
-      body <- obj.getChildOptional[Json]("body")
+      obj     <- ast.asObject.toRight("message is not a json object")
+      src     <- obj.getChild[NodeId]("src")
+      dest    <- obj.getChild[NodeId]("dest")
+      body    <- obj.getChildOptional[Json]("body")
       details <- body.fold(Right(GenericDetails.empty))(body => JsonDecoder[GenericDetails].fromJsonAST(body))
     } yield GenericMessage(src, dest, details.messageType, details.messageId, details.inReplyTo, body, ast)
   )
 }
 
-private[zioMaelstrom] trait GenericDecoder[A <: MessageBody: JsonDecoder]:
+private[zioMaelstrom] trait GenericDecoder[A: JsonDecoder]:
   def decode(msg: GenericMessage): Either[String, Message[A]]
 
 private[zioMaelstrom] object GenericDecoder:
-  def apply[A <: MessageBody: JsonDecoder](using decoder: GenericDecoder[A]): GenericDecoder[A] = decoder
-  given [A <: MessageBody: JsonDecoder]: GenericDecoder[A] = new GenericDecoder[A]:
+  def apply[A: JsonDecoder](using decoder: GenericDecoder[A]): GenericDecoder[A] = decoder
+  given [A: JsonDecoder]: GenericDecoder[A] = new GenericDecoder[A]:
     def decode(msg: GenericMessage): Either[String, Message[A]] =
       for {
         body <- msg.body.toRight("message body is missing")

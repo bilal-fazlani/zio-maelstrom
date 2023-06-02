@@ -4,7 +4,7 @@ package protocol
 import zio.json.*
 import scala.annotation.targetName
 
-case class Message[+Body <: MessageBody](
+case class Message[+Body](
     @jsonField("src")
     source: NodeId,
     @jsonField("dest")
@@ -13,22 +13,21 @@ case class Message[+Body <: MessageBody](
 ) derives JsonDecoder,
       JsonEncoder
 
-trait MessageBody:
+trait Sendable:
   val `type`: String
 
-trait MessageWithId extends MessageBody:
+trait Replyable:
   val msg_id: MessageId
 
-trait MessageWithReply extends MessageBody:
+trait Reply:
   val in_reply_to: MessageId
 
 @jsonHint("init")
 case class MaelstromInit(
     msg_id: MessageId,
     node_id: NodeId,
-    node_ids: Seq[NodeId],
-    `type`: String = "init"
-) extends MessageWithId
+    node_ids: Seq[NodeId]
+) extends Replyable
     derives JsonDecoder
 
 object MaelstromInit {
@@ -54,7 +53,8 @@ object MaelstromInit {
 case class MaelstromInitOk(
     in_reply_to: MessageId,
     `type`: String = "init_ok"
-) extends MessageWithReply
+) extends Sendable
+    with Reply
     derives JsonEncoder
 
 @jsonHint("error")
@@ -63,7 +63,8 @@ case class MaelstromError(
     code: ErrorCode,
     text: String,
     `type`: String = "error"
-) extends MessageWithReply
+) extends Sendable
+    with Reply
     derives JsonCodec
 
 opaque type NodeId = String
@@ -116,7 +117,7 @@ enum StandardErrorCode(code: Int, definite: Boolean) extends ErrorCode(code, def
 
 case class CustomErrorCode(override val code: Int) extends ErrorCode(code, false)
 
-extension (m: Message[MessageWithId])
+extension (m: Message[Replyable])
   def makeErrorMessage(code: ErrorCode, text: String): Message[MaelstromError] =
     Message[MaelstromError](
       source = m.destination,

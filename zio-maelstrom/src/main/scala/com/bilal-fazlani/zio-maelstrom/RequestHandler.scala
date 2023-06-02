@@ -2,12 +2,12 @@ package com.bilalfazlani.zioMaelstrom
 
 import protocol.*
 import zio.*
-import zio.json.JsonDecoder
+import zio.json.*
 
-type Handler[R, I <: MessageBody] = (MessageSource, Context) ?=> I => ZIO[MaelstromRuntime & R, Nothing, Unit]
+type Handler[R, I] = (MessageSource, Context) ?=> I => ZIO[MaelstromRuntime & R, Nothing, Unit]
 
 private[zioMaelstrom] object RequestHandler:
-  def handleR[R, I <: MessageBody: JsonDecoder](
+  def handleR[R, I: JsonDecoder](
       handler: Handler[R, I]
   ): ZIO[MaelstromRuntime & R, Nothing, Unit] =
     for {
@@ -29,7 +29,7 @@ private[zioMaelstrom] object RequestHandler:
         .runDrain
     } yield ()
 
-  def handle[I <: MessageBody: JsonDecoder](handler: Handler[Any, I]): ZIO[MaelstromRuntime, Nothing, Unit] = handleR(handler)
+  def handle[I: JsonDecoder](handler: Handler[Any, I]): ZIO[MaelstromRuntime, Nothing, Unit] = handleR(handler)
 
   private case class InvalidInput(input: GenericMessage, error: String)
 

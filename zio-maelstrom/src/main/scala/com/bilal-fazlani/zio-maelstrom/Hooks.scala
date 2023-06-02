@@ -41,7 +41,7 @@ private case class HooksLive(hooks: ConcurrentMap[MessageCorrelation, Promise[Re
       }
     } yield ()
 
-  private def suspend[I <: MessageWithReply](
+  private def suspend[I <: Reply](
       messageId: MessageId,
       remote: NodeId,
       promise: Promise[ResponseError, GenericMessage],

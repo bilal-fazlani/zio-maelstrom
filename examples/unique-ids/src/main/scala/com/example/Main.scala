@@ -5,9 +5,9 @@ import com.bilalfazlani.zioMaelstrom.*
 import zio.json.{JsonDecoder, JsonEncoder}
 import zio.*
 
-case class Generate(msg_id: MessageId, `type`: String) extends MessageWithId derives JsonDecoder
+case class Generate(msg_id: MessageId, `type`: String) extends Replyable derives JsonDecoder
 
-case class GenerateOk(id: String, in_reply_to: MessageId, `type`: String = "generate_ok") extends MessageWithReply derives JsonEncoder
+case class GenerateOk(id: String, in_reply_to: MessageId, `type`: String = "generate_ok") extends Sendable, Reply derives JsonEncoder
 
 object Main extends ZIOAppDefault:
 
