@@ -11,13 +11,13 @@ enum ResponseError:
 trait MessageSender:
   def send[A <: Sendable: JsonEncoder](body: A, to: NodeId): UIO[Unit]
 
-  def ask[Req <: Sendable & Replyable: JsonEncoder, Res <: Reply: JsonDecoder](
+  def ask[Req <: Sendable & ReplyableTo: JsonEncoder, Res <: Reply: JsonDecoder](
       body: Req,
       to: NodeId,
       timeout: Duration
   ): IO[ResponseError, Res]
 
-  def reply[Req <: Replyable, Res <: Sendable & Reply: JsonEncoder](message: Message[Req], reply: Res): UIO[Unit]
+  def reply[Req <: ReplyableTo, Res <: Sendable & Reply: JsonEncoder](message: Message[Req], reply: Res): UIO[Unit]
 
   // def broadcastAll[A <: MessageBody: JsonEncoder](body: A): UIO[Unit]
 
@@ -29,14 +29,14 @@ private[zioMaelstrom] object MessageSender:
   def send[A <: Sendable: JsonEncoder](body: A, to: NodeId): URIO[MessageSender, Unit] =
     ZIO.serviceWithZIO[MessageSender](_.send(body, to))
 
-  def ask[Req <: Sendable & Replyable: JsonEncoder, Res <: Reply: JsonDecoder](
+  def ask[Req <: Sendable & ReplyableTo: JsonEncoder, Res <: Reply: JsonDecoder](
       body: Req,
       to: NodeId,
       timeout: Duration
   ): ZIO[MessageSender, ResponseError, Res] =
     ZIO.serviceWithZIO[MessageSender](_.ask(body, to, timeout))
 
-  def reply[Req <: Replyable, Res <: Sendable & Reply: JsonEncoder](message: Message[Req], reply: Res): URIO[MessageSender, Unit] =
+  def reply[Req <: ReplyableTo, Res <: Sendable & Reply: JsonEncoder](message: Message[Req], reply: Res): URIO[MessageSender, Unit] =
     ZIO.serviceWithZIO[MessageSender](_.reply(message, reply))
 
   // def broadcastAll[A <: MessageBody: JsonEncoder](body: A): URIO[MessageSender, Unit] =
@@ -54,7 +54,7 @@ private case class MessageSenderLive(init: Initialisation, transport: MessageTra
     )
     transport.transport(message)
 
-  def ask[Req <: Sendable & Replyable: JsonEncoder, Res <: Reply: JsonDecoder](
+  def ask[Req <: Sendable & ReplyableTo: JsonEncoder, Res <: Reply: JsonDecoder](
       body: Req,
       to: NodeId,
       timeout: Duration
@@ -65,7 +65,7 @@ private case class MessageSenderLive(init: Initialisation, transport: MessageTra
       decoded  <- ZIO.fromEither(JsonDecoder[Message[Res]].fromJsonAST(response.raw)).mapError(e => ResponseError.DecodingError(e, response))
     } yield decoded.body
 
-  def reply[Req <: Replyable, Res <: Sendable & Reply: JsonEncoder](message: Message[Req], reply: Res): UIO[Unit] =
+  def reply[Req <: ReplyableTo, Res <: Sendable & Reply: JsonEncoder](message: Message[Req], reply: Res): UIO[Unit] =
     send(reply, message.source)
 
   // def broadcastAll[A <: MessageBody: JsonEncoder](body: A) =

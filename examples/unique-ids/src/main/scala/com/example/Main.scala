@@ -5,7 +5,7 @@ import com.bilalfazlani.zioMaelstrom.*
 import zio.json.{JsonDecoder, JsonEncoder}
 import zio.*
 
-case class Generate(msg_id: MessageId, `type`: String) extends Replyable derives JsonDecoder
+case class Generate(msg_id: MessageId, `type`: String) extends ReplyableTo derives JsonDecoder
 
 case class GenerateOk(id: String, in_reply_to: MessageId, `type`: String = "generate_ok") extends Sendable, Reply derives JsonEncoder
 
@@ -17,7 +17,5 @@ object Main extends ZIOAppDefault:
       _     <- request reply GenerateOk(id = s"${myNodeId}_$newId", in_reply_to = request.msg_id)
     } yield ()
   }
-
-  // private val settings = Settings(NodeInput.FilePath("examples" / "unique-ids" / "simulation.txt"), true)
 
   val run = handler.provideSome[Scope](MaelstromRuntime.live(Settings.default), ZLayer.fromZIO(Ref.make(0)))

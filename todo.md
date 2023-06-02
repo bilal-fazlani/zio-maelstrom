@@ -1,9 +1,9 @@
 - [-] Ask pattern (not working ATM)
 - [ ] Add concurrency in settings
-- [ ] Use union and compound types for message hierarchy. IN messages don't need "type"
-- [ ] Out messages should also not need to define types. Use class name
 - [ ] Multiple request-response can be started
 - [ ] Add more examples
 - [ ] Tests
 - [ ] Create documentation
+- [ ] Out messages should not need to define types. Use class name
+- [X] Use union and compound types for message hierarchy. IN messages don't need "type"
 - [X] Separate init from receive messages

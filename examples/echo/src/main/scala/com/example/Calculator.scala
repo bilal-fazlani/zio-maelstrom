@@ -5,17 +5,13 @@ import zio.*
 import com.bilalfazlani.zioMaelstrom.protocol.*
 import com.bilalfazlani.zioMaelstrom.*
 
-@jsonDiscriminator("type")
-sealed trait CalculatorMessage extends Replyable derives JsonDecoder
+// IN MESSAGES
+@jsonDiscriminator("type") sealed trait CalculatorMessage                    extends ReplyableTo derives JsonDecoder
+@jsonHint("add") case class Add(a: Int, b: Int, msg_id: MessageId)           extends CalculatorMessage derives JsonDecoder
+@jsonHint("subtract") case class Subtract(a: Int, b: Int, msg_id: MessageId) extends CalculatorMessage derives JsonDecoder
 
-@jsonHint("add")
-case class Add(a: Int, b: Int, msg_id: MessageId) extends CalculatorMessage derives JsonDecoder
-
-@jsonHint("subtract")
-case class Subtract(a: Int, b: Int, msg_id: MessageId) extends CalculatorMessage derives JsonDecoder
-
-case class AddOk(result: Int, in_reply_to: MessageId, `type`: String = "add_ok") extends Sendable, Reply derives JsonEncoder
-
+// OUT MESSAGES
+case class AddOk(result: Int, in_reply_to: MessageId, `type`: String = "add_ok")           extends Sendable, Reply derives JsonEncoder
 case class SubtractOk(result: Int, in_reply_to: MessageId, `type`: String = "subtract_ok") extends Sendable, Reply derives JsonEncoder
 
 object Calculator extends ZIOAppDefault:

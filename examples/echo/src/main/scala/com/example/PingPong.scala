@@ -5,7 +5,7 @@ import zio.*
 import com.bilalfazlani.zioMaelstrom.protocol.*
 import com.bilalfazlani.zioMaelstrom.*
 
-case class Ping(msg_id: MessageId, `type`: String = "ping") extends Sendable, Replyable derives JsonEncoder
+case class Ping(msg_id: MessageId, `type`: String = "ping") extends Sendable, ReplyableTo derives JsonEncoder
 case class Pong(in_reply_to: MessageId)                     extends Reply derives JsonDecoder
 
 object PingPong extends ZIOAppDefault:
