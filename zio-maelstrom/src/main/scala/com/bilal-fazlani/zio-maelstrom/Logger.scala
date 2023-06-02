@@ -7,8 +7,7 @@ trait Logger:
   def info(line: String): UIO[Unit]
   def error(line: String): UIO[Unit]
 
-  private[zioMaelstrom] def logRequest(message: String): UIO[Unit]
-  private[zioMaelstrom] def logResponse(message: String): UIO[Unit]
+  private[zioMaelstrom] def logInMessage(message: String): UIO[Unit]
 
 private[zioMaelstrom] object Logger:
   val active: ZLayer[Settings, Nothing, Logger]   = ZLayer.fromFunction(LoggerLive.apply)
@@ -25,12 +24,9 @@ private case class LoggerLive(settings: Settings) extends Logger:
 
   def error(line: String): UIO[Unit] = printLineError(line.red).orDie
 
-  def logRequest(message: String): UIO[Unit] = printLineError(message.blue.onGreen.bold).orDie
-
-  def logResponse(message: String): UIO[Unit] = printLineError(message.blue.onCyan.bold).orDie
+  def logInMessage(message: String): UIO[Unit] = printLineError(message.blue.onGreen.bold).orDie
 
 private object DisabledLogger extends Logger:
-  def info(line: String): UIO[Unit]           = ZIO.unit
-  def error(line: String): UIO[Unit]          = ZIO.unit
-  def logRequest(message: String): UIO[Unit]  = ZIO.unit
-  def logResponse(message: String): UIO[Unit] = printLine(message).orDie
+  def info(line: String): UIO[Unit]             = ZIO.unit
+  def error(line: String): UIO[Unit]            = ZIO.unit
+  def logInMessage(message: String): UIO[Unit]  = ZIO.unit

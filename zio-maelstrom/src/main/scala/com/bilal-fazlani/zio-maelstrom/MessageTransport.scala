@@ -12,7 +12,7 @@ trait MessageTransport:
 
 private[zioMaelstrom] object MessageTransport:
   val live: ZLayer[Logger & Settings, Nothing, MessageTransportLive] = ZLayer.fromFunction(MessageTransportLive.apply)
-  val readInputs = ZIO.serviceWithZIO[MessageTransport](_.readInputs)
+  val readInputs                                                     = ZIO.serviceWithZIO[MessageTransport](_.readInputs)
 
 private case class MessageTransportLive(logger: Logger, settings: Settings) extends MessageTransport:
 
@@ -28,7 +28,7 @@ private case class MessageTransportLive(logger: Logger, settings: Settings) exte
           case NodeInput.FilePath(path) => ZStream.fromFile(path.toFile, 128).via(ZPipeline.utfDecode).via(ZPipeline.splitLines)
         })
           .filter(line => line.trim != "")
-          .tap(logger.logRequest)
+          .tap(logger.logInMessage)
           .takeWhile(line => line.trim != "q")
       } yield strm)
       .orDie
@@ -44,5 +44,8 @@ private case class MessageTransportLive(logger: Logger, settings: Settings) exte
     .map(x => Inputs(x._1, x._2))
 
   def transport[A <: MessageBody: JsonEncoder](message: Message[A]): UIO[Unit] =
-    logger.logResponse(message.toJson)
+    import com.bilalfazlani.rainbowcli.*
+    given colorContext: ColorContext = ColorContext(settings.debugLogs == DebugLogs.Colored)
+
+    Console.printLine(message.toJson.blue.onCyan.bold).orDie
       *> logger.info(s"sent ${message.body} to ${message.destination}")
