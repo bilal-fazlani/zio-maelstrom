@@ -4,7 +4,6 @@ import zio.*
 import zio.Console.*
 
 trait Logger:
-
   def info(line: String): UIO[Unit]
   def error(line: String): UIO[Unit]
 
@@ -24,5 +23,5 @@ private case class LoggerLive(settings: Settings) extends Logger:
   def error(line: String): UIO[Unit] = ZIO.when(settings.logLevel <= NodeLogLevel.Error)(printLineError(line.red).orDie).unit
 
 private object DisabledLogger extends Logger:
-  def info(line: String): UIO[Unit]            = ZIO.unit
-  def error(line: String): UIO[Unit]           = ZIO.unit
+  def info(line: String): UIO[Unit]  = ZIO.unit
+  def error(line: String): UIO[Unit] = ZIO.unit

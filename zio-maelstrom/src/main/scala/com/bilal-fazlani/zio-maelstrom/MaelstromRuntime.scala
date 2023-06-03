@@ -5,7 +5,6 @@ import zio.{Scope, ZLayer}
 type MaelstromRuntime = Initialisation & MessageSender & Logger & ResponseHandler & Settings
 
 object MaelstromRuntime:
-
   def live(settings: Settings): ZLayer[Scope, Nothing, MaelstromRuntime] =
     ZLayer.succeed(settings) >>> {
       val logger: ZLayer[Settings, Nothing, Logger] = if settings.logLevel == NodeLogLevel.Disabled then Logger.disabled else Logger.active

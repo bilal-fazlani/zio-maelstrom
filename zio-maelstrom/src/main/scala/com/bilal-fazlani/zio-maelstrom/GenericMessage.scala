@@ -4,7 +4,7 @@ package protocol
 import zio.json.ast.Json
 import zio.json.JsonDecoder
 
-private case class GenericDetails(
+private[zioMaelstrom] case class GenericDetails(
     messageType: Option[String],
     messageId: Option[MessageId],
     inReplyTo: Option[MessageId]
@@ -16,7 +16,7 @@ extension (parent: Json)
   private def getChild[A: JsonDecoder](field: String): Either[String, A] =
     parent.asObject.flatMap(_.get(field)).fold(Left(s"missing field '$field'"))(json => JsonDecoder[A].fromJsonAST(json))
 
-private object GenericDetails {
+private[zioMaelstrom] object GenericDetails {
   val empty = GenericDetails(None, None, None)
 
   given JsonDecoder[GenericDetails] = JsonDecoder[Json].mapOrFail[GenericDetails](ast =>

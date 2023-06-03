@@ -1,8 +1,9 @@
+- [ ] File input is not working
 - [ ] Make types/apis private
 - [ ] Create documentation
 - [ ] Tests
 - [ ] Add more examples
-- [ ] Multiple request-response can be started
+- [ ] Multiple request-response can be started. There should be only one handler for a node
 - [ ] Out messages should not need to define types. Use class name. May need to use macros
 - [X] Add concurrency in settings
 - [X] Ask pattern

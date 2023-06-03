@@ -6,7 +6,7 @@ import zio.json.{JsonEncoder, EncoderOps}
 import zio.stream.{ZStream, ZPipeline}
 import zio.json.JsonDecoder
 
-trait MessageTransport:
+private[zioMaelstrom] trait MessageTransport:
   def transport[A <: Sendable: JsonEncoder](message: Message[A]): UIO[Unit]
   def readInputs: ZIO[Scope, Nothing, Inputs]
 

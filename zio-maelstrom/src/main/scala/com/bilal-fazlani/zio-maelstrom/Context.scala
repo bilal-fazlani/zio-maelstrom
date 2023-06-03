@@ -2,7 +2,7 @@ package com.bilalfazlani.zioMaelstrom
 
 import protocol.*
 
-case class Context(me: NodeId, others: Seq[NodeId])
+private[zioMaelstrom] case class Context(me: NodeId, others: Seq[NodeId])
 
 object Context:
   private[zioMaelstrom] def apply(init: Message[MaelstromInit]): Context =

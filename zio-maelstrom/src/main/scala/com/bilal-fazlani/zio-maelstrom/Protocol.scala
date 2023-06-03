@@ -22,14 +22,14 @@ trait NeedsReply:
 trait Reply:
   val in_reply_to: MessageId
 
-case class MaelstromInit(
+private[zioMaelstrom] case class MaelstromInit(
     msg_id: MessageId,
     node_id: NodeId,
     node_ids: Seq[NodeId]
 ) extends NeedsReply
     derives JsonDecoder
 
-object MaelstromInit {
+private[zioMaelstrom] object MaelstromInit {
   private def parseInit(msg: GenericMessage): Either[String, Message[MaelstromInit]] =
     if msg.isOfType("init")
     then
@@ -48,7 +48,7 @@ object MaelstromInit {
     parseInit(msg).getOrElse(throw new Exception("message is not of type 'init'"))
 }
 
-case class MaelstromInitOk(
+private[zioMaelstrom] case class MaelstromInitOk(
     in_reply_to: MessageId,
     `type`: String = "init_ok"
 ) extends Sendable
@@ -117,15 +117,3 @@ enum StandardErrorCode(code: Int, definite: Boolean) extends ErrorCode(code, def
 // format: on
 
 case class CustomErrorCode(override val code: Int) extends ErrorCode(code, false)
-
-extension (m: Message[NeedsReply])
-  def makeErrorMessage(code: ErrorCode, text: String): Message[ErrorMessage] =
-    Message[ErrorMessage](
-      source = m.destination,
-      destination = m.source,
-      body = ErrorMessage(
-        in_reply_to = m.body.msg_id,
-        code = code,
-        text = text
-      )
-    )

@@ -20,10 +20,6 @@ trait MessageSender:
 
   def reply[Req <: NeedsReply, Res <: Sendable & Reply: JsonEncoder](message: Message[Req], reply: Res): UIO[Unit]
 
-  // def broadcastAll[A <: MessageBody: JsonEncoder](body: A): UIO[Unit]
-
-  // def broadcastTo[A <: MessageBody: JsonEncoder](others: Seq[NodeId], body: A): UIO[Unit]
-
 private[zioMaelstrom] object MessageSender:
   val live: ZLayer[Initialisation & MessageTransport & Hooks, Nothing, MessageSender] = ZLayer.fromFunction(MessageSenderLive.apply)
 
@@ -39,12 +35,6 @@ private[zioMaelstrom] object MessageSender:
 
   def reply[Req <: NeedsReply, Res <: Sendable & Reply: JsonEncoder](message: Message[Req], reply: Res): URIO[MessageSender, Unit] =
     ZIO.serviceWithZIO[MessageSender](_.reply(message, reply))
-
-  // def broadcastAll[A <: MessageBody: JsonEncoder](body: A): URIO[MessageSender, Unit] =
-  //   ZIO.serviceWithZIO[MessageSender](_.broadcastAll(body))
-
-  // def broadcastTo[A <: MessageBody: JsonEncoder](others: Seq[NodeId], body: A): URIO[MessageSender, Unit] =
-  //   ZIO.serviceWithZIO[MessageSender](_.broadcastTo(others, body))
 
 private case class MessageSenderLive(init: Initialisation, transport: MessageTransport, hooks: Hooks) extends MessageSender:
   def send[A <: Sendable: JsonEncoder](body: A, to: NodeId) =
@@ -80,9 +70,3 @@ private case class MessageSenderLive(init: Initialisation, transport: MessageTra
 
   def reply[Req <: NeedsReply, Res <: Sendable & Reply: JsonEncoder](message: Message[Req], reply: Res): UIO[Unit] =
     send(reply, message.source)
-
-  // def broadcastAll[A <: MessageBody: JsonEncoder](body: A) =
-  //   broadcastTo(init.context.others, body)
-
-  // def broadcastTo[A <: MessageBody: JsonEncoder](others: Seq[NodeId], body: A) =
-  //   ZIO.foreachPar(others)(to => send(body, to)).unit
