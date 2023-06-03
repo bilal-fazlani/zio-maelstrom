@@ -4,7 +4,7 @@ import zio.*
 import protocol.*
 import zio.concurrent.ConcurrentMap
 
-trait Hooks:
+private[zioMaelstrom] trait Hooks:
   def awaitRemote(
       messageId: MessageId,
       remote: NodeId,
@@ -48,8 +48,8 @@ private case class HooksLive(hooks: ConcurrentMap[MessageCorrelation, Promise[Re
       messageTimeout: Duration
   ): URIO[Scope, Unit] =
     val correlation = MessageCorrelation(messageId, remote.nodeId)
-    hooks.put(correlation, promise).unit *> 
-    (timeout(correlation, messageTimeout).delay(messageTimeout).forkScoped.unit)
+    hooks.put(correlation, promise).unit *>
+      (timeout(correlation, messageTimeout).delay(messageTimeout).forkScoped.unit)
 
   private def timeout(correlation: MessageCorrelation, timeout: Duration) =
     for {

@@ -17,7 +17,7 @@ private[zioMaelstrom] case class Initialisation(context: Context, inputs: Inputs
 private[zioMaelstrom] object Initialisation:
   val live: ZLayer[Scope & Initializer, Nothing, Initialisation] = ZLayer.fromZIO(Initializer.initialize)
 
-trait Initializer:
+private[zioMaelstrom] trait Initializer:
   def initialize: ZIO[Scope, Nothing, Initialisation]
 
 private[zioMaelstrom] object Initializer:

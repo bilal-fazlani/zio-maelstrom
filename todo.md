@@ -1,4 +1,5 @@
 - [ ] File input is not working
+- [ ] Error code hierarchy needs to be simplified
 - [ ] Make types/apis private
 - [ ] Create documentation
 - [ ] Tests

@@ -4,7 +4,7 @@ package protocol
 import zio.json.*
 import scala.annotation.targetName
 
-case class Message[+Body](
+private[zioMaelstrom] case class Message[+Body](
     @jsonField("src")
     source: NodeId,
     @jsonField("dest")
@@ -73,11 +73,11 @@ object NodeId:
   given JsonFieldEncoder[NodeId] = JsonFieldEncoder.string.contramap(identity)
   given JsonFieldDecoder[NodeId] = JsonFieldDecoder.string.map(NodeId(_))
 
-opaque type MessageSource = NodeId
+private[zioMaelstrom] opaque type MessageSource = NodeId
 
 extension (s: MessageSource)
   @targetName("messageSourceAsNodeId")
-  def nodeId: NodeId = s
+  private[zioMaelstrom] def nodeId: NodeId = s
 
 object MessageSource:
   @targetName("messageSourceFromNodeId")

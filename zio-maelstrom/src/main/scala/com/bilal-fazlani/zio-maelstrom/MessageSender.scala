@@ -9,7 +9,7 @@ type ResponseError = ErrorMessage | DecodingFailure | Timeout
 case class Timeout(messageId: MessageId, remote: NodeId, timeout: Duration)
 case class DecodingFailure(error: String, message: GenericMessage)
 
-trait MessageSender:
+private[zioMaelstrom] trait MessageSender:
   def send[A <: Sendable: JsonEncoder](body: A, to: NodeId): UIO[Unit]
 
   def ask[Req <: Sendable & NeedsReply: JsonEncoder, Res <: Reply: JsonDecoder](

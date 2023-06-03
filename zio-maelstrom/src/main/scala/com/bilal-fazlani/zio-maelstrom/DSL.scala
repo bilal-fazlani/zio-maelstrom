@@ -30,7 +30,7 @@ def otherNodeIds(using Context): Seq[NodeId] = summon[Context].others
 def src(using MessageSource): NodeId         = summon[MessageSource].nodeId
 //CONTEXTFUL - END
 
-final class AskPartiallyApplied[Res <: Reply](private val remote: NodeId) extends AnyVal {
+private[zioMaelstrom] final class AskPartiallyApplied[Res <: Reply](private val remote: NodeId) extends AnyVal {
   def apply[Req <: Sendable & NeedsReply: JsonEncoder](body: Req, timeout: Duration)(using
       JsonDecoder[Res]
   ): ZIO[MessageSender, ResponseError, Res] =

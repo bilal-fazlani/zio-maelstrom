@@ -2,7 +2,7 @@ package com.bilalfazlani.zioMaelstrom
 
 import zio.*
 
-trait ResponseHandler:
+private[zioMaelstrom] trait ResponseHandler:
   val handle: ZIO[Logger, Nothing, Unit]
 
 private[zioMaelstrom] object ResponseHandler:

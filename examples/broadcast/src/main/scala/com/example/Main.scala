@@ -2,8 +2,8 @@ package com.example.broadcast
 
 import zio.json.*
 import zio.*
-import com.bilalfazlani.zioMaelstrom.protocol.*
 import com.bilalfazlani.zioMaelstrom.*
+import com.bilalfazlani.zioMaelstrom.protocol.*
 
 @jsonDiscriminator("type") sealed trait InMessage derives JsonDecoder
 @jsonHint("topology") case class Topology(topology: Map[NodeId, List[NodeId]], msg_id: MessageId) extends InMessage, NeedsReply
