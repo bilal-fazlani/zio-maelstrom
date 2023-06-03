@@ -9,9 +9,9 @@ trait Hooks:
       messageId: MessageId,
       remote: NodeId,
       timeout: Duration
-  ): IO[ResponseError, GenericMessage]
+  ): ZIO[Scope, ResponseError, GenericMessage]
 
-  def complete(message: GenericMessage): ZIO[Any, Nothing, Unit]
+  def complete(message: GenericMessage): ZIO[Logger, Nothing, Unit]
 
 private[zioMaelstrom] object Hooks:
   val live: ZLayer[Any, Nothing, HooksLive] = {
@@ -23,32 +23,33 @@ private case class MessageCorrelation(messageId: MessageId, remote: NodeId)
 
 private case class HooksLive(hooks: ConcurrentMap[MessageCorrelation, Promise[ResponseError, GenericMessage]]) extends Hooks:
 
-  def awaitRemote(messageId: MessageId, remote: NodeId, timeout: Duration): IO[ResponseError, GenericMessage] =
+  def awaitRemote(messageId: MessageId, remote: NodeId, timeout: Duration): ZIO[Scope, ResponseError, GenericMessage] =
     for {
       promise        <- Promise.make[ResponseError, GenericMessage]
       _              <- suspend(messageId, remote, promise, timeout)
       genericMessage <- promise.await
     } yield genericMessage
 
-  def complete(message: GenericMessage): ZIO[Any, Nothing, Unit] =
+  def complete(message: GenericMessage): ZIO[Logger, Nothing, Unit] =
     // .get is used here because we know that the message is a reply
     val correlation = MessageCorrelation(message.inReplyTo.get, message.src)
     for {
       promise <- hooks.remove(correlation)
       _ <- promise match {
         case Some(p) => p.succeed(message).unit
-        case None    => ZIO.unit
+        case None    => logError(s"Message $message not found in hooks")
       }
     } yield ()
 
-  private def suspend[I <: Reply](
+  private def suspend(
       messageId: MessageId,
       remote: NodeId,
       promise: Promise[ResponseError, GenericMessage],
       messageTimeout: Duration
-  ): UIO[Unit] =
+  ): URIO[Scope, Unit] =
     val correlation = MessageCorrelation(messageId, remote.nodeId)
-    hooks.put(correlation, promise.asInstanceOf).unit *> (timeout(correlation, messageTimeout).delay(messageTimeout))
+    hooks.put(correlation, promise).unit *> 
+    (timeout(correlation, messageTimeout).delay(messageTimeout).forkScoped.unit)
 
   private def timeout(correlation: MessageCorrelation, timeout: Duration) =
     for {

@@ -16,7 +16,8 @@ object MaelstromRuntime:
         Initializer.live,
         ResponseHandler.live,
         MessageTransport.live,
-        Hooks.live
+        Hooks.live,
+        ZLayer.fromZIO(ResponseHandler.handle.forkScoped.unit)
       )
     }
 

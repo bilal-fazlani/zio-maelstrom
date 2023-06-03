@@ -62,7 +62,7 @@ private case class MessageSenderLive(init: Initialisation, transport: MessageTra
   ): IO[ResponseError, Res] =
     for {
       _              <- send(body, to)
-      genericMessage <- hooks.awaitRemote(body.msg_id, to, timeout)
+      genericMessage <- ZIO.scoped(hooks.awaitRemote(body.msg_id, to, timeout))
       decoded <-
         if genericMessage.isError then {
           val error = JsonDecoder[Message[ErrorMessage]]
