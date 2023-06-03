@@ -53,7 +53,7 @@ object Main extends ZIOAppDefault:
         _ <- msg reply TopologyOk(id)
       yield ()
     case msg @ Gossip(iHaveSeen, _) =>
-      ZIO.serviceWithZIO[Ref[State]](_.update(_.addGossip(iHaveSeen, src)))
+      ZIO.serviceWithZIO[Ref[State]](_.update(_.addGossip(iHaveSeen)))
   }
 
   val run = (handleMessages race gossip)
