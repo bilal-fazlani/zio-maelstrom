@@ -54,18 +54,18 @@ object Main extends ZIOAppDefault:
 ## Naive Gossip example
 
 ```scala
-// Define a message that you need to handle
+// Define messages that you need to handle
 @jsonDiscriminator("type") sealed trait InMessage derives JsonDecoder
 @jsonHint("topology") case class Topology(topology: Map[NodeId, List[NodeId]], msg_id: MessageId) extends InMessage, NeedsReply
 @jsonHint("broadcast") case class Broadcast(message: Int, msg_id: MessageId)                      extends InMessage, NeedsReply
 @jsonHint("read") case class Read(msg_id: MessageId)                                              extends InMessage, NeedsReply
 
-// Define a message that you can send
+// Define messages that you can send
 case class BroadcastOk(in_reply_to: MessageId, `type`: String = "broadcast_ok")           extends Sendable, Reply derives JsonEncoder
 case class ReadOk(messages: Set[Int], in_reply_to: MessageId, `type`: String = "read_ok") extends Sendable, Reply derives JsonEncoder
 case class TopologyOk(in_reply_to: MessageId, `type`: String = "topology_ok")             extends Sendable, Reply derives JsonEncoder
 
-//gossip is a messages which you receive and send
+//gossip is a messages which you can receive and send. It does not need a reply
 @jsonHint("gossip") case class Gossip(iHaveSeen: Set[Int], `type`: String = "gossip")     extends InMessage, Sendable derives JsonEncoder
 
 // Define the state of the node
@@ -77,7 +77,7 @@ case class State(messages: Set[Int] = Set.empty, neighbours: Set[NodeId] = Set.e
 
 object Main extends ZIOAppDefault:
 
-  //Helper functions
+  //Some helper functions
   val getState                       = ZIO.serviceWithZIO[Ref[State]](_.get)
   def updateState(f: State => State) = ZIO.serviceWithZIO[Ref[State]](_.update(f))
 
@@ -95,7 +95,8 @@ object Main extends ZIOAppDefault:
         *> (msg reply TopologyOk(messageId)) 
         *> startGossip.forkScoped.unit 
         //gossip starts after topology is received
-        //and runs in a background fiber
+        //and runs in a background fiber. 
+        //`.forkScoped` requires us to add `Scope` to the handler type
 
     case msg @ Gossip(gossipMessages, _) =>
       updateState(_.addGossip(gossipMessages))
