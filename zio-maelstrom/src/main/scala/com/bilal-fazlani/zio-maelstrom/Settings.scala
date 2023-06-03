@@ -10,4 +10,4 @@ enum NodeLogLevel(val level: Int):
 enum LogFormat:
   case Plain, Colored
 
-case class Settings(nodeInput: NodeInput = NodeInput.StdIn, logLevel: NodeLogLevel = NodeLogLevel.Info, logFormat: LogFormat = LogFormat.Plain)
+case class Settings(nodeInput: NodeInput = NodeInput.StdIn, logLevel: NodeLogLevel = NodeLogLevel.Info, logFormat: LogFormat = LogFormat.Colored)
