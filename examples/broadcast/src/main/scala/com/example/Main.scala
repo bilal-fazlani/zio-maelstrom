@@ -20,7 +20,7 @@ object Main extends ZIOAppDefault:
 
   case class State(messages: Set[Int] = Set.empty, neighbours: Set[NodeId] = Set.empty) {
     def addBroadcast(message: Int): State             = copy(messages = messages + message)
-    def addGossip(newMessages: Set[Int]): State       = copy(messages = messages ++ newMessages)
+    def addGossip(gossipMessages: Set[Int]): State    = copy(messages = messages ++ gossipMessages)
     def addNeighbours(neighbours: Set[NodeId]): State = copy(neighbours = neighbours)
   }
 
@@ -34,26 +34,22 @@ object Main extends ZIOAppDefault:
       .unit
   yield ()).delay(500.millis).forever
 
+  def getRef[R: Tag]               = ZIO.serviceWithZIO[Ref[R]](_.get)
+  def updateRef[R: Tag](f: R => R) = ZIO.serviceWithZIO[Ref[R]](_.update(f))
+
   val handleMessages = receiveR[Ref[State], InMessage] {
     case msg @ Broadcast(message, messageId) =>
-      for
-        state <- ZIO.serviceWithZIO[Ref[State]](_.updateAndGet(_.addBroadcast(message)))
-        _     <- msg reply BroadcastOk(messageId)
-      yield ()
+      updateRef[State](_.addBroadcast(message)) *> (msg reply BroadcastOk(messageId))
+
     case msg @ Read(messageId) =>
-      for
-        myMessages <- ZIO.serviceWithZIO[Ref[State]](_.get.map(_.messages))
-        _          <- msg reply ReadOk(myMessages, messageId)
-      yield ()
-    case msg @ Topology(id, topology) =>
-      for
-        state <- ZIO.service[Ref[State]]
-        neighbours = topology(myNodeId).toSet
-        _ <- state.update(_.addNeighbours(neighbours))
-        _ <- msg reply TopologyOk(id)
-      yield ()
-    case msg @ Gossip(iHaveSeen, _) =>
-      ZIO.serviceWithZIO[Ref[State]](_.update(_.addGossip(iHaveSeen)))
+      getRef[State].map(_.messages) flatMap (myMessages => msg reply ReadOk(myMessages, messageId))
+
+    case msg @ Topology(messageId, topology) =>
+      val neighbours = topology(myNodeId).toSet
+      updateRef[State](_.addNeighbours(neighbours)) *> (msg reply TopologyOk(messageId))
+
+    case msg @ Gossip(gossipMessages, _) =>
+      updateRef[State](_.addGossip(gossipMessages))
   }
 
   val run = (handleMessages race gossip)
