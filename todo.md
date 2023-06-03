@@ -1,9 +1,10 @@
-- [ ] Add concurrency in settings
-- [ ] Multiple request-response can be started
-- [ ] Add more examples
-- [ ] Tests
+- [ ] Make types/apis private
 - [ ] Create documentation
-- [ ] Out messages should not need to define types. Use class name
+- [ ] Tests
+- [ ] Add more examples
+- [ ] Multiple request-response can be started
+- [ ] Out messages should not need to define types. Use class name. May need to use macros
+- [X] Add concurrency in settings
 - [X] Ask pattern
 - [X] Use union and compound types for message hierarchy. IN messages don't need "type"
 - [X] Separate init from receive messages

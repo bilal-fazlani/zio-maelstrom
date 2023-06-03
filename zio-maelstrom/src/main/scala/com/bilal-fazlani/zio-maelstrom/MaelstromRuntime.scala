@@ -2,7 +2,7 @@ package com.bilalfazlani.zioMaelstrom
 
 import zio.{Scope, ZLayer}
 
-type MaelstromRuntime = Initialisation & MessageSender & Logger & ResponseHandler
+type MaelstromRuntime = Initialisation & MessageSender & Logger & ResponseHandler & Settings
 
 object MaelstromRuntime:
 

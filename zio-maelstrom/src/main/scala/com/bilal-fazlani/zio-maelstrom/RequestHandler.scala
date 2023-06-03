@@ -12,9 +12,10 @@ private[zioMaelstrom] object RequestHandler:
   ): ZIO[MaelstromRuntime & R, Nothing, Unit] =
     for {
       initialisation <- ZIO.service[Initialisation]
+      settings <- ZIO.service[Settings]
       _ <- initialisation.inputs.messageStream
         // process messages in parallel
-        .mapZIOPar(1024)(genericMessage =>
+        .mapZIOPar(settings.concurrency)(genericMessage =>
           ZIO
             .fromEither(GenericDecoder[I].decode(genericMessage))
             .mapError(e => InvalidInput(genericMessage, e))
