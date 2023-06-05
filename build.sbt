@@ -75,7 +75,6 @@ lazy val maelstrom = project
     libraryDependencies ++= Seq(
       Libs.zio,
       Libs.zioConcurrent,
-      Libs.rainbowCli,
       Libs.zioStreams,
       Libs.zioJson,
       Libs.zioTest % Test
