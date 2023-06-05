@@ -4,58 +4,64 @@ import zio.*
 import protocol.*
 import zio.concurrent.ConcurrentMap
 
+case class DuplicateCallbackAttempt(callbackId: CallbackId)
+
 private[zioMaelstrom] trait Hooks:
   def awaitRemote(
       messageId: MessageId,
       remote: NodeId,
       timeout: Duration
-  ): ZIO[Scope, ResponseError, GenericMessage]
+  ): ZIO[Scope, AskError, GenericMessage]
 
-  def complete(message: GenericMessage): ZIO[Logger, Nothing, Unit]
+  def complete(message: GenericMessage): ZIO[Any, Nothing, Unit]
 
 private[zioMaelstrom] object Hooks:
-  val live: ZLayer[Any, Nothing, HooksLive] = {
-    val hooks = ZLayer.fromZIO(ConcurrentMap.empty[MessageCorrelation, Promise[ResponseError, GenericMessage]])
+  val live: ZLayer[Logger, Nothing, HooksLive] = {
+    val hooks = ZLayer.fromZIO(ConcurrentMap.empty[CallbackId, Promise[AskError, GenericMessage]])
     hooks >>> ZLayer.fromFunction(HooksLive.apply)
   }
 
-private case class MessageCorrelation(messageId: MessageId, remote: NodeId)
+private case class CallbackId(messageId: MessageId, remote: NodeId) {
+  override def toString(): String = s"CallbackId(messageId=$messageId, remote=$remote)"
+}
 
-private case class HooksLive(hooks: ConcurrentMap[MessageCorrelation, Promise[ResponseError, GenericMessage]]) extends Hooks:
+private case class HooksLive(hooks: ConcurrentMap[CallbackId, Promise[AskError, GenericMessage]], logger: Logger) extends Hooks:
 
-  def awaitRemote(messageId: MessageId, remote: NodeId, timeout: Duration): ZIO[Scope, ResponseError, GenericMessage] =
+  def awaitRemote(messageId: MessageId, remote: NodeId, timeout: Duration): ZIO[Scope, AskError, GenericMessage] =
     for {
-      promise        <- Promise.make[ResponseError, GenericMessage]
+      promise        <- Promise.make[AskError, GenericMessage]
       _              <- suspend(messageId, remote, promise, timeout)
       genericMessage <- promise.await
     } yield genericMessage
 
-  def complete(message: GenericMessage): ZIO[Logger, Nothing, Unit] =
+  def complete(message: GenericMessage): ZIO[Any, Nothing, Unit] =
     // .get is used here because we know that the message is a reply
-    val correlation = MessageCorrelation(message.inReplyTo.get, message.src)
+    val callbackId = CallbackId(message.inReplyTo.get, message.src)
     for {
-      promise <- hooks.remove(correlation)
+      promise <- hooks.remove(callbackId)
       _ <- promise match {
         case Some(p) => p.succeed(message).unit
-        case None    => logError(s"Message $message not found in hooks")
+        case None    => logger.error(s"$callbackId not found in callback registry. This could be because of duplicate message ids")
       }
     } yield ()
 
   private def suspend(
       messageId: MessageId,
       remote: NodeId,
-      promise: Promise[ResponseError, GenericMessage],
+      promise: Promise[AskError, GenericMessage],
       messageTimeout: Duration
   ): URIO[Scope, Unit] =
     val correlation = MessageCorrelation(messageId, remote.nodeId)
     hooks.put(correlation, promise).unit *>
       (timeout(correlation, messageTimeout).delay(messageTimeout).forkScoped.unit)
 
-  private def timeout(correlation: MessageCorrelation, timeout: Duration) =
+  private def timeout(callbackId: CallbackId, timeout: Duration) =
     for {
-      promise <- hooks.remove(correlation)
+      promise <- hooks.remove(callbackId)
       _ <- promise match {
-        case Some(p) => p.fail(Timeout(correlation.messageId, correlation.remote, timeout))
-        case None    => ZIO.unit
+        case Some(p) =>
+          p.fail(Timeout(callbackId.messageId, callbackId.remote, timeout))
+        case None =>
+          logger.error(s"$callbackId not found in callback registry. This would have happened because call was completed before the timeout")
       }
     } yield ()

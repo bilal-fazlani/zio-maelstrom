@@ -33,6 +33,6 @@ def src(using MessageSource): NodeId         = summon[MessageSource].nodeId
 private[zioMaelstrom] final class AskPartiallyApplied[Res <: Reply](private val remote: NodeId) extends AnyVal {
   def apply[Req <: Sendable & NeedsReply: JsonEncoder](body: Req, timeout: Duration)(using
       JsonDecoder[Res]
-  ): ZIO[MessageSender, ResponseError, Res] =
+  ): ZIO[MessageSender, AskError, Res] =
     MessageSender.ask[Req, Res](body, remote, timeout)
 }

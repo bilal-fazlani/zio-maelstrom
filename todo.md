@@ -1,11 +1,13 @@
 - [ ] File input is not working
 - [ ] Error code hierarchy needs to be simplified
-- [ ] Make types/apis private
+- [ ] User messages should not be restricted to a msg_id of Int
 - [ ] Create documentation
 - [ ] Tests
 - [ ] Add more examples
 - [ ] Multiple request-response can be started. There should be only one handler for a node
 - [ ] Out messages should not need to define types. Use class name. May need to use macros
+- [ ] If a message is awaited, and another callback is is being registered with same messages id from same remote, then it results in unintended behavior
+- [X] Make internal  types/apis private
 - [X] Add concurrency in settings
 - [X] Ask pattern
 - [X] Use union and compound types for message hierarchy. IN messages don't need "type"

@@ -11,7 +11,7 @@ case class Pong(in_reply_to: MessageId)                     extends Reply derive
 object PingPong extends ZIOAppDefault:
 
   val ping = NodeId("c4")
-    .ask[Pong](Ping(MessageId(6)), 3.seconds)
+    .ask[Pong](Ping(MessageId(6)), 9.seconds)
     .flatMap(_ => logInfo(s"PONG RECEIVED"))
     .tapError(err => logError(s"ERROR: $err"))
     .catchAll(_ => ZIO.unit)

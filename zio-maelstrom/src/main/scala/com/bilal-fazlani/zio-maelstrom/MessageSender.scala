@@ -16,7 +16,7 @@ private[zioMaelstrom] trait MessageSender:
       body: Req,
       to: NodeId,
       timeout: Duration
-  ): IO[ResponseError, Res]
+  ): IO[AskError, Res]
 
   def reply[Req <: NeedsReply, Res <: Sendable & Reply: JsonEncoder](message: Message[Req], reply: Res): UIO[Unit]
 
@@ -30,7 +30,7 @@ private[zioMaelstrom] object MessageSender:
       body: Req,
       to: NodeId,
       timeout: Duration
-  ): ZIO[MessageSender, ResponseError, Res] =
+  ): ZIO[MessageSender, AskError, Res] =
     ZIO.serviceWithZIO[MessageSender](_.ask(body, to, timeout))
 
   def reply[Req <: NeedsReply, Res <: Sendable & Reply: JsonEncoder](message: Message[Req], reply: Res): URIO[MessageSender, Unit] =
@@ -49,7 +49,7 @@ private case class MessageSenderLive(init: Initialisation, transport: MessageTra
       body: Req,
       to: NodeId,
       timeout: Duration
-  ): IO[ResponseError, Res] =
+  ): IO[AskError, Res] =
     for {
       _              <- send(body, to)
       genericMessage <- ZIO.scoped(hooks.awaitRemote(body.msg_id, to, timeout))
