@@ -65,5 +65,5 @@ private case class InitializerLive(logger: Logger, transport: MessageTransport) 
   private def handleInitDecodingError(genericMessage: GenericMessage) =
     logger.error(s"could not decode init message $genericMessage") *>
       genericMessage
-        .makeError(StandardErrorCode.MalformedRequest, "init message is malformed")
+        .makeError(ErrorCode.MalformedRequest, "init message is malformed")
         .fold(ZIO.unit)(transport.transport(_))

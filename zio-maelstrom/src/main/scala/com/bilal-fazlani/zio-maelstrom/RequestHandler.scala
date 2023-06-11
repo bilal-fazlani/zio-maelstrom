@@ -12,7 +12,7 @@ private[zioMaelstrom] object RequestHandler:
   ): ZIO[MaelstromRuntime & R, Nothing, Unit] =
     for {
       initialisation <- ZIO.service[Initialisation]
-      settings <- ZIO.service[Settings]
+      settings       <- ZIO.service[Settings]
       _ <- initialisation.inputs.messageStream
         // process messages in parallel
         .mapZIOPar(settings.concurrency)(genericMessage =>
@@ -37,7 +37,7 @@ private[zioMaelstrom] object RequestHandler:
     val maybeResponse: Option[ErrorMessage] = invalidInput.input.messageId.map { msgId =>
       ErrorMessage(
         in_reply_to = msgId,
-        code = StandardErrorCode.MalformedRequest,
+        code = ErrorCode.MalformedRequest,
         text = s"invalid input: $invalidInput"
       )
     }
