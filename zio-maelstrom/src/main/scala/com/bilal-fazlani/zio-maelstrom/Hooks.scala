@@ -51,9 +51,9 @@ private case class HooksLive(hooks: ConcurrentMap[CallbackId, Promise[AskError, 
       promise: Promise[AskError, GenericMessage],
       messageTimeout: Duration
   ): URIO[Scope, Unit] =
-    val correlation = MessageCorrelation(messageId, remote.nodeId)
-    hooks.put(correlation, promise).unit *>
-      (timeout(correlation, messageTimeout).delay(messageTimeout).forkScoped.unit)
+    val callbackId = CallbackId(messageId, remote.nodeId)
+    hooks.put(callbackId, promise).unit *>
+      (timeout(callbackId, messageTimeout).delay(messageTimeout).forkScoped.unit)
 
   private def timeout(callbackId: CallbackId, timeout: Duration) =
     for {
