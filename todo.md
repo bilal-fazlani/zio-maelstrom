@@ -1,3 +1,4 @@
+- [ ] Handle duplicate message ids for in-flight RPC
 - [ ] File input is not working
 - [ ] Error code hierarchy needs to be simplified
 - [ ] User messages should not be restricted to a msg_id of Int
