@@ -4,8 +4,7 @@ import protocol.*
 import zio.*
 import zio.json.{JsonEncoder, JsonDecoder}
 
-// type AskError = ErrorMessage | DecodingFailure | Timeout | DuplicateCallbackAttempt
-type AskError = ErrorMessage | DecodingFailure | Timeout
+type AskError = ErrorMessage | DecodingFailure | Timeout | DuplicateCallbackAttempt
 
 case class Timeout(messageId: MessageId, remote: NodeId, timeout: Duration)
 case class DecodingFailure(error: String, message: GenericMessage)

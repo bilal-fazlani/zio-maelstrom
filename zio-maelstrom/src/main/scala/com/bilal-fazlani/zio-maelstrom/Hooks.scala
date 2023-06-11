@@ -50,10 +50,30 @@ private case class HooksLive(hooks: ConcurrentMap[CallbackId, Promise[AskError, 
       remote: NodeId,
       promise: Promise[AskError, GenericMessage],
       messageTimeout: Duration
-  ): URIO[Scope, Unit] =
-    val correlation = MessageCorrelation(messageId, remote.nodeId)
-    hooks.put(correlation, promise).unit *>
-      (timeout(correlation, messageTimeout).delay(messageTimeout).forkScoped.unit)
+  ): ZIO[Scope, DuplicateCallbackAttempt, Unit] =
+    val callbackId = CallbackId(messageId, remote.nodeId)
+    for {
+      _ <- hooks
+        .putIfAbsent(callbackId, promise)
+        .map(_.toRight(DuplicateCallbackAttempt(callbackId)))
+        .absolve
+        .tapError((_: DuplicateCallbackAttempt) =>
+          logger.error(
+            s"$callbackId already exists in callback registry. " +
+              s"This can happen if a message with same message is is awaited again from the same node before the first one is completed. " +
+              s"Consider using a unique message id for each message"
+          )
+        )
+        .unit
+      _ <- ZIO.acquireReleaseInterruptibleExit(timeout(callbackId, messageTimeout).delay(messageTimeout).forkScoped.unit)(e =>
+        ZIO.when(e.isInterrupted)(removeCallback(callbackId))
+      )
+    } yield ()
+
+  private def removeCallback(callbackId: CallbackId) = for {
+    _ <- logger.debug(s"Interrupted $callbackId. removing callback hook")
+    _ <- hooks.remove(callbackId).unit
+  } yield ()
 
   private def timeout(callbackId: CallbackId, timeout: Duration) =
     for {
