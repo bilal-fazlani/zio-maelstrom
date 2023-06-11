@@ -1,0 +1,112 @@
+site_name: zio-maelstrom
+site_url: https://zio-maelstrom.bilal-fazlani.com
+site_description: A Scala library for building nodes for maelstrom simulations using ZIO
+repo_name: "bilal-fazlani/zio-maelstrom"
+repo_url: "https://github.com/bilal-fazlani/zio-maelstrom"
+strict: !ENV [CI, false]
+
+theme:
+  name: "material"
+  palette:
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep orange
+      accent: red
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep orange
+      accent: yellow
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+
+  features:
+    - navigation.tabs
+    - navigation.instant
+    - navigation.tracking
+    - navigation.footer
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - navigation.expand
+    - navigation.path
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tooltips
+    - content.code.select
+    - content.code.annotate
+
+markdown_extensions:
+  - abbr
+  - def_list
+  - admonition
+  - md_in_html
+  - attr_list
+  - footnotes
+  - pymdownx.snippets:
+      check_paths: true
+      dedent_subsections: true
+      base_path:
+        - includes
+  - pymdownx.highlight:
+      linenums: true
+      anchor_linenums: true
+      pygments_lang_class: true
+      line_spans: __span
+  - pymdownx.arithmatex
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.escapeall:
+      nbsp: true
+  - pymdownx.inlinehilite
+  - pymdownx.magiclink
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+  - toc:
+      permalink: "#"
+
+plugins:
+  - search
+  - autolinks
+  - codeinclude:
+      title_mode: none
+  - social:
+      concurrency: !ENV [CONCURRENY, 2]
+  - awesome-pages:
+      collapse_single_pages: true
+      strict: !ENV [CI, false]
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: "https://github.com/bilal-fazlani"
+    - icon: fontawesome/brands/twitter
+      link: "https://twitter.com/bilal_fazlani"
+    - icon: fontawesome/brands/linkedin
+      link: "https://www.linkedin.com/in/bilal-fazlani/"
+
+copyright: Copyright &copy; 2019 - 2023 Bilal Fazlani

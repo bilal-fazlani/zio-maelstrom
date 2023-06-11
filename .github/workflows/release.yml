@@ -3,15 +3,14 @@ on:
   push:
     branches: [main]
     paths-ignore:
-      - 'docs/**'
-      - '*.md'
-      - 'mkdocs.yml'
-      - 'requirements.txt'
-      - 'netlify.toml'
-      - '**/build.yml'
-      - '**/docs.yml'
-      - '**/Examples.scala'
-      - '.gitignore'      
+      - "docs/**"
+      - "*.md"
+      - "mkdocs.yml"
+      - "requirements.txt"
+      - "netlify.toml"
+      - "**/build.yml"
+      - "examples/"
+      - ".gitignore"
     tags: ["*"]
 jobs:
   publish:

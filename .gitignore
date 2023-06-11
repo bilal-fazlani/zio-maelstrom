@@ -31,7 +31,10 @@ metals.sbt
 .idea_modules
 /.worksheet/
 
-
+.cache
+site/
+Pipfile
+Pipfile.lock
 TestApp*.scala
 BlogSamples.scala
 .java-version
