@@ -1,0 +1,65 @@
+[data-md-color-scheme=slate] {
+  --md-typeset-a-color: var(--md-accent-fg-color) !important;
+}
+
+[data-md-color-scheme=slate] .md-button--primary {
+  color: darkgreen;
+}
+
+*[data-md-color-scheme="default"] {
+  --md-accent-fg-color: #ff0000;
+  --md-typeset-a-color: var(--md-accent-fg-color);
+}
+
+.md-button {
+  font-size: 1rem;
+}
+
+.big-quote>p {
+  font: 1.8rem/1.2 Georgia, serif;
+  font-style: italic;
+}
+
+#zio-maelstrom {
+  font-size: 3rem;
+}
+
+@media screen and (min-width: 1220px) {
+  .home-page {
+    display: grid;
+    grid-template-areas:
+      "logo title"
+      "logo content"
+      "logo buttons";
+
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto;
+    column-gap: 2rem;
+    row-gap: 1rem;
+  }
+
+  .home-page>h1 {
+    grid-area: title;
+  }
+
+  .home-page>p {
+    grid-area: logo;
+    margin: 0;
+  }
+
+  #zio-maelstrom {
+    margin: 0;
+  }
+
+  .home-page .big-quote {
+    grid-area: content;
+  }
+
+  .home-page .big-quote>p {
+    margin: 0;
+  }
+
+  .home-page p:last-child {
+    grid-area: buttons;
+  }
+}

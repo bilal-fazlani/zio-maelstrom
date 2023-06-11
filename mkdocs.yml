@@ -7,11 +7,13 @@ strict: !ENV [CI, false]
 
 theme:
   name: "material"
+  favicon: imgs/logo.svg
+  logo: imgs/logo.svg
   palette:
     # Palette toggle for light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: deep orange
+      primary: black
       accent: red
       toggle:
         icon: material/brightness-7
@@ -20,8 +22,8 @@ theme:
     # Palette toggle for dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: deep orange
-      accent: yellow
+      primary: black
+      accent: green
       toggle:
         icon: material/brightness-4
         name: Switch to system preference
@@ -91,14 +93,27 @@ markdown_extensions:
 
 plugins:
   - search
+  - typeset
   - autolinks
+  - meta
   - codeinclude:
       title_mode: none
-  # - social:
-  #     concurrency: !ENV [CONCURRENY, 2]
+  - social:
+      # cards_layout_dir: social-preview
+      cards_layout: default
+      concurrency: !ENV [CONCURRENY, 2]
   - awesome-pages:
       collapse_single_pages: true
       strict: !ENV [CI, false]
+
+nav:
+  - Home: index.md
+  - Examples: examples.md
+  - Documentation: documentation.md
+
+#Customization
+extra_css:
+  - stylesheets/all.css
 
 extra:
   social:
@@ -109,4 +124,4 @@ extra:
     - icon: fontawesome/brands/linkedin
       link: "https://www.linkedin.com/in/bilal-fazlani/"
 
-copyright: Copyright &copy; 2019 - 2023 Bilal Fazlani
+copyright: Copyright &copy 2023 Bilal Fazlani

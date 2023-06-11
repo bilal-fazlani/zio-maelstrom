@@ -1,4 +1,4 @@
-mkdocs-material == 9.1.15
+git+https://${GH_USERNAME}:${GH_TOKEN}@github.com/${GH_USERNAME}/mkdocs-material-insiders.git@0fa547a#egg=mkdocs-material
 mkdocs-awesome-pages-plugin == 2.8.0
 mkdocs-git-revision-date-localized-plugin == 1.1.0
 mkdocs-codeinclude-plugin == 0.2.0
