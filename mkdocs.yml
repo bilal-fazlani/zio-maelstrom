@@ -116,6 +116,7 @@ extra_css:
   - stylesheets/all.css
 
 extra:
+  generator: false
   social:
     - icon: fontawesome/brands/github
       link: "https://github.com/bilal-fazlani"

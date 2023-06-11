@@ -14,7 +14,7 @@ description: zio-maelstrom
 ![logo](logo.svg)
 
 <div markdown="1" class="big-quote">
-“ZIO-Maelstrom is a :simple-scala: Scala library for building maelstrom nodes using ZIO”
+ZIO-Maelstrom is a :simple-scala: Scala library for building maelstrom nodes using ZIO
 </div>
 
 [:fontawesome-solid-blog: Examples](examples.md){ .md-button .md-button--primary }
