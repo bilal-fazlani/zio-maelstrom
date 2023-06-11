@@ -24,11 +24,11 @@ def logError(message: => String) = Logger.error(message)
 def receive[I: JsonDecoder](handler: Handler[Any, I]): ZIO[MaelstromRuntime, Nothing, Unit]       = RequestHandler.handle(handler)
 def receiveR[R, I: JsonDecoder](handler: Handler[R, I]): ZIO[MaelstromRuntime & R, Nothing, Unit] = RequestHandler.handleR(handler)
 
-//CONTEXTFUL - BEGIN
-def myNodeId(using Context): NodeId          = summon[Context].me
-def otherNodeIds(using Context): Seq[NodeId] = summon[Context].others
-def src(using MessageSource): NodeId         = summon[MessageSource].nodeId
-//CONTEXTFUL - END
+//RECEIVE CONTEXTFUL - BEGIN
+def me(using Context): NodeId          = summon[Context].me
+def others(using Context): Seq[NodeId] = summon[Context].others
+def src(using MessageSource): NodeId   = summon[MessageSource].nodeId
+//RECEIVE CONTEXTFUL - END
 
 private[zioMaelstrom] final class AskPartiallyApplied[Res <: Reply](private val remote: NodeId) extends AnyVal {
   def apply[Req <: Sendable & NeedsReply: JsonEncoder](body: Req, timeout: Duration)(using

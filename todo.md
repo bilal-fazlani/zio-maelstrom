@@ -1,4 +1,3 @@
-- [ ] Handle duplicate message ids for in-flight RPC
 - [ ] File input is not working
 - [ ] Error code hierarchy needs to be simplified
 - [ ] User messages should not be restricted to a msg_id of Int
@@ -8,6 +7,7 @@
 - [ ] Multiple request-response can be started. There should be only one handler for a node
 - [ ] Out messages should not need to define types. Use class name. May need to use macros
 - [ ] If a message is awaited, and another callback is is being registered with same messages id from same remote, then it results in unintended behavior
+  - [ ] Does this need to be solved in this library?
 - [X] Make internal  types/apis private
 - [X] Add concurrency in settings
 - [X] Ask pattern
