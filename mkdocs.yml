@@ -94,8 +94,8 @@ plugins:
   - autolinks
   - codeinclude:
       title_mode: none
-  - social:
-      concurrency: !ENV [CONCURRENY, 2]
+  # - social:
+  #     concurrency: !ENV [CONCURRENY, 2]
   - awesome-pages:
       collapse_single_pages: true
       strict: !ENV [CI, false]
