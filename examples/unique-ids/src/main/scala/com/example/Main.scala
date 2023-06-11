@@ -23,4 +23,5 @@ object Main extends ZIOAppDefault:
   }
 
   // Run the handler
-  val run = handler.provideSome[Scope](MaelstromRuntime.live, ZLayer.fromZIO(Ref.make(0)))
+  val settings = Settings(nodeInput = NodeInput.FilePath("examples" / "unique-ids" / "simulation.txt"), concurrency = 1)
+  val run      = handler.provideSome[Scope](MaelstromRuntime.live(settings), ZLayer.fromZIO(Ref.make(0)))

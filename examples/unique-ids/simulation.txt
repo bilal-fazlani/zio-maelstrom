@@ -1,1 +1,20 @@
-{ "src":"c0", "dest": "B", "body": { "type": "init", "msg_id": 5, "node_id": "B", "node_ids": [ "A", "B", "C" ]}}
+{ "src":"c0", "dest": "B", "body": { "type": "init", "msg_id": 100, "node_id": "B", "node_ids": [ "A", "B", "C" ]}}
+{ "src": "c1", "dest": "B", "body": { "type" : "generate", "msg_id": 1 } }
+{ "src": "c1", "dest": "B", "body": { "type" : "generate", "msg_id": 2 } }
+{ "src": "c1", "dest": "B", "body": { "type" : "generate", "msg_id": 3 } }
+{ "src": "c1", "dest": "B", "body": { "type" : "generate", "msg_id": 4 } }
+{ "src": "c1", "dest": "B", "body": { "type" : "generate", "msg_id": 5 } }
+{ "src": "c1", "dest": "B", "body": { "type" : "generate", "msg_id": 6 } }
+{ "src": "c1", "dest": "B", "body": { "type" : "generate", "msg_id": 7 } }
+{ "src": "c1", "dest": "B", "body": { "type" : "generate", "msg_id": 8 } }
+{ "src": "c1", "dest": "B", "body": { "type" : "generate", "msg_id": 9 } }
+{ "src": "c1", "dest": "B", "body": { "type" : "generate", "msg_id": 10 } }
+{ "src": "c1", "dest": "B", "body": { "type" : "generate", "msg_id": 11 } }
+{ "src": "c1", "dest": "B", "body": { "type" : "generate", "msg_id": 12 } }
+{ "src": "c1", "dest": "B", "body": { "type" : "generate", "msg_id": 13 } }
+{ "src": "c1", "dest": "B", "body": { "type" : "generate", "msg_id": 14 } }
+{ "src": "c1", "dest": "B", "body": { "type" : "generate", "msg_id": 15 } }
+{ "src": "c1", "dest": "B", "body": { "type" : "generate", "msg_id": 16 } }
+{ "src": "c1", "dest": "B", "body": { "type" : "generate", "msg_id": 17 } }
+{ "src": "c1", "dest": "B", "body": { "type" : "generate", "msg_id": 18 } }
+{ "src": "c1", "dest": "B", "body": { "type" : "generate", "msg_id": 19 } }
