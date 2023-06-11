@@ -1,0 +1,171 @@
+# -----------------------------------------------------------------------------
+# Configuration
+# -----------------------------------------------------------------------------
+
+# Definitions
+definitions:
+  # Site name
+  - &og_type >-
+    {{ page.meta.get("og:type", "website") }}
+
+  # Page title
+  - &page_title >-
+    {%- if not page.is_homepage -%}
+      {{ page.meta.get("title", page.title) }}
+    {%- else -%}
+      {{ config.site_name }}
+    {%- endif -%}
+
+  # Page title with site name
+  - &page_title_with_site_name >-
+    {%- if page.is_homepage -%}
+      {{ config.site_name }}
+    {%- elif page.meta.get("isList", false) -%}
+      {{ page.meta.get("title", page.title) }}
+    {%- else -%}
+      {{ page.meta.get("title", page.title) }} - {{ config.site_name }}
+    {%- endif -%}
+
+  # Page description
+  - &page_description >-
+    {{ page.meta.get("description", config.site_description) or "" }}
+
+  # Article date
+  - &article_date >-
+    {%- if page.meta.get("og:type", "") == "article" -%}
+      {{ page.meta.get("date").strftime("%Y-%m-%d") }}
+    {%- endif -%}
+
+  - &article_date_time >-
+    {%- if page.meta.get("og:type", "") == "article" -%}
+      {{ page.meta.get("date").strftime("%Y-%m-%d") }}T00:00:00Z
+    {%- endif -%}
+
+  # Article author
+  - &article_author >-
+    {%- if page.meta.get("og:type", "") == "article" -%}
+      Bilal Fazlani
+    {%- else -%}
+    {%- endif -%}
+
+  # Article section
+  - &article_section >-
+    {%- if page.meta.get("og:type", "") == "article" -%}
+      Programming
+    {%- endif -%}
+
+  # Article publisher
+  - &article_publisher >-
+    {%- if page.meta.get("og:type", "") == "article" -%}
+      https://twitter.com/bilal_fazlani
+    {%- endif -%}
+
+  # Page icon
+  - &page_icon >-
+    {{ page.meta.icon or "" }}
+
+  # Logo
+  - &logo >-
+    {%- if config.theme.logo -%}
+      {{ config.docs_dir }}/{{ config.theme.logo }}
+    {%- endif -%}
+
+  # Logo (icon)
+  - &logo_icon >-
+    {{ config.theme.icon.logo or "" }}
+
+# Meta tags
+tags:
+  # Twitter
+  twitter:card: summary_large_image
+  twitter:title: *page_title_with_site_name
+  twitter:description: *page_description
+  twitter:image: "{{ image.url }}"
+  twitter:image:src: "{{ image.url }}"
+  twitter:creator: "@bilal_fazlani"
+  twitter:site: "@bilal_fazlani"
+
+  # Open Graph
+  og:type: *og_type
+  og:title: *page_title_with_site_name
+  og:description: *page_description
+  og:image: "{{ image.url }}"
+  og:image:type: "{{ image.type }}"
+  og:image:width: "{{ image.width }}"
+  og:image:height: "{{ image.height }}"
+  og:url: "{{ page.canonical_url }}"
+
+  # Open Graph - Article specific
+  article:section: *article_section
+  article:author: *article_author
+  article:date: *article_date
+  article:published_time: *article_date_time
+  article:publisher: *article_publisher
+
+# -----------------------------------------------------------------------------
+# Specification
+# -----------------------------------------------------------------------------
+
+size: { width: 1200, height: 630 }
+layers:
+  # Background color
+  - background:
+      color: "#333333"
+
+  # Image
+  - background:
+      image: "docs/imgs/network.png"
+
+  # Black tink
+  - background:
+      color: "#000000B8"
+
+  # Logo
+  - size: { width: 500, height: 280 }
+    offset: { x: 30, y: 80 }
+    background:
+      image: "docs/imgs/logo.svg"
+
+  # Github
+  - size: { width: 620, height: 60 }
+    offset: { x: 560, y: 140 }
+    typography:
+      content: bilal-fazlani/
+      align: start center
+      overflow: shrink
+      color: "#febf00"
+      line:
+        amount: 1
+        height: 1
+      font:
+        family: Roboto
+        style: Bold
+
+  # Title
+  - size: { width: 620, height: 110 }
+    offset: { x: 560, y: 200 }
+    typography:
+      content: zio-maelstrom
+      align: start center
+      overflow: shrink
+      color: "#05b301"
+      line:
+        amount: 1
+        height: 1
+      font:
+        family: Roboto
+        style: Bold
+
+  # Subitle
+  - size: { width: 1160, height: 150 }
+    offset: { x: 30, y: 450 }
+    typography:
+      content: "Learn distributed systems in Scala using ZIO and Maelstrom"
+      align: start center
+      color: "#00bcff"
+      overflow: shrink
+      line:
+        amount: 2
+        height: 1.25
+      font:
+        family: Roboto

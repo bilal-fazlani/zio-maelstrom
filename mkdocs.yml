@@ -99,8 +99,10 @@ plugins:
   - codeinclude:
       title_mode: none
   - social:
-      # cards_layout_dir: social-preview
-      cards_layout: default
+      cards_layout: custom
+      debug: false
+      debug_color: yellow
+      cards_layout_dir: social-preview
       concurrency: !ENV [CONCURRENY, 2]
   - awesome-pages:
       collapse_single_pages: true
