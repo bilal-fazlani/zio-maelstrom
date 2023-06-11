@@ -1,0 +1,36 @@
+name: Release
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - 'mkdocs.yml'
+      - 'requirements.txt'
+      - 'netlify.toml'
+      - '**/build.yml'
+      - '**/docs.yml'
+      - '**/Examples.scala'
+      - '.gitignore'      
+    tags: ["*"]
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          key: ${{ runner.os }}-scala
+          path: |
+            ~/.ivy2/cache
+            ~/.sbt
+      - uses: olafurpg/setup-scala@v13
+        with:
+          java-version: openjdk@1.17.0
+      - name: Publish ${{ github.ref }}
+        run: sbt ci-release
+        env:
+          PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
+          PGP_SECRET: ${{ secrets.PGP_SECRET }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}

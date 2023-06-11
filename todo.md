@@ -7,6 +7,8 @@ PENDING:
 
 TBD:
 
+- [ ] Create Maelstrom node parent class
+  - Assess importance
 - [ ] Multiple request-response can be started. There should be only one handler for a node
   - Not a V1 requirement
 - [ ] User messages should not be restricted to a msg_id of Int
@@ -21,5 +23,5 @@ DONE:
 - [X] Make internal  types/apis private
 - [X] Add concurrency in settings
 - [X] Ask pattern
-- [X] Use union and compound types for message hierarchy. IN messages don't need "type"
+- [X] Use intersection types for message hierarchy. IN messages don't need "type"
 - [X] Separate init from receive messages
