@@ -12,7 +12,7 @@
 }
 
 .md-button {
-  font-size: 0.8rem;
+  font-size: 1rem;
 }
 
 .big-quote>p {
@@ -65,6 +65,12 @@
   }
 }
 
+@media screen and (max-width: 640px) {
+  .md-button {
+    font-size: 0.8rem;
+  }
+}
+
 @media screen and (max-width: 440px) {
   .home-page>p:last-child {
     display: grid;
@@ -74,9 +80,5 @@
 
   #zio-maelstrom {
     font-size: 2rem;
-  }
-
-  .md-button {
-    font-size: 1rem;
   }
 }
