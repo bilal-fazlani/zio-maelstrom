@@ -17,7 +17,7 @@ description: zio-maelstrom
 Learn distributed systems in Scala using ZIO and Maelstrom
 </div>
 
-[:fontawesome-solid-blog: Examples](examples.md){ .md-button .md-button--primary }
-[:fontawesome-solid-pen-ruler: Documentation](documentation.md){ .md-button }
+[:fontawesome-solid-blog: Examples](examples/index.md){ .md-button .md-button--primary }
+[:fontawesome-solid-pen-ruler: Documentation](documentation/index.md){ .md-button }
 
 </div>
