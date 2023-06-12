@@ -4,7 +4,6 @@ hide:
   - toc
   - navigation
   - footer
-description: zio-maelstrom
 ---
 
 <div markdown="1" class="home-page">
