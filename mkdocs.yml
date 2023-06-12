@@ -110,12 +110,12 @@ plugins:
 
 nav:
   - Home: index.md
-  - Examples: examples.md
-  - Documentation: documentation.md
+  - Examples: examples/index.md
+  - Documentation: documentation/index.md
 
 #Customization
 extra_css:
-  - stylesheets/all.css
+  - stylesheets/styles.css
 
 extra:
   generator: false

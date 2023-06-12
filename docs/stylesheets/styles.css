@@ -11,10 +11,8 @@
   --md-typeset-a-color: var(--md-accent-fg-color);
 }
 
-
-
 .md-button {
-  font-size: 1rem;
+  font-size: 0.8rem;
 }
 
 .big-quote>p {
@@ -64,5 +62,17 @@
 
   .home-page p:last-child {
     grid-area: buttons;
+  }
+}
+
+@media screen and (max-width: 440px) {
+  .home-page>p:last-child {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    row-gap: 0.5rem;
+  }
+
+  #zio-maelstrom {
+    font-size: 2rem;
   }
 }
