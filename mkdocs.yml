@@ -1,6 +1,6 @@
 site_name: zio-maelstrom
 site_url: https://zio-maelstrom.bilal-fazlani.com
-site_description: A Scala library for building nodes for maelstrom simulations using ZIO
+site_description: Learn distributed systems in Scala using ZIO and Maelstrom
 repo_name: "bilal-fazlani/zio-maelstrom"
 repo_url: "https://github.com/bilal-fazlani/zio-maelstrom"
 strict: !ENV [CI, false]
