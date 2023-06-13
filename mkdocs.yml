@@ -38,6 +38,7 @@ theme:
     - navigation.top
     - navigation.expand
     - navigation.path
+    - navigation.prune
     - toc.follow
     - search.suggest
     - search.highlight
@@ -59,7 +60,7 @@ markdown_extensions:
       base_path:
         - includes
   - pymdownx.highlight:
-      linenums: true
+      linenums: false
       anchor_linenums: true
       pygments_lang_class: true
       line_spans: __span
@@ -110,8 +111,11 @@ plugins:
 
 nav:
   - Home: index.md
-  - Examples: examples/index.md
   - Documentation: documentation/index.md
+  - Examples:
+      - examples/echo.md
+      - examples/unique-ids.md
+      - examples/broadcast.md
 
 #Customization
 extra_css:

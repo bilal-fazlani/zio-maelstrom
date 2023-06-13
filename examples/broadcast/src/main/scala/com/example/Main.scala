@@ -33,7 +33,7 @@ object Main extends ZIOAppDefault:
   def updateState(f: State => State) = ZIO.serviceWithZIO[Ref[State]](_.update(f))
 
   // gossip every 500 millis.. forver
-  val startGossip          = getState.flatMap(gossip).delay(500.millis).forever
+  val startGossip = getState.flatMap(gossip).delay(500.millis).forever
   // gossip all state to all neighbours (inefficient)
   def gossip(state: State) = ZIO.foreachPar(state.neighbours)(nodeId => nodeId.send(Gossip(state.messages)))
 
