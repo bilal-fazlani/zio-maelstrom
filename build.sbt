@@ -23,7 +23,7 @@ ThisBuild / developers := List(
 )
 ThisBuild / licenses := List(
   "MIT License" -> url(
-    "https://github.com/bilal-fazlani/zio-maelstrom/blob/main/license.md"
+    "https://github.com/bilal-fazlani/zio-maelstrom/blob/main/LICENSE"
   )
 )
 ThisBuild / homepage := Some(url("https://zio-maelstrom.bilal-fazlani.com/"))
