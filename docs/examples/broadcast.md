@@ -5,3 +5,73 @@ hide:
 ---
 
 # Broadcast
+
+!!! info
+    Examples are from [Gossip Glomers](https://fly.io/dist-sys/) - A series of distributed systems challenges brought to you by Fly.io
+
+This example is for [Challenge #3b: Multi-Node Broadcast](https://fly.io/dist-sys/3b/). The goal is to make nodes gossip messages with each other so that "eventually" all nodes receive all messages.
+
+<!--codeinclude-->
+[Imports](../../examples/broadcast/src/main/scala/com/example/Main.scala) inside_block:imports
+<!--/codeinclude-->
+
+As part of the broadcast challenge, nodes will receive work with below messages
+
+**Topology**
+
+:   `topology` message contains the list of all nodes in the cluster mapped to their neighbors.
+
+**Broadcast**
+
+:   `broadcast` message has an Integer number in it. Not all the nodes will receive all the numbers in broadcast. The goal is to make sure that all nodes get all the numbers eventually using gossip.
+
+
+**Read**
+
+:   `read` Maelstrom will expect a reply to this message with all the number that that node knows about either via broadcast or gossip.
+
+---
+
+**Gossip**
+
+:   Our nodes will send `gossip` messages to each other to gossip the numbers they have received via broadcast.
+
+Because there are multiple messages, lets create a sealed trait to represent them. We will use `zio-json` annotations to make it easy to serialize and deserialize these messages.
+
+<!--codeinclude-->
+[Message definitions](../../examples/broadcast/src/main/scala/com/example/Main.scala) inside_block:input_messages
+<!--/codeinclude-->
+
+1.  "type" field is part of standard [Maelstrom message format](https://github.com/jepsen-io/maelstrom/blob/main/doc/protocol.md#message-bodies). It is used to identify the type of message.
+2.  `derive JsonDecoder` will derives decoders for all children of `InMessage` trait
+3.  All the messages that needs a reply should extend from `NeedsReply`
+4.  All messages that need to be sent out from nodes should extend from `Sendable`
+5.  Since `Gossip` message is sent out from nodes, it also needs an Encoder
+
+<!--codeinclude-->
+[Reply messages](../../examples/broadcast/src/main/scala/com/example/Main.scala) inside_block:reply_messages
+reply_messages
+<!--/codeinclude-->
+
+1.  All messages that are replies to some other messages must extend `Sendable` and `Reply`
+2.  All `Sendable` messages require `type` field
+
+<!--codeinclude-->
+[Node state](../../examples/broadcast/src/main/scala/com/example/Main.scala) inside_block:state
+<!--/codeinclude-->
+
+<!--codeinclude-->
+[Node application](../../examples/broadcast/src/main/scala/com/example/Main.scala) block:Main
+<!--/codeinclude-->
+
+1.  This is a naive implementation of gossip protocol. We are sending all the number in a node's state to all its neighbors.
+2.  The gossiping once started, will trigger every 500 milliseconds and keep happening forever
+3.  Save the new number and reply OK to the sender
+4.  `me` is the current node's id
+5.  Add node's neighbors to the state
+6.  Reply OK to the sender
+7.  Start gossiping after arrival of `topology` message
+8.  Add gossip received by other nodes to node's state
+
+!!! tip
+    This is a naive implementation of gossip protocol. We are sending all the number in a node's state to all its neighbors. This will not scale well. Find a better way to do this.

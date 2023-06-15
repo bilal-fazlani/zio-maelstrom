@@ -25,6 +25,9 @@ Here, we define the protocol of the node. It includes messages which the node ca
 
 Unlike echo, this node also has some state which we have modeled using `Ref[Int]`. We increment the `Int` every time we generate a new Id. To make it unique across the cluster, we append the node Id to the generated id.
 
+!!! tip "Why use a `Ref`?"
+    Using a `Ref` ensures that I can update the state in a thread-safe manner. This is important because the **messages are received and processed concurrently**
+
 <!--codeinclude-->
 [Node application](../../examples/unique-ids/src/main/scala/com/example/Main.scala) block:Main
 <!--/codeinclude-->
