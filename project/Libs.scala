@@ -1,7 +1,7 @@
 import sbt._
 
 object Libs {
-  lazy val zioVersion = "2.0.15" // +38-388764de-SNAPSHOT"
+  lazy val zioVersion = "2.0.15"
   private val ZIO     = "dev.zio"
 
   lazy val zio           = ZIO %% "zio"            % zioVersion
