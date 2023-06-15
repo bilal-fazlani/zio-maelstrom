@@ -5,3 +5,33 @@ hide:
 ---
 
 # Unique ID Generation
+
+!!! info
+    Examples are from [Gossip Glomers](https://fly.io/dist-sys/) - A series of distributed systems challenges brought to you by Fly.io
+
+This example is for [Challenge #2: Unique ID Generation](https://fly.io/dist-sys/2/)
+
+In this challenge we generate globally-unique IDs in a distributed network
+
+<!--codeinclude-->
+[Imports](../../examples/unique-ids/src/main/scala/com/example/Main.scala) inside_block:imports
+<!--/codeinclude-->
+
+Here, we define the protocol of the node. It includes messages which the node can handle and messages it can send
+
+<!--codeinclude-->
+[Message definitions](../../examples/unique-ids/src/main/scala/com/example/Main.scala) inside_block:messages
+<!--/codeinclude-->
+
+Unlike echo, this node also has some state which we have modeled using `Ref[Int]`. We increment the `Int` every time we generate a new Id. To make it unique across the cluster, we append the node Id to the generated id.
+
+<!--codeinclude-->
+[Node application](../../examples/unique-ids/src/main/scala/com/example/Main.scala) block:Main
+<!--/codeinclude-->
+
+1.  `me` method returns the `NodeId` of self node. It's a [context function](https://docs.scala-lang.org/scala3/reference/contextual/context-functions.html) which is only available inside receive block
+
+I have used `ZLayer` to inject the state and also to make sure the same `Ref` is used across the codebase in case we want to make the code more modular.
+
+!!! note
+    Source code for this example can be found on [:simple-github: Github](https://github.com/bilal-fazlani/zio-maelstrom/blob/main/examples/unique-ids/src/main/scala/com/example/Main.scala)

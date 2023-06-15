@@ -1,8 +1,8 @@
 package com.example.echo
 
 //imports {
-import zio.json.*
-import zio.*
+import zio.json.{JsonEncoder, JsonDecoder}
+import zio.{ZIOAppDefault, ZIO}
 import com.bilalfazlani.zioMaelstrom.protocol.*
 import com.bilalfazlani.zioMaelstrom.*
 //}
@@ -14,10 +14,9 @@ case class EchoOk(echo: String, in_reply_to: MessageId, `type`: String = "echo_o
 //}
 
 object Main extends ZIOAppDefault {
-  // define a handler for the message
+
   val echoHandler: ZIO[MaelstromRuntime, Nothing, Unit] =
     receive[Echo](msg => msg reply EchoOk(echo = msg.echo, in_reply_to = msg.msg_id))
 
-  // run the handler
   val run = echoHandler.provide(MaelstromRuntime.live)
 }
