@@ -9,7 +9,8 @@ extension (s: String) infix def /(string: String): Path = Path.of(s, string)
 extension (p: Path) infix def /(string: String): Path   = p resolve string
 
 extension [A <: NeedsReply](message: A)
-  def reply[B <: Sendable & Reply: JsonEncoder](out: B)(using MessageSource) = MessageSender.send(out, NodeId(summon[MessageSource].nodeId))
+  def reply[B <: Sendable & Reply: JsonEncoder](out: B)(using MessageSource) =
+    MessageSender.send(out, NodeId(summon[MessageSource].nodeId))
 
 extension (nodeId: NodeId)
   def ask[Res <: Reply]                         = new AskPartiallyApplied[Res](nodeId)
@@ -21,8 +22,7 @@ def getOtherNodeIds = ZIO.service[Initialisation].map(_.context.others)
 def logInfo(message: => String)  = Logger.info(message)
 def logError(message: => String) = Logger.error(message)
 
-def receive[I: JsonDecoder](handler: Handler[Any, I]): ZIO[MaelstromRuntime, Nothing, Unit]       = RequestHandler.handle(handler)
-def receiveR[R, I: JsonDecoder](handler: Handler[R, I]): ZIO[MaelstromRuntime & R, Nothing, Unit] = RequestHandler.handleR(handler)
+def receive[I]: ReceivePartiallyApplied[I] = new ReceivePartiallyApplied[I]
 
 //RECEIVE CONTEXTFUL - BEGIN
 def me(using Context): NodeId          = summon[Context].me
@@ -35,4 +35,9 @@ private[zioMaelstrom] final class AskPartiallyApplied[Res <: Reply](private val 
       JsonDecoder[Res]
   ): ZIO[MessageSender, AskError, Res] =
     MessageSender.ask[Req, Res](body, remote, timeout)
+}
+
+private[zioMaelstrom] final class ReceivePartiallyApplied[I](private val dummy: Boolean = false) extends AnyVal {
+  def apply[Env](handler: Handler[Env, I])(using JsonDecoder[I]): ZIO[MaelstromRuntime & Env, Nothing, Unit] =
+    RequestHandler.handle(handler)
 }

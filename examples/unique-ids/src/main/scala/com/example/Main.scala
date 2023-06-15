@@ -14,7 +14,7 @@ case class GenerateOk(id: String, in_reply_to: MessageId, `type`: String = "gene
 object Main extends ZIOAppDefault:
 
   // Define a handler for the message
-  val handler = receiveR[Ref[Int], Generate] { case request =>
+  val handler = receive[Generate] { case request =>
     for {
       generated <- ZIO.serviceWithZIO[Ref[Int]](_.updateAndGet(_ + 1))
       combinedId = s"${me}_${generated}"

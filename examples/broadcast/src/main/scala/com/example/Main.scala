@@ -39,7 +39,7 @@ object Main extends ZIOAppDefault:
 
   // handle IN messages
   // notice `receiveR` which allows you to use R, in this case Ref[State]
-  val handleMessages = receiveR[Ref[State] & Scope, InMessage] {
+  val handleMessages = receive[InMessage] {
     case msg @ Broadcast(broadcast, messageId) =>
       updateState(_.addBroadcast(broadcast)) *> (msg reply BroadcastOk(messageId))
 
