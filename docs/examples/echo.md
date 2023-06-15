@@ -17,17 +17,27 @@ It demonstrates how to create a simple node that echoes messages back to the sen
 [Imports](../../examples/echo/src/main/scala/com/example/Main.scala) inside_block:imports
 <!--/codeinclude-->
 
-Here, we define the protocol of the node. It includes messages which the node can handle and messages it can send
+Here, we define the protocol of the node. It includes messages which the node can handle and messages it can send. Create data classes only for the body part of a maelstrom message. The top level fields (i.e. src, dest) are handled by the library
 
 <!--codeinclude-->
 [Message definitions](../../examples/echo/src/main/scala/com/example/Main.scala) inside_block:messages
 <!--/codeinclude-->
+
+1.  Every messages that needs an acknowledgement or reply should extend `NeedsReply`
+2.  All input messages need a way to decode them. We use `zio-json` to derive `JsonDecoder`
+3.  Messages that need to be sent out need to extend from `Sendable`. If they are a reply to some other message, they should also extend from `Reply`
+4.  Outgoing messages need `JsonEncoders`
+
+!!! note
+    Refer to [Maelstrom documentation](https://github.com/jepsen-io/maelstrom/blob/main/doc/protocol.md#message-bodies) for more information on the standard message fields like `msg_id`, `type`, `in_reply_to` etc
 
 This is the Node definition. It defines the behavior of the node and is a typical ZIO application. We use the `recieve` function to define a handler for incoming request messages
 
 <!--codeinclude-->
 [Node application](../../examples/echo/src/main/scala/com/example/Main.scala) block:Main
 <!--/codeinclude-->
+
+1. `reply` is a function that sends a reply to the sender of the message. It takes a `Sendable` & `Reply` message as an argument. You can only call reply on messages that extend `NeedsReply`
 
 Using maelstrom DSL functions such as `receive` and `reply` requires `MaelstromRuntime` which can be provided as a `ZLayer` to the application as shown   above
 
