@@ -44,7 +44,6 @@ theme:
     - search.highlight
     - content.code.copy
     - content.tooltips
-    - content.code.select
     - content.code.annotate
 
 markdown_extensions:
@@ -61,7 +60,7 @@ markdown_extensions:
         - includes
   - pymdownx.highlight:
       linenums: false
-      anchor_linenums: true
+      anchor_linenums: false
       pygments_lang_class: true
       line_spans: __span
   - pymdownx.arithmatex
@@ -98,7 +97,7 @@ plugins:
   - autolinks
   - meta
   - codeinclude:
-      title_mode: none
+      title_mode: mkdocs-material
   - social:
       cards_layout: custom
       debug: false
