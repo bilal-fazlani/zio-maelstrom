@@ -17,4 +17,4 @@ object PingPong extends ZIOAppDefault:
     .catchAll(_ => ZIO.unit)
     .flatMap(_ => exit(ExitCode.success))
 
-  val run = ping.provideSome[Scope](MaelstromRuntime.live) *> exit(ExitCode.success)
+  val run = ping.provide(MaelstromRuntime.live) *> exit(ExitCode.success)

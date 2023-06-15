@@ -9,7 +9,8 @@ import zio.*
 case class Generate(msg_id: MessageId) extends NeedsReply derives JsonDecoder
 
 // Define reply message
-case class GenerateOk(id: String, in_reply_to: MessageId, `type`: String = "generate_ok") extends Sendable, Reply derives JsonEncoder
+case class GenerateOk(id: String, in_reply_to: MessageId, `type`: String = "generate_ok") extends Sendable, Reply
+    derives JsonEncoder
 
 object Main extends ZIOAppDefault:
 
@@ -23,5 +24,5 @@ object Main extends ZIOAppDefault:
   }
 
   // Run the handler
-  // val settings = Settings(nodeInput = NodeInput.FilePath("examples" / "unique-ids" / "simulation.txt"), concurrency = 1)
-  val run = handler.provideSome[Scope](MaelstromRuntime.live, ZLayer.fromZIO(Ref.make(0)))
+  val settings = Settings(nodeInput = NodeInput.FilePath("examples" / "unique-ids" / "simulation.txt"))
+  val run      = handler.provide(MaelstromRuntime.live(settings), ZLayer.fromZIO(Ref.make(0)))

@@ -19,5 +19,5 @@ object Main extends ZIOAppDefault {
     receive[Echo](msg => msg reply EchoOk(echo = msg.echo, in_reply_to = msg.msg_id))
 
   // run the handler
-  val run = echoHandler.provideSome[Scope](MaelstromRuntime.live)
+  val run = echoHandler.provide(MaelstromRuntime.live)
 }

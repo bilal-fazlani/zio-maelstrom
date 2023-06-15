@@ -9,15 +9,21 @@ import com.bilalfazlani.zioMaelstrom.protocol.*
 // Use @jsonDiscriminator to specify the field that will be used to determine the type of message.
 @jsonDiscriminator("type") sealed trait InMessage derives JsonDecoder
 // Use @jsonHint to specify the type of message.
-@jsonHint("topology") case class Topology(topology: Map[NodeId, List[NodeId]], msg_id: MessageId) extends InMessage, NeedsReply
-@jsonHint("broadcast") case class Broadcast(message: Int, msg_id: MessageId)                      extends InMessage, NeedsReply
-@jsonHint("read") case class Read(msg_id: MessageId)                                              extends InMessage, NeedsReply
-@jsonHint("gossip") case class Gossip(iHaveSeen: Set[Int], `type`: String = "gossip")             extends InMessage, Sendable derives JsonEncoder
+@jsonHint("topology") case class Topology(topology: Map[NodeId, List[NodeId]], msg_id: MessageId)
+    extends InMessage,
+      NeedsReply
+@jsonHint("broadcast") case class Broadcast(message: Int, msg_id: MessageId)          extends InMessage, NeedsReply
+@jsonHint("read") case class Read(msg_id: MessageId)                                  extends InMessage, NeedsReply
+@jsonHint("gossip") case class Gossip(iHaveSeen: Set[Int], `type`: String = "gossip") extends InMessage, Sendable
+    derives JsonEncoder
 
 // Reply messages
-case class BroadcastOk(in_reply_to: MessageId, `type`: String = "broadcast_ok")           extends Sendable, Reply derives JsonEncoder
-case class ReadOk(messages: Set[Int], in_reply_to: MessageId, `type`: String = "read_ok") extends Sendable, Reply derives JsonEncoder
-case class TopologyOk(in_reply_to: MessageId, `type`: String = "topology_ok")             extends Sendable, Reply derives JsonEncoder
+case class BroadcastOk(in_reply_to: MessageId, `type`: String = "broadcast_ok") extends Sendable, Reply
+    derives JsonEncoder
+case class ReadOk(messages: Set[Int], in_reply_to: MessageId, `type`: String = "read_ok") extends Sendable, Reply
+    derives JsonEncoder
+case class TopologyOk(in_reply_to: MessageId, `type`: String = "topology_ok") extends Sendable, Reply
+    derives JsonEncoder
 
 // Define the state of node
 case class State(messages: Set[Int] = Set.empty, neighbours: Set[NodeId] = Set.empty) {
@@ -38,7 +44,7 @@ object Main extends ZIOAppDefault:
   def gossip(state: State) = ZIO.foreachPar(state.neighbours)(nodeId => nodeId.send(Gossip(state.messages)))
 
   // handle IN messages
-  // notice `receiveR` which allows you to use R, in this case Ref[State]
+  // notice `receive` which allows you to use R, in this case Ref[State]
   val handleMessages = receive[InMessage] {
     case msg @ Broadcast(broadcast, messageId) =>
       updateState(_.addBroadcast(broadcast)) *> (msg reply BroadcastOk(messageId))
@@ -50,7 +56,7 @@ object Main extends ZIOAppDefault:
       val neighbours = topology(me).toSet
       updateState(_.addNeighbours(neighbours)) *> (msg reply TopologyOk(messageId))
       // start gossiping after we have received the topology
-        *> startGossip.forkScoped.unit // .forkScoped requires us to add a `Scope` in the environment
+        *> startGossip.forkScoped.unit // .forkScoped adds a `Scope` in the environment
 
     case msg @ Gossip(gossipMessages, _) =>
       updateState(_.addGossip(gossipMessages))

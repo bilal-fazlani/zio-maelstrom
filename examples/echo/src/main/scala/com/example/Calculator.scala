@@ -26,4 +26,4 @@ object Calculator extends ZIOAppDefault:
     case divide: Divide =>
       if divide.b == 0 then divide reply ErrorMessage(divide.msg_id, ErrorCode.Custom(55), "divide by zero")
       else divide reply DivideOk(divide.a / divide.b, divide.msg_id)
-  }.provideSome[Scope](MaelstromRuntime.live)
+  }.provide(MaelstromRuntime.live)
