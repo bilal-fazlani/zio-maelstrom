@@ -11,7 +11,7 @@ zio-maelstrom is implemented as a library (or a driver) and does not try become 
 
 I have tried to keep things as simple as possible. The library follows ZIO idiomatic practices and is functional in nature. 
 
-**What this library does for you**
+**What does this library do?**
 
 - [x] Abstracts STDIN and STDOUT and exposes a simple Network IO interface to send and receive messages
 - [x] Handles `Init` message
@@ -19,7 +19,7 @@ I have tried to keep things as simple as possible. The library follows ZIO idiom
 - [x] RPC messages - maintains correlation between requests and responses
 - [x] Gives you traits - `Sendable`, `Reply` and `NeedsResponse` to help you define your own protocol
 
-**What it does not do**
+**What it doesn't do**
 
 - [ ] Define messaging protocols
 - [ ] Define message handlers
@@ -30,18 +30,59 @@ These are the things you need to do. Because you are using `ZIO`, you get super 
 
 ### Design
 
-The whole runtime is implemented as `ZLayer`s. Because `ZLayer` allows creation from a `ZIO` effect, it is possible to run effects before message handlers are invoked. An example of this is the handling of `init` message. The library handles the `init` message first and then invokes the message handlers. This is done by creating a `ZLayer` that runs the effect to handle `init` message.
+### The runtime
 
-This is more evident if we look at the definition of type `MaelstromRuntime`
+The runtime is implemented as `ZLayer`s. Because `ZLayer` allows creation from a `ZIO` effect, it is possible to run effects before message handlers are invoked
+
+This is more evident if we look at the definition of type `MaelstromRuntime` and its layer construction
 
 ```scala title="MaelstromRuntime"
 type MaelstromRuntime = Initialisation & MessageSender & Logger & Settings
 ```
 
-`Initialisation` is a product of `Init` message
-
 <!--codeinclude-->
 [Layer construction](../../zio-maelstrom/src/main/scala/com/bilal-fazlani/zio-maelstrom/MaelstromRuntime.scala) block:live
 <!--/codeinclude-->
 
+Using effects to create layers makes these effects run before user's effect. In this case initialization and starting of response handler is done as part of layer creation
+
+!!! note
+    Initialization refers to the handling of `init` message
+
+```mermaid
+graph BT
+L1("Initialisation.run")
+L2("Initializer.live") --> L1
+L3("ZLayer.succeed(settings)") --> L4("Logger.live")
+L4 --> L5("MessageTransport.live")
+L3 --> L5
+L4 --> L6("Hooks.live")
+L1 --> L7("ResponseHandler.live")
+L4 --> L7
+L6 --> L7
+L3 --> L7
+L1 --> L8("MessageSender.live")
+L5 --> L8
+L6 --> L8
+L4 --> L2
+L5 --> L2
+L7 --> L9("ResponseHandler.start")
+L3
+```
+
+### Reading STDIN
+
+Reading STDIN is done using a `ZStream` and then each line is parsed into a `GenericMessage`. `GenericMessage` is a semi parsed messaged that is used to determine the `type` of message, whether is a reply to some other message, etc.
+
+The first element of this stream is assumed to be the `init` message because that is guaranteed by maelstrom. First element is consumed from the stream and then the remaining stream is split into two streams - one for the normal messages and one for the replies. This is done using `ZStream#partition` method. The partitioning is done using the `in_reply_to` field of the message. If this field is set, the message is assumed to be a reply.
+
+![Reading STDIN](stdin.svg)
+
+These two streams are subscribed by two different consumers. Message stream is consumed by the `receive` api used by the user. Reply stream is consumed by the `ResponseHandler` which starts during creation of  `MaelstromRuntime` layer.
+
+### Message Correlation
+
+Maelstrom uses `msg_id` of a message as unique identifier of a message. This is used to correlate requests and responses. A reply to a message needs to have `in_reply_to` field set to the `msg_id` of the original message it is replying to. Message Ids are optional because not every message needs a reply.
+
+The `ask` api lets users send a message and also wait for a reply. It uses `Promise` to achieve this. When a message is sent, a `Promise` is created and stored in the `Hooks` layer. For every message in response stream, the `Hooks` layer completes corresponding promise with the message. The identification of reply in `Hooks` layer is based on combination of `msg_id` and `src`/`dest` of the message.
 

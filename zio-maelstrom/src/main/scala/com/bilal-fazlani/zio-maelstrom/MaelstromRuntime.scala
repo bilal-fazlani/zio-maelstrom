@@ -6,9 +6,10 @@ type MaelstromRuntime = Initialisation & MessageSender & Logger & Settings
 
 object MaelstromRuntime:
   def live(settings: Settings): ZLayer[Any, Nothing, MaelstromRuntime] = {
-    Scope.default ++ ZLayer.succeed(settings) >>> {
-      ZLayer.makeSome[Scope & Settings, MaelstromRuntime](
+    Scope.default >>> {
+      ZLayer.makeSome[Scope, MaelstromRuntime](
         // pure layers
+        ZLayer.succeed(settings),
         MessageSender.live,
         Logger.live,
         Initializer.live,
