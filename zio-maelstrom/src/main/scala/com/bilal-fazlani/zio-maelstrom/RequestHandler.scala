@@ -24,7 +24,7 @@ private[zioMaelstrom] object RequestHandler:
               given Context       = initialisation.context
               handler apply message.body
             }
-            .catchAll(e => handleInvalidInput(e))
+            .catchAll(handleInvalidInput)
         )
         .runDrain
     } yield ()
