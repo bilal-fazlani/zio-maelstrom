@@ -116,6 +116,7 @@ nav:
       - examples/unique-ids.md
       - examples/broadcast.md
   - API Reference: api-reference/index.md
+  - Design Principles: design-principles/index.md
 
 #Customization
 extra_css:

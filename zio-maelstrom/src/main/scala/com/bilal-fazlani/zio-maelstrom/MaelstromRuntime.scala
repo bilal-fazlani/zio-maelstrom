@@ -5,20 +5,22 @@ import zio.{Scope, ZLayer}
 type MaelstromRuntime = Initialisation & MessageSender & Logger & Settings
 
 object MaelstromRuntime:
-  def live(settings: Settings): ZLayer[Any, Nothing, MaelstromRuntime] = Scope.default ++
-    ZLayer.succeed(settings) >>> {
-      val logger: ZLayer[Settings, Nothing, Logger] =
-        if settings.logLevel == NodeLogLevel.Disabled then Logger.disabled else Logger.active
+  def live(settings: Settings): ZLayer[Any, Nothing, MaelstromRuntime] = {
+    Scope.default ++ ZLayer.succeed(settings) >>> {
       ZLayer.makeSome[Scope & Settings, MaelstromRuntime](
-        Initialisation.live,
+        // pure layers
         MessageSender.live,
-        logger,
+        Logger.live,
         Initializer.live,
         ResponseHandler.live,
         MessageTransport.live,
         Hooks.live,
-        ZLayer.fromZIO(ResponseHandler.handle.forkScoped.unit)
+
+        // effectful layers
+        Initialisation.run,
+        ResponseHandler.start
       )
     }
+  }
 
   val live: ZLayer[Any, Nothing, MaelstromRuntime] = Scope.default >>> live(Settings())
