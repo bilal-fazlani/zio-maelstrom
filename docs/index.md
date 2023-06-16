@@ -17,7 +17,7 @@ Learn distributed systems in Scala using ZIO and Maelstrom
 </div>
 
 [:material-play-outline: Getting Started](getting-started/index.md){ .md-button .md-button--primary }
-[:fontawesome-solid-network-wired: Examples](echo.md){ .md-button }
+[:fontawesome-solid-network-wired: Examples](examples/index.md){ .md-button }
 [:material-api: API Reference](api-reference/index.md){ .md-button }
 
 </div>

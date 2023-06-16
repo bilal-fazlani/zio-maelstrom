@@ -11,6 +11,10 @@
   --md-typeset-a-color: var(--md-accent-fg-color);
 }
 
+.md-nav__link.md-nav__container {
+  display: none;
+}
+
 .md-button {
   font-size: 1rem;
 }
@@ -125,4 +129,10 @@
 .quote-content>p {
   font: 1.2rem/1.4 Georgia, serif;
   font-style: italic;
+}
+
+/*Examples page*/
+
+.examples .md-button {
+  font-size: initial;
 }

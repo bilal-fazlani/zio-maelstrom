@@ -7,9 +7,9 @@ hide:
 # Broadcast
 
 !!! info
-    Examples are from [Gossip Glomers](https://fly.io/dist-sys/) - A series of distributed systems challenges brought to you by Fly.io
+    his example is for [Challenge #3b: Multi-Node Broadcast](https://fly.io/dist-sys/3b/)
 
-This example is for [Challenge #3b: Multi-Node Broadcast](https://fly.io/dist-sys/3b/). The goal is to make nodes gossip messages with each other so that "eventually" all nodes receive all messages.
+The goal is to make nodes gossip messages with each other so that "eventually" all nodes receive all messages.
 
 <!--codeinclude-->
 [Imports](../../examples/broadcast/src/main/scala/com/example/Main.scala) inside_block:imports

@@ -7,9 +7,7 @@ hide:
 # Unique ID Generation
 
 !!! info
-    Examples are from [Gossip Glomers](https://fly.io/dist-sys/) - A series of distributed systems challenges brought to you by Fly.io
-
-This example is for [Challenge #2: Unique ID Generation](https://fly.io/dist-sys/2/)
+    This example is for [Challenge #2: Unique ID Generation](https://fly.io/dist-sys/2/)
 
 In this challenge we generate globally-unique IDs in a distributed network
 

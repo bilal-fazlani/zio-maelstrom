@@ -112,11 +112,12 @@ nav:
   - Home: index.md
   - Getting Started: getting-started/index.md
   - Examples:
+      - examples/index.md
       - examples/echo.md
       - examples/unique-ids.md
       - examples/broadcast.md
   - API Reference: api-reference/index.md
-  - Design Principles: design-principles/index.md
+  - Library Design: library-design/index.md
 
 #Customization
 extra_css:

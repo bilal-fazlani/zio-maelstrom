@@ -7,9 +7,7 @@ hide:
 # Echo
 
 !!! info
-    Examples are from [Gossip Glomers](https://fly.io/dist-sys/) - A series of distributed systems challenges brought to you by Fly.io
-
-This example is for [Challenge #1: Echo](https://fly.io/dist-sys/1/)
+    This example is for [Challenge #1: Echo](https://fly.io/dist-sys/1/)
 
 It demonstrates how to create a simple node that echoes messages back to the sender
 
