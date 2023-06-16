@@ -1,5 +1,5 @@
 site_name: zio-maelstrom
-site_url: https://zio-maelstrom.bilal-fazlani.com
+site_url: https://zio-maelstrom.bilal-fazlani.com/
 site_description: Learn distributed systems in Scala using ZIO and Maelstrom
 repo_name: "bilal-fazlani/zio-maelstrom"
 repo_url: "https://github.com/bilal-fazlani/zio-maelstrom"
@@ -31,6 +31,7 @@ theme:
   features:
     - navigation.tabs
     - navigation.instant
+    - navigation.instant.prefetch
     - navigation.tracking
     - navigation.footer
     - navigation.sections
@@ -38,7 +39,6 @@ theme:
     - navigation.top
     - navigation.expand
     - navigation.path
-    - navigation.prune
     - toc.follow
     - search.suggest
     - search.highlight
@@ -110,11 +110,12 @@ plugins:
 
 nav:
   - Home: index.md
-  - Documentation: documentation/index.md
+  - Getting Started: getting-started/index.md
   - Examples:
       - examples/echo.md
       - examples/unique-ids.md
       - examples/broadcast.md
+  - API Reference: api-reference/index.md
 
 #Customization
 extra_css:
