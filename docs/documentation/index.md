@@ -29,8 +29,16 @@ ZIO-Maelstrom is a high level Scala driver for Maelstrom which abstracts away th
 
 The first thing to do is to [download and setup](https://github.com/jepsen-io/maelstrom/blob/main/doc/01-getting-ready/index.md#getting-ready) the Maelstrom CLI.
 
-Since maelstrom is Closure program, you will need java installed on your machine. You will also need graphviz & gnuplot.
+Since Maelstrom is Closure program, you will need JVM installed on your machine. You will also need graphviz & gnuplot.
 
 ```bash
 brew install openjdk graphviz gnuplot
+```
+
+## Getting started
+
+Create an sbt project with Scala 3 and add the following dependency:
+
+```scala
+libraryDependencies += "com.bilal-fazlani" %% "zio-maelstrom" % "0.1.1"
 ```

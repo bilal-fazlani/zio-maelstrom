@@ -75,3 +75,6 @@ reply_messages
 
 !!! tip
     This is a naive implementation of gossip protocol. We are sending all the number in a node's state to all its neighbors. This will not scale well. Find a better way to do this.
+
+!!! note
+    Source code for this example can be found on [:simple-github: Github](https://github.com/bilal-fazlani/zio-maelstrom/blob/main/examples/broadcast/src/main/scala/com/example/Main.scala)
