@@ -47,19 +47,13 @@ libraryDependencies += "com.bilal-fazlani" %% "zio-maelstrom" % "0.1.1"
 
 A node is a process that can receive messages and respond to them. It can also send messages to other nodes. Take a look at [Challenge #1: Echo](https://fly.io/dist-sys/1/) to understand the basics of a node. This node is implemented in Go. You can find an equivalent implementation in Scala [here](echo.md)
 
-Example nodes:
-
-1. [Echo](echo.md)
-2. [Unique Id Generation](unique-ids.md)
-3. [Broadcast](broadcast.md)
-
 ## Running a node
 
 Maelstrom requires a binary executable file to launch a node. There are several ways to create a binary executable file:
 
-- Use sbt-assembly https://www.baeldung.com/scala/sbt-fat-jar
-- Use Coursier bootstrap https://get-coursier.io/docs/cli-bootstrap
-- Use GraalVM native-image https://www.graalvm.org/reference-manual/native-image/
+- Create a fat JAR using [sbt-assembly](https://www.baeldung.com/scala/sbt-fat-jar) plugin
+- Create a fat JAR using [Coursier bootstrap](https://get-coursier.io/docs/cli-bootstrap)
+- Create an OS native app using [sbt-native-image](https://github.com/scalameta/sbt-native-image) plugin
 
 I have tested with Coursier bootstrap and it works well. But sbt-assembly should be even more simple to work with.
 
