@@ -82,3 +82,33 @@
     font-size: 2rem;
   }
 }
+
+/*Documentation Page*/
+
+.quote {
+  display: grid;
+  grid-template-columns: auto auto;
+  column-gap: 0.5rem;
+  margin: 1.5rem 0 1.5rem 0;
+}
+
+.quote p {
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.quotation-mark {
+  font-size: 4rem;
+  font-family: Georgia, serif;
+  font-style: italic;
+}
+
+.quotation-mark p {
+  line-height: 0.7;
+}
+
+.quote-content>p {
+  font: 1.2rem/1.4 Georgia, serif;
+  font-style: italic;
+}

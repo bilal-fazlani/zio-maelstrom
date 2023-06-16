@@ -7,25 +7,18 @@ ThisBuild / scalaVersion     := scala3Version
 ThisBuild / organization     := "com.bilal-fazlani"
 ThisBuild / organizationName := "Bilal Fazlani"
 
-ThisBuild / scmInfo := Some(
-  ScmInfo(
-    url("https://github.com/bilal-fazlani/zio-maelstrom"),
-    "https://github.com/bilal-fazlani/zio-maelstrom.git"
-  )
-)
-ThisBuild / developers := List(
-  Developer(
-    "bilal-fazlani",
-    "Bilal Fazlani",
-    "bilal.m.fazlani@gmail.com",
-    url("https://bilal-fazlani.com")
-  )
-)
-ThisBuild / licenses := List(
-  "MIT License" -> url(
-    "https://github.com/bilal-fazlani/zio-maelstrom/blob/main/LICENSE"
-  )
-)
+ThisBuild / scmInfo := Some(ScmInfo(
+  url("https://github.com/bilal-fazlani/zio-maelstrom"),
+  "https://github.com/bilal-fazlani/zio-maelstrom.git"
+))
+ThisBuild / developers := List(Developer(
+  "bilal-fazlani",
+  "Bilal Fazlani",
+  "bilal.m.fazlani@gmail.com",
+  url("https://bilal-fazlani.com")
+))
+ThisBuild / licenses :=
+  List("MIT License" -> url("https://github.com/bilal-fazlani/zio-maelstrom/blob/main/LICENSE"))
 ThisBuild / homepage := Some(url("https://zio-maelstrom.bilal-fazlani.com/"))
 
 logo := raw"""
