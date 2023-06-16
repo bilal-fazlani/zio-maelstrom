@@ -112,7 +112,6 @@ nav:
   - Home: index.md
   - Getting Started: getting-started/index.md
   - Examples:
-      - examples/index.md
       - examples/echo.md
       - examples/unique-ids.md
       - examples/broadcast.md
