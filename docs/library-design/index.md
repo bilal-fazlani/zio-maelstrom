@@ -51,23 +51,34 @@ Using effects to create layers makes these effects run before user's effect. In 
 
 ```mermaid
 graph BT
-L1("Initialisation.run")
-L2("Initializer.live") --> L1
+L2("Initializer.live") --> L1("Initialisation.run")
+
 L3("ZLayer.succeed(settings)") --> L4("Logger.live")
-L4 --> L5("MessageTransport.live")
-L3 --> L5
+
+L3 --> L5("MessageTransport.live")
+L4 --> L5
+
 L4 --> L6("Hooks.live")
+
 L1 --> L7("ResponseHandler.live")
-L4 --> L7
 L6 --> L7
 L3 --> L7
-L1 --> L8("MessageSender.live")
-L5 --> L8
+
+L5 --> L8("MessageSender.live")
+L1 --> L8
 L6 --> L8
-L4 --> L2
+
 L5 --> L2
+L4 --> L2
+
 L7 --> L9("ResponseHandler.start")
-L3
+
+L3 --> L10("MaelstromRuntime.live")
+L8 --> L10
+L1 --> L10
+L9 --> L10
+L4 --> L10
+
 ```
 
 ### Reading STDIN
@@ -81,9 +92,9 @@ The first element of this stream is assumed to be `init` message because that is
 
 These two streams are subscribed by two different consumers. Message stream is consumed by the `receive` api (invoked by the user). Reply stream is consumed by the `ResponseHandler` which is invoked during creation of  `MaelstromRuntime` layer.
 
-### Message Correlation
+### Request-Response
 
-Every message that needs a reply needs to have a `msg_id` field and all the reply messages need to have `in_reply_to` field set to the `msg_id` of the original message. This is how maelstrom correlates messages and replies.
+Every message that needs a reply needs to have a `msg_id` field and all the reply messages need to have `in_reply_to` field set to the `msg_id` of the original message. This is how maelstrom correlates messages and their replies.
 
-The `ask` api lets users send a message and also wait for a reply. It uses `Promise` to achieve this. When a message is sent, a `Promise` is created and stored in the `Hooks` layer. For every message in response stream, the `Hooks` layer completes corresponding promise with the message. The identification of reply in `Hooks` layer is based on combination of `msg_id` and `src`/`dest` of the message.
+The `ask` api lets users send a message and also wait for a reply. It uses `Promise` to achieve this. When a message is sent, a `Promise` is created and stored in the `Hooks` layer. For every message in response stream, the `Hooks` layer completes corresponding promise with the message. The identification of reply in `Hooks` layer is based on combination of `msg_id` and `dest` of request message.
 

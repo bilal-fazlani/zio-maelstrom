@@ -1,63 +1,63 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns:dc="http://purl.org/dc/elements/1.1/" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" viewBox="643 773 347 366.5" width="347" height="366.5">
+<svg xmlns:dc="http://purl.org/dc/elements/1.1/" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" viewBox="670 753.957 347 366.5" width="347" height="366.5">
   <defs/>
   <g id="Canvas_1" fill-opacity="1" stroke-dasharray="none" stroke="none" stroke-opacity="1" fill="none">
     <title>Canvas 1</title>
     <g id="Canvas_1_Layer_1">
       <title>Layer 1</title>
-      <g id="Graphic_75"/>
-      <g id="Graphic_54">
-        <rect x="659" y="1088.086" width="41" height="37" fill="#ffffc0"/>
-        <rect x="659" y="1088.086" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <g id="Graphic_152"/>
+      <g id="Graphic_151">
+        <path d="M 690 1069.043 L 723 1069.043 C 725.2091 1069.043 727 1070.8339 727 1073.043 L 727 1102.043 C 727 1104.2521 725.2091 1106.043 723 1106.043 L 690 1106.043 C 687.7909 1106.043 686 1104.2521 686 1102.043 L 686 1073.043 C 686 1070.8339 687.7909 1069.043 690 1069.043 Z" fill="red" fill-opacity=".15"/>
+        <path d="M 690 1069.043 L 723 1069.043 C 725.2091 1069.043 727 1070.8339 727 1073.043 L 727 1102.043 C 727 1104.2521 725.2091 1106.043 723 1106.043 L 690 1106.043 C 687.7909 1106.043 686 1104.2521 686 1102.043 L 686 1073.043 C 686 1070.8339 687.7909 1069.043 690 1069.043 Z" stroke="#ff0002" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
       </g>
-      <g id="Graphic_55">
-        <rect x="690" y="1045.862" width="41" height="37" fill="#ffffc0"/>
-        <rect x="690" y="1045.862" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <g id="Graphic_150">
+        <path d="M 721 1026.819 L 754 1026.819 C 756.2091 1026.819 758 1028.6099 758 1030.819 L 758 1059.819 C 758 1062.0281 756.2091 1063.819 754 1063.819 L 721 1063.819 C 718.7909 1063.819 717 1062.0281 717 1059.819 L 717 1030.819 C 717 1028.6099 718.7909 1026.819 721 1026.819 Z" fill="red" fill-opacity=".15"/>
+        <path d="M 721 1026.819 L 754 1026.819 C 756.2091 1026.819 758 1028.6099 758 1030.819 L 758 1059.819 C 758 1062.0281 756.2091 1063.819 754 1063.819 L 721 1063.819 C 718.7909 1063.819 717 1062.0281 717 1059.819 L 717 1030.819 C 717 1028.6099 718.7909 1026.819 721 1026.819 Z" stroke="#ff0002" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
       </g>
-      <g id="Graphic_56">
-        <rect x="723" y="1003.638" width="41" height="37" fill="#ffffc0"/>
-        <rect x="723" y="1003.638" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <g id="Graphic_149">
+        <path d="M 754 984.595 L 787 984.595 C 789.2091 984.595 791 986.3859 791 988.595 L 791 1017.595 C 791 1019.8041 789.2091 1021.595 787 1021.595 L 754 1021.595 C 751.7909 1021.595 750 1019.8041 750 1017.595 L 750 988.595 C 750 986.3859 751.7909 984.595 754 984.595 Z" fill="red" fill-opacity=".15"/>
+        <path d="M 754 984.595 L 787 984.595 C 789.2091 984.595 791 986.3859 791 988.595 L 791 1017.595 C 791 1019.8041 789.2091 1021.595 787 1021.595 L 754 1021.595 C 751.7909 1021.595 750 1019.8041 750 1017.595 L 750 988.595 C 750 986.3859 751.7909 984.595 754 984.595 Z" stroke="#ff0002" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
       </g>
-      <g id="Graphic_57">
-        <rect x="759.5" y="961.414" width="41" height="37" fill="#ffffc0"/>
-        <rect x="759.5" y="961.414" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <g id="Graphic_148">
+        <path d="M 790.5 942.371 L 823.5 942.371 C 825.7091 942.371 827.5 944.1619 827.5 946.371 L 827.5 975.371 C 827.5 977.5801 825.7091 979.371 823.5 979.371 L 790.5 979.371 C 788.2909 979.371 786.5 977.5801 786.5 975.371 L 786.5 946.371 C 786.5 944.1619 788.2909 942.371 790.5 942.371 Z" fill="red" fill-opacity=".15"/>
+        <path d="M 790.5 942.371 L 823.5 942.371 C 825.7091 942.371 827.5 944.1619 827.5 946.371 L 827.5 975.371 C 827.5 977.5801 825.7091 979.371 823.5 979.371 L 790.5 979.371 C 788.2909 979.371 786.5 977.5801 786.5 975.371 L 786.5 946.371 C 786.5 944.1619 788.2909 942.371 790.5 942.371 Z" stroke="#ff0002" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
       </g>
-      <g id="Graphic_58">
-        <rect x="929" y="1088.086" width="41" height="37" fill="#c0ffc0"/>
-        <rect x="929" y="1088.086" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <g id="Graphic_147">
+        <path d="M 960 1069.043 L 993 1069.043 C 995.2091 1069.043 997 1070.8339 997 1073.043 L 997 1102.043 C 997 1104.2521 995.2091 1106.043 993 1106.043 L 960 1106.043 C 957.7909 1106.043 956 1104.2521 956 1102.043 L 956 1073.043 C 956 1070.8339 957.7909 1069.043 960 1069.043 Z" fill="#00c653" fill-opacity=".2"/>
+        <path d="M 960 1069.043 L 993 1069.043 C 995.2091 1069.043 997 1070.8339 997 1073.043 L 997 1102.043 C 997 1104.2521 995.2091 1106.043 993 1106.043 L 960 1106.043 C 957.7909 1106.043 956 1104.2521 956 1102.043 L 956 1073.043 C 956 1070.8339 957.7909 1069.043 960 1069.043 Z" stroke="#01c853" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
       </g>
-      <g id="Graphic_59">
-        <rect x="896.7" y="1046.81" width="41" height="37" fill="#c0ffc0"/>
-        <rect x="896.7" y="1046.81" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <g id="Graphic_146">
+        <path d="M 927.7 1027.767 L 960.7 1027.767 C 962.9092 1027.767 964.7 1029.5579 964.7 1031.767 L 964.7 1060.767 C 964.7 1062.9761 962.9092 1064.767 960.7 1064.767 L 927.7 1064.767 C 925.4909 1064.767 923.7 1062.9761 923.7 1060.767 L 923.7 1031.767 C 923.7 1029.5579 925.4909 1027.767 927.7 1027.767 Z" fill="#00c653" fill-opacity=".2"/>
+        <path d="M 927.7 1027.767 L 960.7 1027.767 C 962.9092 1027.767 964.7 1029.5579 964.7 1031.767 L 964.7 1060.767 C 964.7 1062.9761 962.9092 1064.767 960.7 1064.767 L 927.7 1064.767 C 925.4909 1064.767 923.7 1062.9761 923.7 1060.767 L 923.7 1031.767 C 923.7 1029.5579 925.4909 1027.767 927.7 1027.767 Z" stroke="#01c853" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
       </g>
-      <g id="Graphic_60">
-        <rect x="862.1" y="1005.534" width="41" height="37" fill="#c0ffc0"/>
-        <rect x="862.1" y="1005.534" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <g id="Graphic_145">
+        <path d="M 893.1 986.491 L 926.1 986.491 C 928.3092 986.491 930.1 988.2819 930.1 990.491 L 930.1 1019.491 C 930.1 1021.7001 928.3092 1023.491 926.1 1023.491 L 893.1 1023.491 C 890.8909 1023.491 889.1 1021.7001 889.1 1019.491 L 889.1 990.491 C 889.1 988.2819 890.8909 986.491 893.1 986.491 Z" fill="#00c653" fill-opacity=".2"/>
+        <path d="M 893.1 986.491 L 926.1 986.491 C 928.3092 986.491 930.1 988.2819 930.1 990.491 L 930.1 1019.491 C 930.1 1021.7001 928.3092 1023.491 926.1 1023.491 L 893.1 1023.491 C 890.8909 1023.491 889.1 1021.7001 889.1 1019.491 L 889.1 990.491 C 889.1 988.2819 890.8909 986.491 893.1 986.491 Z" stroke="#01c853" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
       </g>
-      <g id="Graphic_61">
-        <rect x="830.5" y="964.258" width="41" height="37" fill="#c0ffc0"/>
-        <rect x="830.5" y="964.258" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <g id="Graphic_144">
+        <path d="M 861.5 945.215 L 894.5 945.215 C 896.7091 945.215 898.5 947.0059 898.5 949.215 L 898.5 978.215 C 898.5 980.4241 896.7091 982.215 894.5 982.215 L 861.5 982.215 C 859.2909 982.215 857.5 980.4241 857.5 978.215 L 857.5 949.215 C 857.5 947.0059 859.2909 945.215 861.5 945.215 Z" fill="#00c653" fill-opacity=".2"/>
+        <path d="M 861.5 945.215 L 894.5 945.215 C 896.7091 945.215 898.5 947.0059 898.5 949.215 L 898.5 978.215 C 898.5 980.4241 896.7091 982.215 894.5 982.215 L 861.5 982.215 C 859.2909 982.215 857.5 980.4241 857.5 978.215 L 857.5 949.215 C 857.5 947.0059 859.2909 945.215 861.5 945.215 Z" stroke="#01c853" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
       </g>
-      <g id="Graphic_69">
-        <rect x="793.8107" y="866" width="41" height="37" fill="#ffffc0"/>
-        <rect x="793.8107" y="866" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <g id="Graphic_143">
+        <path d="M 824.8107 846.957 L 857.8107 846.957 C 860.0198 846.957 861.8107 848.7479 861.8107 850.957 L 861.8107 879.957 C 861.8107 882.1661 860.0198 883.957 857.8107 883.957 L 824.8107 883.957 C 822.6016 883.957 820.8107 882.1661 820.8107 879.957 L 820.8107 850.957 C 820.8107 848.7479 822.6016 846.957 824.8107 846.957 Z" fill="red" fill-opacity=".15"/>
+        <path d="M 824.8107 846.957 L 857.8107 846.957 C 860.0198 846.957 861.8107 848.7479 861.8107 850.957 L 861.8107 879.957 C 861.8107 882.1661 860.0198 883.957 857.8107 883.957 L 824.8107 883.957 C 822.6016 883.957 820.8107 882.1661 820.8107 879.957 L 820.8107 850.957 C 820.8107 848.7479 822.6016 846.957 824.8107 846.957 Z" stroke="#ff0002" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
       </g>
-      <g id="Graphic_68">
-        <rect x="793.8107" y="829" width="41" height="37" fill="#c0ffc0"/>
-        <rect x="793.8107" y="829" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <g id="Graphic_142">
+        <path d="M 824.8107 805.681 L 857.8107 805.681 C 860.0198 805.681 861.8107 807.4719 861.8107 809.681 L 861.8107 838.681 C 861.8107 840.8901 860.0198 842.681 857.8107 842.681 L 824.8107 842.681 C 822.6016 842.681 820.8107 840.8901 820.8107 838.681 L 820.8107 809.681 C 820.8107 807.4719 822.6016 805.681 824.8107 805.681 Z" fill="#00c653" fill-opacity=".2"/>
+        <path d="M 824.8107 805.681 L 857.8107 805.681 C 860.0198 805.681 861.8107 807.4719 861.8107 809.681 L 861.8107 838.681 C 861.8107 840.8901 860.0198 842.681 857.8107 842.681 L 824.8107 842.681 C 822.6016 842.681 820.8107 840.8901 820.8107 838.681 L 820.8107 809.681 C 820.8107 807.4719 822.6016 805.681 824.8107 805.681 Z" stroke="#01c853" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
       </g>
-      <g id="Graphic_67">
-        <rect x="793.8107" y="792" width="41" height="37" fill="#c0ffc0"/>
-        <rect x="793.8107" y="792" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <g id="Graphic_141">
+        <path d="M 824.8107 764.405 L 857.8107 764.405 C 860.0198 764.405 861.8107 766.1959 861.8107 768.405 L 861.8107 797.405 C 861.8107 799.6141 860.0198 801.405 857.8107 801.405 L 824.8107 801.405 C 822.6016 801.405 820.8107 799.6141 820.8107 797.405 L 820.8107 768.405 C 820.8107 766.1959 822.6016 764.405 824.8107 764.405 Z" fill="#00c653" fill-opacity=".2"/>
+        <path d="M 824.8107 764.405 L 857.8107 764.405 C 860.0198 764.405 861.8107 766.1959 861.8107 768.405 L 861.8107 797.405 C 861.8107 799.6141 860.0198 801.405 857.8107 801.405 L 824.8107 801.405 C 822.6016 801.405 820.8107 799.6141 820.8107 797.405 L 820.8107 768.405 C 820.8107 766.1959 822.6016 764.405 824.8107 764.405 Z" stroke="#01c853" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
       </g>
-      <g id="Graphic_74">
-        <path d="M 814.3107 878.707 L 876.4889 934.819 L 814.3107 990.931 L 752.1325 934.819 Z" fill="#ff4efc" fill-opacity=".30195027"/>
-        <path d="M 814.3107 878.707 L 876.4889 934.819 L 814.3107 990.931 L 752.1325 934.819 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <g id="Graphic_140">
+        <path d="M 841.3107 859.664 L 903.4889 915.776 L 841.3107 971.888 L 779.1325 915.776 Z" fill="#ff4efc" fill-opacity=".30195027"/>
+        <path d="M 841.3107 859.664 L 903.4889 915.776 L 841.3107 971.888 L 779.1325 915.776 Z" stroke="#f600e2" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
       </g>
-      <g id="Graphic_71">
-        <rect x="710" y="919.405" width="222.48" height="28.447998" fill="white" fill-opacity=".66328114"/>
-        <text transform="translate(715 924.405)" fill="black">
+      <g id="Graphic_139">
+        <rect x="737" y="900.362" width="222.48" height="28.447998" fill="white" fill-opacity=".6659216"/>
+        <text transform="translate(742 905.362)" fill="black">
           <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">stream.partition(isResponse?)</tspan>
         </text>
       </g>
