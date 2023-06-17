@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:dc="http://purl.org/dc/elements/1.1/" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" viewBox="643 1212 347 366.5" width="347" height="366.5">
+  <defs/>
+  <g id="Canvas_1" fill-opacity="1" stroke-dasharray="none" stroke="none" stroke-opacity="1" fill="none">
+    <title>Canvas 1</title>
+    <g id="Canvas_1_Layer_1">
+      <title>Layer 1</title>
+      <g id="Graphic_76"/>
+      <g id="Graphic_98">
+        <rect x="659" y="1527.086" width="41" height="37" fill="#ffffc0"/>
+        <rect x="659" y="1527.086" width="41" height="37" stroke="#b34400" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_99">
+        <rect x="690" y="1484.862" width="41" height="37" fill="#ffffc0"/>
+        <rect x="690" y="1484.862" width="41" height="37" stroke="#b34400" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_100">
+        <rect x="723" y="1442.638" width="41" height="37" fill="#ffffc0"/>
+        <rect x="723" y="1442.638" width="41" height="37" stroke="#b34400" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_101">
+        <rect x="759.5" y="1400.414" width="41" height="37" fill="#ffffc0"/>
+        <rect x="759.5" y="1400.414" width="41" height="37" stroke="#b34400" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_102">
+        <rect x="929" y="1527.086" width="41" height="37" fill="#c0ffc0"/>
+        <rect x="929" y="1527.086" width="41" height="37" stroke="#235e00" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_103">
+        <rect x="896.7" y="1485.81" width="41" height="37" fill="#c0ffc0"/>
+        <rect x="896.7" y="1485.81" width="41" height="37" stroke="#235e00" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_104">
+        <rect x="862.1" y="1444.534" width="41" height="37" fill="#c0ffc0"/>
+        <rect x="862.1" y="1444.534" width="41" height="37" stroke="#235e00" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_105">
+        <rect x="830.5" y="1403.258" width="41" height="37" fill="#c0ffc0"/>
+        <rect x="830.5" y="1403.258" width="41" height="37" stroke="#235e00" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_106">
+        <rect x="793.8107" y="1305" width="41" height="37" fill="#ffffc0"/>
+        <rect x="793.8107" y="1305" width="41" height="37" stroke="#b34400" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_107">
+        <rect x="793.8107" y="1268" width="41" height="37" fill="#c0ffc0"/>
+        <rect x="793.8107" y="1268" width="41" height="37" stroke="#235e00" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_108">
+        <rect x="793.8107" y="1231" width="41" height="37" fill="#c0ffc0"/>
+        <rect x="793.8107" y="1231" width="41" height="37" stroke="#235e00" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_109">
+        <path d="M 814.3107 1317.707 L 876.4889 1373.819 L 814.3107 1429.931 L 752.1325 1373.819 Z" fill="#ff4efc" fill-opacity=".30195027"/>
+        <path d="M 814.3107 1317.707 L 876.4889 1373.819 L 814.3107 1429.931 L 752.1325 1373.819 Z" stroke="#f600e2" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_110">
+        <rect x="710" y="1358.405" width="222.48" height="28.447998" fill="black" fill-opacity=".5"/>
+        <text transform="translate(715 1363.405)" fill="white">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="white" x="0" y="15">stream.partition(isResponse?)</tspan>
+        </text>
+      </g>
+    </g>
+  </g>
+</svg>

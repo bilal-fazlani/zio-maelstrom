@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:dc="http://purl.org/dc/elements/1.1/" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" viewBox="643 773 347 366.5" width="347" height="366.5">
+  <defs/>
+  <g id="Canvas_1" fill-opacity="1" stroke-dasharray="none" stroke="none" stroke-opacity="1" fill="none">
+    <title>Canvas 1</title>
+    <g id="Canvas_1_Layer_1">
+      <title>Layer 1</title>
+      <g id="Graphic_75"/>
+      <g id="Graphic_54">
+        <rect x="659" y="1088.086" width="41" height="37" fill="#ffffc0"/>
+        <rect x="659" y="1088.086" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_55">
+        <rect x="690" y="1045.862" width="41" height="37" fill="#ffffc0"/>
+        <rect x="690" y="1045.862" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_56">
+        <rect x="723" y="1003.638" width="41" height="37" fill="#ffffc0"/>
+        <rect x="723" y="1003.638" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_57">
+        <rect x="759.5" y="961.414" width="41" height="37" fill="#ffffc0"/>
+        <rect x="759.5" y="961.414" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_58">
+        <rect x="929" y="1088.086" width="41" height="37" fill="#c0ffc0"/>
+        <rect x="929" y="1088.086" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_59">
+        <rect x="896.7" y="1046.81" width="41" height="37" fill="#c0ffc0"/>
+        <rect x="896.7" y="1046.81" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_60">
+        <rect x="862.1" y="1005.534" width="41" height="37" fill="#c0ffc0"/>
+        <rect x="862.1" y="1005.534" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_61">
+        <rect x="830.5" y="964.258" width="41" height="37" fill="#c0ffc0"/>
+        <rect x="830.5" y="964.258" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_69">
+        <rect x="793.8107" y="866" width="41" height="37" fill="#ffffc0"/>
+        <rect x="793.8107" y="866" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_68">
+        <rect x="793.8107" y="829" width="41" height="37" fill="#c0ffc0"/>
+        <rect x="793.8107" y="829" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_67">
+        <rect x="793.8107" y="792" width="41" height="37" fill="#c0ffc0"/>
+        <rect x="793.8107" y="792" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_74">
+        <path d="M 814.3107 878.707 L 876.4889 934.819 L 814.3107 990.931 L 752.1325 934.819 Z" fill="#ff4efc" fill-opacity=".30195027"/>
+        <path d="M 814.3107 878.707 L 876.4889 934.819 L 814.3107 990.931 L 752.1325 934.819 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_71">
+        <rect x="710" y="919.405" width="222.48" height="28.447998" fill="white" fill-opacity=".66328114"/>
+        <text transform="translate(715 924.405)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">stream.partition(isResponse?)</tspan>
+        </text>
+      </g>
+    </g>
+  </g>
+</svg>

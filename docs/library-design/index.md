@@ -7,9 +7,9 @@ hide:
 
 ### Principles
 
-zio-maelstrom is implemented as a library (or a driver) and does not try become a framework. Its because the whole point of it is to learn and have fun. Frameworks are not bad but they box you and restrict what you can do. It makes you faster but you learn less and there is less scope for creativity and exploration.
+zio-maelstrom is implemented as a driver library and does not try become a framework. Its because the whole point of it is to learn and have fun. Frameworks are alright but they box you and restrict what you can do in order to make you faster. But you learn less and there is less scope for creativity and exploration.
 
-I have tried to keep things as simple as possible. The library follows ZIO idiomatic practices and is functional in nature. 
+I have tried to keep things as simple as possible on the interface level. The library follows ZIO idiomatic practices and is functional in nature. 
 
 **What does this library do?**
 
@@ -72,17 +72,18 @@ L3
 
 ### Reading STDIN
 
-Reading STDIN is done using a `ZStream` and then each line is parsed into a `GenericMessage`. `GenericMessage` is a semi parsed messaged that is used to determine the `type` of message, whether is a reply to some other message, etc.
+Reading STDIN is done using a `ZStream` and then each line is parsed into a `GenericMessage`. `GenericMessage` is a semi parsed messaged that is used to determine the `type` of message, whether it is a reply to some other message, etc.
 
-The first element of this stream is assumed to be the `init` message because that is guaranteed by maelstrom. First element is consumed from the stream and then the remaining stream is split into two streams - one for the normal messages and one for the replies. This is done using `ZStream#partition` method. The partitioning is done using the `in_reply_to` field of the message. If this field is set, the message is assumed to be a reply.
+The first element of this stream is assumed to be `init` message because that is guaranteed by maelstrom. First element is consumed from the stream and then the remaining stream is split into two streams - one for the normal messages and one for the replies. This is done using `ZStream#partition` method. The partitioning is done using the `in_reply_to` field of the message. If this field is set, the message is identified as reply.
 
-![Reading STDIN](stdin.svg)
+![Reading STDIN](stdin.svg#only-light) ![Stream Partition](stream-partition.svg#only-light)
+![Reading STDIN](stdin-dark.svg#only-dark) ![Stream Partition](stream-partition-dark.svg#only-dark)
 
-These two streams are subscribed by two different consumers. Message stream is consumed by the `receive` api used by the user. Reply stream is consumed by the `ResponseHandler` which starts during creation of  `MaelstromRuntime` layer.
+These two streams are subscribed by two different consumers. Message stream is consumed by the `receive` api (invoked by the user). Reply stream is consumed by the `ResponseHandler` which is invoked during creation of  `MaelstromRuntime` layer.
 
 ### Message Correlation
 
-Maelstrom uses `msg_id` of a message as unique identifier of a message. This is used to correlate requests and responses. A reply to a message needs to have `in_reply_to` field set to the `msg_id` of the original message it is replying to. Message Ids are optional because not every message needs a reply.
+Every message that needs a reply needs to have a `msg_id` field and all the reply messages need to have `in_reply_to` field set to the `msg_id` of the original message. This is how maelstrom correlates messages and replies.
 
 The `ask` api lets users send a message and also wait for a reply. It uses `Promise` to achieve this. When a message is sent, a `Promise` is created and stored in the `Hooks` layer. For every message in response stream, the `Hooks` layer completes corresponding promise with the message. The identification of reply in `Hooks` layer is based on combination of `msg_id` and `src`/`dest` of the message.
 

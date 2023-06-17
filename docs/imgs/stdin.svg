@@ -1,84 +1,107 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns:dc="http://purl.org/dc/elements/1.1/" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" viewBox="108 17 623 619" width="623" height="619">
-  <defs/>
+<svg xmlns:dc="http://purl.org/dc/elements/1.1/" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" viewBox="291.5 764 221.5 366.5" width="221.5" height="366.5">
+  <defs>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -4 10 8" markerWidth="10" markerHeight="8" color="black">
+      <g>
+        <path d="M 8 0 L 0 -3 L 0 3 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+  </defs>
   <g id="Canvas_1" fill-opacity="1" stroke-dasharray="none" stroke="none" stroke-opacity="1" fill="none">
     <title>Canvas 1</title>
     <g id="Canvas_1_Layer_1">
       <title>Layer 1</title>
-      <g id="Graphic_32">
-        <rect x="108" y="17" width="623" height="619" fill="white"/>
+      <g id="Graphic_53"/>
+      <g id="Graphic_33">
+        <rect x="355" y="1077" width="41" height="37" fill="#c0c0ff"/>
+        <rect x="355" y="1077" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
       </g>
-      <g id="Graphic_15">
-        <rect x="392" y="80.5" width="28" height="205" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
-      </g>
-      <g id="Graphic_16">
-        <path d="M 369.49598 285.5 L 392.14845 301.958 L 196.30095 571.51895 L 173.64848 555.06096 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
-      </g>
-      <g id="Graphic_17">
-        <path d="M 626.9043 571.00574 L 649.2661 554.1549 L 446.8201 285.5 L 424.4583 302.35082 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
-      </g>
-      <g id="Graphic_18">
-        <path d="M 456.25 206.795 C 456.25 202.0585 454.97365 201.4725 445.65026 196.785 L 445.5518 196.7365 C 436.17914 192 436.08166 192 426.4628 192 C 413.6551 192 355.75 192 355.75 192 L 355.75 236 C 355.75 239.3137 358.4363 242 361.75 242 L 450.25 242 C 453.5637 242 456.25 239.3137 456.25 236 L 456.25 206.795 Z" fill="white"/>
-        <path d="M 456.25 206.795 C 456.25 202.0585 454.97365 201.4725 445.65026 196.785 L 445.5518 196.7365 C 436.17914 192 436.08166 192 426.4628 192 C 413.6551 192 355.75 192 355.75 192 L 355.75 236 C 355.75 239.3137 358.4363 242 361.75 242 L 450.25 242 C 453.5637 242 456.25 239.3137 456.25 236 L 456.25 206.795 Z M 456.25 206.551 C 456.25 202.0585 456.1515 202.0585 436.08166 202.0585 L 436.08166 202.0585 C 436.08166 192.049 436.08166 192 427.05174 192" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
-        <text transform="translate(360.75 207.776)" fill="black">
-          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="34.434" y="15">Init</tspan>
+      <g id="Graphic_34">
+        <text transform="translate(413 1086.276)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">init</tspan>
         </text>
       </g>
-      <g id="Graphic_19">
-        <path d="M 379.97366 378.29304 C 383.8713 372.92837 383.32095 371.51444 379.6355 360.7251 L 379.59574 360.6123 C 375.9108 349.73852 375.83192 349.68122 368.0501 344.0274 C 357.68844 336.4992 310.84224 302.46346 310.84224 302.46346 L 273.224 354.24055 C 271.27624 356.9214 271.87053 360.6736 274.55138 362.62136 L 346.1494 414.64035 C 348.83023 416.5881 352.58245 415.9938 354.5302 413.31296 C 354.5302 413.31296 354.5302 413.31296 354.5302 413.31296 L 379.97366 378.29304 Z" fill="white"/>
-        <path d="M 379.97366 378.29304 C 383.8713 372.92837 383.32095 371.51444 379.6355 360.7251 L 379.59574 360.6123 C 375.9108 349.73852 375.83192 349.68122 368.0501 344.0274 C 357.68844 336.4992 310.84224 302.46346 310.84224 302.46346 L 273.224 354.24055 C 271.27624 356.9214 271.87053 360.6736 274.55138 362.62136 L 346.1494 414.64035 C 348.83023 416.5881 352.58245 415.9938 354.5302 413.31296 C 354.5302 413.31296 354.5302 413.31296 354.5302 413.31296 L 379.97366 378.29304 Z M 380.17444 378.0167 C 383.8713 372.92837 383.79164 372.8705 367.5548 361.0737 L 367.5548 361.0737 C 375.7916 349.73672 375.83192 349.68122 368.52656 344.37357" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
-        <text transform="translate(299.73658 326.2556) rotate(36)" fill="black">
-          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="6.13" y="15">Message 1</tspan>
+      <g id="Graphic_35">
+        <rect x="355" y="1040" width="41" height="37" fill="#ffffc0"/>
+        <rect x="355" y="1040" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_36">
+        <text transform="translate(413 1049.276)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">message 1</tspan>
         </text>
       </g>
-      <g id="Graphic_20">
-        <path d="M 319.07935 460.7654 C 322.977 455.40075 322.42664 453.9868 318.7412 443.1975 L 318.70143 443.08467 C 315.01648 432.2109 314.9376 432.1536 307.1558 426.4998 C 296.79413 418.9716 249.94794 384.93584 249.94794 384.93584 L 212.32968 436.71293 C 210.38193 439.39377 210.97622 443.146 213.65707 445.09374 L 285.25507 497.11273 C 287.93592 499.0605 291.68814 498.4662 293.6359 495.78534 C 293.6359 495.78534 293.6359 495.78534 293.6359 495.78534 L 319.07935 460.7654 Z" fill="white"/>
-        <path d="M 319.07935 460.7654 C 322.977 455.40075 322.42664 453.9868 318.7412 443.1975 L 318.70143 443.08467 C 315.01648 432.2109 314.9376 432.1536 307.1558 426.4998 C 296.79413 418.9716 249.94794 384.93584 249.94794 384.93584 L 212.32968 436.71293 C 210.38193 439.39377 210.97622 443.146 213.65707 445.09374 L 285.25507 497.11273 C 287.93592 499.0605 291.68814 498.4662 293.6359 495.78534 C 293.6359 495.78534 293.6359 495.78534 293.6359 495.78534 L 319.07935 460.7654 Z M 319.28013 460.48907 C 322.977 455.40075 322.89733 455.34286 306.66048 443.5461 L 306.66048 443.5461 C 314.8973 432.2091 314.9376 432.1536 307.63225 426.84595" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
-        <text transform="translate(238.84227 408.728) rotate(36)" fill="black">
-          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="6.13" y="15">Message 2</tspan>
+      <g id="Graphic_37">
+        <rect x="355" y="1003" width="41" height="37" fill="#c0ffc0"/>
+        <rect x="355" y="1003" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_38">
+        <text transform="translate(413 1012.276)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">response 1</tspan>
         </text>
       </g>
-      <g id="Graphic_21">
-        <path d="M 515.5966 318.5605 C 511.4235 313.40715 509.9153 313.5728 498.53976 314.3402 L 498.4205 314.3494 C 486.9635 315.09446 486.88774 315.1558 479.4125 321.20915 C 469.459 329.2693 424.4583 365.71016 424.4583 365.71016 L 464.7348 415.4475 C 466.8202 418.02273 470.5984 418.41984 473.1736 416.33445 C 473.1736 416.33445 473.1736 416.33445 473.1736 416.33445 L 541.95104 360.6396 C 544.5263 358.5542 544.9234 354.77603 542.838 352.2008 L 515.5966 318.5605 Z" fill="white"/>
-        <path d="M 515.5966 318.5605 C 511.4235 313.40715 509.9153 313.5728 498.53976 314.3402 L 498.4205 314.3494 C 486.9635 315.09446 486.88774 315.1558 479.4125 321.20915 C 469.459 329.2693 424.4583 365.71016 424.4583 365.71016 L 464.7348 415.4475 C 466.8202 418.02273 470.5984 418.41984 473.1736 416.33445 C 473.1736 416.33445 473.1736 416.33445 473.1736 416.33445 L 541.95104 360.6396 C 544.5263 358.5542 544.9234 354.77603 542.838 352.2008 L 515.5966 318.5605 Z M 515.3816 318.295 C 511.4235 313.40715 511.347 313.46913 495.74977 326.0995 L 495.74977 326.0995 C 486.9309 315.2091 486.88774 315.1558 479.8702 320.83852" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
-        <text transform="translate(444.5654 382.59527) rotate(-39)" fill="black">
-          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="2.722" y="15">Response 1</tspan>
+      <g id="Graphic_39">
+        <rect x="355" y="966" width="41" height="37" fill="#c0ffc0"/>
+        <rect x="355" y="966" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_40">
+        <text transform="translate(413 975.276)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">response 2</tspan>
         </text>
       </g>
-      <g id="Graphic_22">
-        <path d="M 580.9328 399.08955 C 576.7597 393.9362 575.2515 394.1019 563.876 394.86926 L 563.7567 394.87847 C 552.2997 395.62353 552.22395 395.6849 544.7487 401.7382 C 534.7952 409.7984 489.7945 446.23923 489.7945 446.23923 L 530.071 495.97657 C 532.1564 498.5518 535.9346 498.9489 538.5098 496.8635 L 607.28725 441.16867 C 609.8625 439.0833 610.2596 435.3051 608.1742 432.72987 L 580.9328 399.08955 Z" fill="white"/>
-        <path d="M 580.9328 399.08955 C 576.7597 393.9362 575.2515 394.1019 563.876 394.86926 L 563.7567 394.87847 C 552.2997 395.62353 552.22395 395.6849 544.7487 401.7382 C 534.7952 409.7984 489.7945 446.23923 489.7945 446.23923 L 530.071 495.97657 C 532.1564 498.5518 535.9346 498.9489 538.5098 496.8635 L 607.28725 441.16867 C 609.8625 439.0833 610.2596 435.3051 608.1742 432.72987 L 580.9328 399.08955 Z M 580.7178 398.8241 C 576.7597 393.9362 576.6832 393.9982 561.086 406.62857 L 561.086 406.62857 C 552.2671 395.7382 552.22395 395.6849 545.2064 401.3676" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
-        <text transform="translate(509.9016 463.12434) rotate(-39)" fill="black">
-          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="2.722" y="15">Response 2</tspan>
+      <g id="Graphic_41">
+        <rect x="355" y="929" width="41" height="37" fill="#ffffc0"/>
+        <rect x="355" y="929" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_42">
+        <text transform="translate(413 938.276)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">message 2</tspan>
         </text>
       </g>
-      <g id="Graphic_23">
-        <text transform="translate(356.986 35.5)" fill="black">
-          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">STDIN Straem</tspan>
+      <g id="Graphic_43">
+        <rect x="355" y="892" width="41" height="37" fill="#ffffc0"/>
+        <rect x="355" y="892" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_44">
+        <text transform="translate(413 901.276)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">message 3</tspan>
         </text>
       </g>
-      <g id="Graphic_24">
-        <text transform="translate(126 594)" fill="black">
-          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">Message Stream</tspan>
+      <g id="Graphic_45">
+        <rect x="355" y="855" width="41" height="37" fill="#ffffc0"/>
+        <rect x="355" y="855" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_46">
+        <text transform="translate(413 864.276)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">message 4</tspan>
         </text>
       </g>
-      <g id="Graphic_25">
-        <text transform="translate(584.5 594)" fill="black">
-          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">Response Stream</tspan>
+      <g id="Graphic_47">
+        <rect x="355" y="818" width="41" height="37" fill="#c0ffc0"/>
+        <rect x="355" y="818" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_48">
+        <text transform="translate(413 827.276)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">response 3</tspan>
         </text>
       </g>
-      <g id="Graphic_27">
-        <rect x="392" y="80.6" width="28" height="28.447998" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <g id="Graphic_49">
+        <rect x="355" y="781" width="41" height="37" fill="#c0ffc0"/>
+        <rect x="355" y="781" width="41" height="37" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
       </g>
-      <g id="Graphic_28">
-        <rect x="392" y="109.048" width="28" height="28.447998" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <g id="Graphic_50">
+        <text transform="translate(413 790.276)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">response 4</tspan>
+        </text>
       </g>
-      <g id="Graphic_29">
-        <rect x="391.8189" y="137.3149" width="28" height="28.447998" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <g id="Line_51">
+        <line x1="310.5" y1="785.276" x2="310.5" y2="1104.1" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
       </g>
-      <g id="Graphic_31">
-        <rect x="391.8189" y="242" width="28" height="28.447998" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <g id="Graphic_52">
+        <rect x="296.276" y="936.72" width="28.447998" height="56.512" fill="white"/>
+        <text transform="translate(319.724 941.72) rotate(90)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="0" y="15">STDIN</tspan>
+        </text>
       </g>
     </g>
   </g>

@@ -11,10 +11,6 @@
   --md-typeset-a-color: var(--md-accent-fg-color);
 }
 
-.md-nav__link.md-nav__container {
-  display: none;
-}
-
 .md-button {
   font-size: 1rem;
 }
@@ -70,6 +66,12 @@
   display: grid;
   grid-auto-flow: column;
   column-gap: 0.5rem;
+}
+
+@media screen and (min-width: 1220px) {
+  .md-nav__link.md-nav__container {
+    display: none;
+  }
 }
 
 @media screen and (max-width: 768px) {
