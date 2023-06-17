@@ -12,22 +12,11 @@ private[zioMaelstrom] case class Inputs(responseStream: MessageStream, messageSt
 private[zioMaelstrom] case class Initialisation(context: Context, inputs: Inputs)
 
 private[zioMaelstrom] object Initialisation:
-  val run: ZLayer[Scope & Initializer, Nothing, Initialisation] = ZLayer
-    .fromZIO(Initializer.initialize)
-
-private[zioMaelstrom] trait Initializer:
-  def initialize: ZIO[Scope, Nothing, Initialisation]
-
-private[zioMaelstrom] object Initializer:
-  val initialize: ZIO[Scope & Initializer, Nothing, Initialisation] = ZIO
-    .serviceWithZIO[Initializer](_.initialize)
-
-  val live: ZLayer[Logger & OutputChannel & InputChannel, Nothing, Initializer] = ZLayer
+  val run: ZLayer[Scope & Logger & InputChannel & OutputChannel, Nothing, Initialisation] = ZLayer
     .fromFunction(InitializerLive.apply)
+    .flatMap(initializer => ZLayer.fromZIO(initializer.get.initialize))
 
-private case class InitializerLive(logger: Logger, stdout: OutputChannel, stdin: InputChannel)
-    extends Initializer:
-
+private case class InitializerLive(logger: Logger, stdout: OutputChannel, stdin: InputChannel):
   val initialize: ZIO[Scope, Nothing, Initialisation] =
     for
       inputs <- stdin.readInputs

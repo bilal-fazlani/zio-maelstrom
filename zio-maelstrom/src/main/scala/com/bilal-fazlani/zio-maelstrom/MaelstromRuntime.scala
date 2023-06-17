@@ -2,7 +2,7 @@ package com.bilalfazlani.zioMaelstrom
 
 import zio.{Scope, ZLayer}
 
-type MaelstromRuntime = Initialisation & MessageSender & Logger & Settings
+type MaelstromRuntime = Initialisation & RequestHandler & MessageSender & Logger & Settings
 
 object MaelstromRuntime:
   def live(settings: Settings): ZLayer[Any, Nothing, MaelstromRuntime] = {
@@ -12,8 +12,7 @@ object MaelstromRuntime:
         ZLayer.succeed(settings),
         MessageSender.live,
         Logger.live,
-        Initializer.live,
-        ResponseHandler.live,
+        RequestHandler.live,
         OutputChannel.live,
         InputChannel.live,
         Hooks.live,

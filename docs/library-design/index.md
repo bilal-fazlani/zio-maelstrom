@@ -51,34 +51,39 @@ Using effects to create layers makes these effects run before user's effect. In 
 
 ```mermaid
 graph BT
-L2("Initializer.live") --> L1("Initialisation.run")
+L0("ZLayer.succeed(settings)") --> L1("Logger.live")
 
-L3("ZLayer.succeed(settings)") --> L4("Logger.live")
+L1 --> L2("Hooks.live")
 
-L3 --> L5("MessageTransport.live")
+L3("OutputChannel.live")
+
+L6 --> L5("RequestHandler.live")
 L4 --> L5
+L1 --> L5
+L0 --> L5
 
-L4 --> L6("Hooks.live")
+L4 ---> L6("MessageSender.live")
+L2 ----> L6
+L3 --> L6
 
-L1 --> L7("ResponseHandler.live")
-L6 --> L7
-L3 --> L7
+L8 --> L4
+L1 --> L4("Initialisation.run")
+L3 --> L4
 
-L5 --> L8("MessageSender.live")
-L1 --> L8
-L6 --> L8
 
-L5 --> L2
-L4 --> L2
+L0 --> L8("InputChannel.live")
+L1 ---> L8
 
-L7 --> L9("ResponseHandler.start")
+L0 --> L9("ResponseHandler.start")
+L2 --> L9
+L4 ---> L9
 
-L3 --> L10("MaelstromRuntime.live")
-L8 --> L10
-L1 --> L10
+
+L1 --> L10("MaelstromRuntime.live")
 L9 --> L10
 L4 --> L10
-
+L6 --> L10
+L5 --> L10
 ```
 
 ### Reading STDIN
