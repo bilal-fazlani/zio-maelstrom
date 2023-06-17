@@ -14,7 +14,8 @@ object MaelstromRuntime:
         Logger.live,
         Initializer.live,
         ResponseHandler.live,
-        MessageTransport.live,
+        OutputChannel.live,
+        InputChannel.live,
         Hooks.live,
 
         // effectful layers

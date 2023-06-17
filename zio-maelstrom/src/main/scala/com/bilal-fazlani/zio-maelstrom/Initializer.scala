@@ -22,14 +22,15 @@ private[zioMaelstrom] object Initializer:
   val initialize: ZIO[Scope & Initializer, Nothing, Initialisation] = ZIO
     .serviceWithZIO[Initializer](_.initialize)
 
-  val live: ZLayer[Logger & MessageTransport, Nothing, Initializer] = ZLayer
+  val live: ZLayer[Logger & OutputChannel & InputChannel, Nothing, Initializer] = ZLayer
     .fromFunction(InitializerLive.apply)
 
-private case class InitializerLive(logger: Logger, transport: MessageTransport) extends Initializer:
+private case class InitializerLive(logger: Logger, stdout: OutputChannel, stdin: InputChannel)
+    extends Initializer:
 
   val initialize: ZIO[Scope, Nothing, Initialisation] =
     for
-      inputs <- transport.readInputs
+      inputs <- stdin.readInputs
       init <- inputs.messageStream.peel(ZSink.head).flatMap {
         // happy case: found init message
         case (Some(genericMessage), remainder) =>
@@ -58,11 +59,11 @@ private case class InitializerLive(logger: Logger, transport: MessageTransport) 
       MaelstromInitOk(message.body.msg_id)
     )
     for {
-      _ <- transport.transport(replyMessage)
+      _ <- stdout.transport(replyMessage)
       _ <- logger.info("initialised")
     } yield ()
 
   private def handleInitDecodingError(genericMessage: GenericMessage) = logger
     .error(s"could not decode init message $genericMessage") *>
     genericMessage.makeError(ErrorCode.MalformedRequest, "init message is malformed")
-      .fold(ZIO.unit)(transport.transport(_))
+      .fold(ZIO.unit)(stdout.transport(_))

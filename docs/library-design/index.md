@@ -7,7 +7,7 @@ hide:
 
 ### Principles
 
-zio-maelstrom is implemented as a driver library and does not try become a framework. Its because the whole point of it is to learn and have fun. Frameworks are alright but they box you and restrict what you can do in order to make you faster. But you learn less and there is less scope for creativity and exploration.
+zio-maelstrom is implemented as a driver library and does not try become a framework. Its because the whole point of it is to learn and have fun. Frameworks are alright but they box you and restrict what you can do in order to make you faster. With opinionated frameworks, you learn less and there is less scope for creativity and exploration.
 
 I have tried to keep things as simple as possible on the interface level. The library follows ZIO idiomatic practices and is functional in nature. 
 
