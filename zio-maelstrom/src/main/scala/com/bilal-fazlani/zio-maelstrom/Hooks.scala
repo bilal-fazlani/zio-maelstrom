@@ -25,9 +25,16 @@ private case class CallbackId(messageId: MessageId, remote: NodeId) {
   override def toString(): String = s"CallbackId(messageId=$messageId, remote=$remote)"
 }
 
-private case class HooksLive(hooks: ConcurrentMap[CallbackId, Promise[AskError, GenericMessage]], logger: Logger) extends Hooks:
+private case class HooksLive(
+    hooks: ConcurrentMap[CallbackId, Promise[AskError, GenericMessage]],
+    logger: Logger
+) extends Hooks:
 
-  def awaitRemote(messageId: MessageId, remote: NodeId, timeout: Duration): ZIO[Scope, AskError, GenericMessage] =
+  def awaitRemote(
+      messageId: MessageId,
+      remote: NodeId,
+      timeout: Duration
+  ): ZIO[Scope, AskError, GenericMessage] =
     for {
       promise        <- Promise.make[AskError, GenericMessage]
       _              <- suspend(messageId, remote, promise, timeout)
@@ -39,10 +46,14 @@ private case class HooksLive(hooks: ConcurrentMap[CallbackId, Promise[AskError, 
     val callbackId = CallbackId(message.inReplyTo.get, message.src)
     for {
       promise <- hooks.remove(callbackId)
-      _ <- promise match {
-        case Some(p) => p.succeed(message).unit
-        case None    => logger.error(s"$callbackId not found in callback registry. This could be because of duplicate message ids")
-      }
+      _ <-
+        promise match {
+          case Some(p) => p.succeed(message).unit
+          case None =>
+            logger.error(
+              s"$callbackId not found in callback registry. This could be because of duplicate message ids"
+            )
+        }
     } yield ()
 
   private def suspend(
@@ -58,10 +69,13 @@ private case class HooksLive(hooks: ConcurrentMap[CallbackId, Promise[AskError, 
   private def timeout(callbackId: CallbackId, timeout: Duration) =
     for {
       promise <- hooks.remove(callbackId)
-      _ <- promise match {
-        case Some(p) =>
-          p.fail(Timeout(callbackId.messageId, callbackId.remote, timeout))
-        case None =>
-          logger.error(s"$callbackId not found in callback registry. This would have happened because call was completed before the timeout")
-      }
+      _ <-
+        promise match {
+          case Some(p) =>
+            p.fail(Timeout(callbackId.messageId, callbackId.remote, timeout))
+          case None =>
+            logger.error(
+              s"$callbackId not found in callback registry. This would have happened because call was completed before the timeout"
+            )
+        }
     } yield ()

@@ -30,7 +30,7 @@ private case class RequestHandlerLive(
       _ <- initialisation.inputs.messageStream
         // process messages in parallel
         .mapZIOPar(settings.concurrency)(genericMessage =>
-          logDebug(s"processing: ${genericMessage.raw.toJson}") *>
+          logDebug(s"processing request: ${genericMessage.raw.toJson}") *>
             ZIO.fromEither(GenericDecoder[I].decode(genericMessage))
               .mapError(e => InvalidInput(genericMessage, e)).flatMap { message =>
                 given MessageSource = MessageSource(message.source)

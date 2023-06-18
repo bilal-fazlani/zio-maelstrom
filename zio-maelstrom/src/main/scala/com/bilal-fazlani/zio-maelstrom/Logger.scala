@@ -10,24 +10,29 @@ private[zioMaelstrom] trait Logger:
 
 private[zioMaelstrom] object Logger:
   val live = ZLayer.fromFunction { (settings: Settings) =>
-    if settings.logLevel == NodeLogLevel.Disabled then DisabledLogger else LoggerLive(settings)
+    (settings.logLevel, settings.logFormat) match
+      case (NodeLogLevel.Disabled, _) => DisabledLogger
+      case (_, LogFormat.Plain)       => PlainLogger
+      case (_, LogFormat.Colored)     => ColoredLogger(settings)
   }
 
   def debug(line: String): URIO[Logger, Unit] = ZIO.serviceWithZIO[Logger](_.debug(line))
   def info(line: String): URIO[Logger, Unit]  = ZIO.serviceWithZIO[Logger](_.info(line))
   def error(line: String): URIO[Logger, Unit] = ZIO.serviceWithZIO[Logger](_.error(line))
 
-private case class LoggerLive(settings: Settings) extends Logger:
-  import zio.internal.ansi.AnsiStringOps
+private case class ColoredLogger(settings: Settings) extends Logger:
 
   def debug(line: => String): UIO[Unit] = ZIO
-    .when(settings.logLevel <= NodeLogLevel.Debug)(printLineError(line.faint).orDie).unit
+    .when(settings.logLevel <= NodeLogLevel.Debug)(printLineError(line.gray).orDie)
+    .unit
 
   def info(line: => String): UIO[Unit] = ZIO
-    .when(settings.logLevel <= NodeLogLevel.Info)(printLineError(line.yellow).orDie).unit
+    .when(settings.logLevel <= NodeLogLevel.Info)(printLineError(line.yellow).orDie)
+    .unit
 
   def error(line: => String): UIO[Unit] = ZIO
-    .when(settings.logLevel <= NodeLogLevel.Error)(printLineError(line.red).orDie).unit
+    .when(settings.logLevel <= NodeLogLevel.Error)(printLineError(line.red).orDie)
+    .unit
 
 private object PlainLogger extends Logger:
   def debug(line: => String): UIO[Unit] = printLineError(line).orDie.unit
