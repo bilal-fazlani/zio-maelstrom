@@ -21,9 +21,9 @@ ZIO-Maelstrom is a high level Scala driver for Maelstrom which abstracts away th
 </div>
 
 !!! note "Alternatives"
-    There is also an official Go library for Maelstrom called [:fontawesome-brands-golang: maelstrom-go](https://pkg.go.dev/github.com/jepsen-io/maelstrom/demo/go)
+    Maelstrom has an official Go library called [:fontawesome-brands-golang: maelstrom-go](https://pkg.go.dev/github.com/jepsen-io/maelstrom/demo/go)
 
-    There a java open-source library called [:fontawesome-brands-java: maelstrom-java](https://github.com/lant/maelstrom-java)
+    There is also a java open-source library called [:fontawesome-brands-java: maelstrom-java](https://github.com/lant/maelstrom-java)
 
 ## Prerequisites
 
