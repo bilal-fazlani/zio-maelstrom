@@ -2,6 +2,8 @@ PENDING:
 
 - [ ] Create documentation
 - [ ] Tests
+  - [ ] Test overlap in console output
+  - [ ] Test resource safety in hooks
 - [ ] Add more examples
 - [ ] Out messages should not need to define types. Use class name. May need to use macros
 

@@ -3,6 +3,36 @@ package protocol
 
 import zio.json.*
 import scala.annotation.targetName
+import zio.*
+import scala.concurrent.duration.{Duration => ScalaDuration}
+
+private[zioMaelstrom] case class Sleep(duration: Duration)
+
+private case class InvalidSleepDuration(str: String)
+
+private[zioMaelstrom] object Sleep:
+
+  def isSleep(str: String): Option[String] = for {
+    strMatch    <- "sleep\\s*(\\d+\\w)$".r.findFirstMatchIn(str)
+    durationStr <- strMatch.subgroups.headOption
+  } yield durationStr
+
+  private def parseDuration(durationStr: String): Either[InvalidSleepDuration, Sleep] = for {
+    duration <- durationStr match {
+      case ScalaDuration((drn, unit)) => Right(Duration(drn, unit))
+      case _                          => Left(InvalidSleepDuration(durationStr))
+    }
+  } yield Sleep(duration)
+
+  def unapply(str: String): Option[String] = isSleep(str)
+
+  def conditionally(logger: Logger, duration: String): ZIO[Any, Nothing, Unit] =
+    parseDuration(duration).fold(
+      err => ZIO.die(Throwable(err.toString)),
+      sleep =>
+        logger.info(s"input paused for ${sleep.duration.render}") *> ZIO.sleep(sleep.duration) *>
+          logger.info(s"input resumed")
+    )
 
 private[zioMaelstrom] case class Message[+Body](
     @jsonField("src")
@@ -10,8 +40,7 @@ private[zioMaelstrom] case class Message[+Body](
     @jsonField("dest")
     destination: NodeId,
     body: Body
-) derives JsonDecoder,
-      JsonEncoder
+) derives JsonDecoder, JsonEncoder
 
 trait Sendable:
   val `type`: String
@@ -31,37 +60,27 @@ private[zioMaelstrom] case class MaelstromInit(
 
 private[zioMaelstrom] object MaelstromInit {
   private def parseInit(msg: GenericMessage): Either[String, Message[MaelstromInit]] =
-    if msg.isOfType("init")
-    then
+    if msg.isOfType("init") then
       msg.body.toRight("init body is missing").flatMap { body =>
         JsonDecoder[MaelstromInit].fromJsonAST(body).map { init =>
-          Message(
-            source = msg.src,
-            destination = msg.dest,
-            body = init
-          )
+          Message(source = msg.src, destination = msg.dest, body = init)
         }
       }
     else Left("message is not of type 'init'")
 
-  def parseInitUnsafe(msg: GenericMessage): Message[MaelstromInit] =
-    parseInit(msg).getOrElse(throw new Exception("message is not of type 'init'"))
+  def parseInitUnsafe(msg: GenericMessage): Message[MaelstromInit] = parseInit(msg)
+    .getOrElse(throw new Exception("message is not of type 'init'"))
 }
 
-private[zioMaelstrom] case class MaelstromInitOk(
-    in_reply_to: MessageId,
-    `type`: String = "init_ok"
-) extends Sendable
-    with Reply
-    derives JsonEncoder
+private[zioMaelstrom] case class MaelstromInitOk(in_reply_to: MessageId, `type`: String = "init_ok")
+    extends Sendable with Reply derives JsonEncoder
 
 case class ErrorMessage(
     in_reply_to: MessageId,
     code: ErrorCode,
     text: String,
     `type`: String = "error"
-) extends Sendable
-    with Reply
+) extends Sendable with Reply
     derives JsonCodec
 
 opaque type NodeId = String

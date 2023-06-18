@@ -10,8 +10,7 @@ import zio.{ZIOAppDefault, ZIO, Ref, ZLayer}
 //messages{
 case class Generate(msg_id: MessageId) extends NeedsReply derives JsonDecoder
 case class GenerateOk(id: String, in_reply_to: MessageId, `type`: String = "generate_ok")
-    extends Sendable,
-      Reply derives JsonEncoder
+    extends Sendable, Reply derives JsonEncoder
 //}
 
 object Main extends ZIOAppDefault {

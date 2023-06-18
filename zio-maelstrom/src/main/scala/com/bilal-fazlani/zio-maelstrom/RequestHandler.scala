@@ -10,7 +10,9 @@ private[zioMaelstrom] trait RequestHandler:
   def handle[R, I: JsonDecoder](handler: Handler[R, I]): ZIO[R & MaelstromRuntime, Nothing, Unit]
 
 private[zioMaelstrom] object RequestHandler:
-  val live: ZLayer[Initialisation & Logger & MessageSender & Settings, Nothing, RequestHandlerLive] = ZLayer.fromFunction(RequestHandlerLive.apply)
+  val live
+      : ZLayer[Initialisation & Logger & MessageSender & Settings, Nothing, RequestHandlerLive] =
+    ZLayer.fromFunction(RequestHandlerLive.apply)
 
   def handle[R, I: JsonDecoder](handler: Handler[R, I]): ZIO[R & MaelstromRuntime, Nothing, Unit] =
     ZIO.serviceWithZIO[RequestHandler](_.handle(handler))
@@ -28,12 +30,13 @@ private case class RequestHandlerLive(
       _ <- initialisation.inputs.messageStream
         // process messages in parallel
         .mapZIOPar(settings.concurrency)(genericMessage =>
-          ZIO.fromEither(GenericDecoder[I].decode(genericMessage))
-            .mapError(e => InvalidInput(genericMessage, e)).flatMap { message =>
-              given MessageSource = MessageSource(message.source)
-              given Context       = initialisation.context
-              handler apply message.body
-            }.catchAll(handleInvalidInput)
+          logDebug(s"processing: ${genericMessage.raw.toJson}") *>
+            ZIO.fromEither(GenericDecoder[I].decode(genericMessage))
+              .mapError(e => InvalidInput(genericMessage, e)).flatMap { message =>
+                given MessageSource = MessageSource(message.source)
+                given Context       = initialisation.context
+                handler apply message.body
+              }.catchAll(handleInvalidInput)
         ).runDrain
     } yield ()
 

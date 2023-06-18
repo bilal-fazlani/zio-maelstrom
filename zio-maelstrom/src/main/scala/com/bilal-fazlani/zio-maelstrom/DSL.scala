@@ -9,8 +9,8 @@ extension (s: String) infix def /(string: String): Path = Path.of(s, string)
 extension (p: Path) infix def /(string: String): Path   = p resolve string
 
 extension [A <: NeedsReply](message: A)
-  def reply[B <: Sendable & Reply: JsonEncoder](out: B)(using MessageSource) =
-    MessageSender.send(out, NodeId(summon[MessageSource].nodeId))
+  def reply[B <: Sendable & Reply: JsonEncoder](out: B)(using MessageSource) = MessageSender
+    .send(out, NodeId(summon[MessageSource].nodeId))
 
 extension (nodeId: NodeId)
   def ask[Res <: Reply]                         = new AskPartiallyApplied[Res](nodeId)
@@ -19,6 +19,7 @@ extension (nodeId: NodeId)
 def getMyNodeId     = ZIO.service[Initialisation].map(_.context.me)
 def getOtherNodeIds = ZIO.service[Initialisation].map(_.context.others)
 
+def logDebug(message: => String) = Logger.debug(message)
 def logInfo(message: => String)  = Logger.info(message)
 def logError(message: => String) = Logger.error(message)
 
@@ -30,14 +31,16 @@ def others(using Context): Seq[NodeId] = summon[Context].others
 def src(using MessageSource): NodeId   = summon[MessageSource].nodeId
 //RECEIVE CONTEXTFUL - END
 
-private[zioMaelstrom] final class AskPartiallyApplied[Res <: Reply](private val remote: NodeId) extends AnyVal {
+private[zioMaelstrom] final class AskPartiallyApplied[Res <: Reply](private val remote: NodeId)
+    extends AnyVal {
   def apply[Req <: Sendable & NeedsReply: JsonEncoder](body: Req, timeout: Duration)(using
       JsonDecoder[Res]
-  ): ZIO[MessageSender, AskError, Res] =
-    MessageSender.ask[Req, Res](body, remote, timeout)
+  ): ZIO[MessageSender, AskError, Res] = MessageSender.ask[Req, Res](body, remote, timeout)
 }
 
-private[zioMaelstrom] final class ReceivePartiallyApplied[I](private val dummy: Boolean = false) extends AnyVal {
-  def apply[Env](handler: Handler[Env, I])(using JsonDecoder[I]): ZIO[MaelstromRuntime & Env, Nothing, Unit] =
-    RequestHandler.handle(handler)
+private[zioMaelstrom] final class ReceivePartiallyApplied[I](private val dummy: Boolean = false)
+    extends AnyVal {
+  def apply[Env](handler: Handler[Env, I])(using
+      JsonDecoder[I]
+  ): ZIO[MaelstromRuntime & Env, Nothing, Unit] = RequestHandler.handle(handler)
 }

@@ -23,11 +23,14 @@ private case class InputChannelLive(logger: Logger, settings: Settings) extends 
         case NodeInput.StdIn => ZStream.fromInputStream(java.lang.System.in)
             .via(ZPipeline.utfDecode)
         case NodeInput.FilePath(path) => ZStream.fromFile(path.toFile, 128).via(ZPipeline.utfDecode)
-            .via(ZPipeline.splitLines)
+            .via(ZPipeline.splitLines).tap(line => logger.debug(s"read: $line"))
       }).filter(line => line.trim != "").takeWhile(line => line.trim != "q")
     } yield strm).orDie
 
-  val readInputs = strings
+  val readInputs = strings.collectZIO {
+    case str @ Sleep(duration) => Sleep.conditionally(logger, duration) *> ZIO.succeed(None)
+    case str                   => ZIO.succeed(Some(str))
+  }.collectSome
     .map(str => JsonDecoder[GenericMessage].decodeJson(str).left.map(e => InvalidInput(str, e)))
     .tap {
       case Left(errorMessage) => logger

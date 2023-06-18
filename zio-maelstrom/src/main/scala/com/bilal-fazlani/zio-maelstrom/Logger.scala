@@ -21,7 +21,7 @@ private case class LoggerLive(settings: Settings) extends Logger:
   import zio.internal.ansi.AnsiStringOps
 
   def debug(line: String): UIO[Unit] = ZIO
-    .when(settings.logLevel <= NodeLogLevel.Info)(printLineError(line.faint).orDie).unit
+    .when(settings.logLevel <= NodeLogLevel.Debug)(printLineError(line.faint).orDie).unit
 
   def info(line: String): UIO[Unit] = ZIO
     .when(settings.logLevel <= NodeLogLevel.Info)(printLineError(line.yellow).orDie).unit

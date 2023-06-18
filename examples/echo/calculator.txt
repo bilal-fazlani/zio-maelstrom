@@ -1,3 +1,5 @@
 {"src": "c1", "dest": "B", "body": { "type" : "init", "msg_id": 5, "node_id": "B", "node_ids": ["A", "B", "C"] }}
+sleep 6s
 {"src": "c1", "dest": "B", "body": { "type" : "add", "msg_id": 6, "a": 6, "b": 8 }}
+sleep 6s
 {"src": "c1", "dest": "B", "body": { "type" : "subtract", "msg_id": 7, "a": 9, "b": 2 }}
