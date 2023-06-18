@@ -4,35 +4,6 @@ package protocol
 import zio.json.*
 import scala.annotation.targetName
 import zio.*
-import scala.concurrent.duration.{Duration => ScalaDuration}
-
-private[zioMaelstrom] case class Sleep(duration: Duration)
-
-private case class InvalidSleepDuration(str: String)
-
-private[zioMaelstrom] object Sleep:
-
-  def isSleep(str: String): Option[String] = for {
-    strMatch    <- "sleep\\s*(\\d+\\w)$".r.findFirstMatchIn(str)
-    durationStr <- strMatch.subgroups.headOption
-  } yield durationStr
-
-  private def parseDuration(durationStr: String): Either[InvalidSleepDuration, Sleep] = for {
-    duration <- durationStr match {
-      case ScalaDuration((drn, unit)) => Right(Duration(drn, unit))
-      case _                          => Left(InvalidSleepDuration(durationStr))
-    }
-  } yield Sleep(duration)
-
-  def unapply(str: String): Option[String] = isSleep(str)
-
-  def conditionally(logger: Logger, duration: String): ZIO[Any, Nothing, Unit] =
-    parseDuration(duration).fold(
-      err => ZIO.die(Throwable(err.toString)),
-      sleep =>
-        logger.info(s"input paused for ${sleep.duration.render}") *> ZIO.sleep(sleep.duration) *>
-          logger.info(s"input resumed")
-    )
 
 private[zioMaelstrom] case class Message[+Body](
     @jsonField("src")
