@@ -7,7 +7,10 @@ import zio.json.{JsonEncoder, JsonDecoder}
 // type AskError = ErrorMessage | DecodingFailure | Timeout | DuplicateCallbackAttempt
 type AskError = ErrorMessage | DecodingFailure | Timeout
 
-case class Timeout(messageId: MessageId, remote: NodeId, timeout: Duration)
+case class Timeout(messageId: MessageId, remote: NodeId, timeout: Duration) {
+  override def toString(): String =
+    s"Timeout(messageId=$messageId, remote=$remote, timeout=${timeout.render})"
+}
 case class DecodingFailure(error: String, message: GenericMessage)
 
 private[zioMaelstrom] trait MessageSender:

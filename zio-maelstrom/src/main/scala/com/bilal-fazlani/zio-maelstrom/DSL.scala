@@ -21,6 +21,7 @@ def getOtherNodeIds = ZIO.service[Initialisation].map(_.context.others)
 
 def logDebug(message: => String) = Logger.debug(message)
 def logInfo(message: => String)  = Logger.info(message)
+def logWarn(message: => String)  = Logger.warn(message)
 def logError(message: => String) = Logger.error(message)
 
 def receive[I]: ReceivePartiallyApplied[I] = new ReceivePartiallyApplied[I]

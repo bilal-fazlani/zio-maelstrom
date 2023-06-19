@@ -11,13 +11,24 @@ case class Pong(in_reply_to: MessageId) extends Reply derives JsonDecoder
 
 object PingPong extends ZIOAppDefault:
 
-  val ping = NodeId("c4")
-    .ask[Pong](Ping(MessageId(6)), 4.seconds)
-    .flatMap(_ => logInfo(s"PONG RECEIVED"))
-    .catchAll(_ => ZIO.unit)
-    .flatMap(_ => exit(ExitCode.success))
+  val timeout = (for {
+    _ <- NodeId("c4")
+      .ask[Pong](Ping(MessageId(6)), 3.seconds)
+    _ <- logInfo(s"PONG RECEIVED")
+  } yield ())
+    .catchAll { (e: AskError) =>
+      logError(s"pong error: $e") *>
+        exit(ExitCode.failure)
+    }
 
-  val run = ping.provide(
+  val interruption = for {
+    _ <- NodeId("c4")
+      .ask[Pong](Ping(MessageId(6)), 5.seconds)
+      .disconnect raceFirst (ZIO.fail("boom").delay(1.second).disconnect)
+    _ <- logInfo(s"PONG RECEIVED")
+  } yield ()
+
+  val run = interruption.provide(
     MaelstromRuntime.live(
       Settings(
         nodeInput = NodeInput.FilePath("examples" / "echo" / "ping-pong.txt"),

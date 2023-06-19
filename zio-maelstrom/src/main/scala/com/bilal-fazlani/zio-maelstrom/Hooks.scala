@@ -15,6 +15,8 @@ private[zioMaelstrom] trait Hooks:
 
   def complete(message: GenericMessage): ZIO[Any, Nothing, Unit]
 
+  def exists(callbackId: CallbackId): ZIO[Any, Nothing, Boolean]
+
 private[zioMaelstrom] object Hooks:
   val live: ZLayer[Logger, Nothing, HooksLive] = {
     val hooks = ZLayer.fromZIO(ConcurrentMap.empty[CallbackId, Promise[AskError, GenericMessage]])
@@ -41,6 +43,9 @@ private case class HooksLive(
       genericMessage <- promise.await
     } yield genericMessage
 
+  def exists(callbackId: CallbackId): ZIO[Any, Nothing, Boolean] =
+    hooks.get(callbackId).map(_.isDefined)
+
   def complete(message: GenericMessage): ZIO[Any, Nothing, Unit] =
     // .get is used here because we know that the message is a reply
     val callbackId = CallbackId(message.inReplyTo.get, message.src)
@@ -48,10 +53,11 @@ private case class HooksLive(
       promise <- hooks.remove(callbackId)
       _ <-
         promise match {
-          case Some(p) => p.succeed(message).unit
+          case Some(p) =>
+            p.succeed(message).unit
           case None =>
-            logger.error(
-              s"$callbackId not found in callback registry. This could be because of duplicate message ids"
+            logger.warn(
+              s"$callbackId not found in callback registry. This could be due to duplicate message ids"
             )
         }
     } yield ()
@@ -64,7 +70,11 @@ private case class HooksLive(
   ): URIO[Scope, Unit] =
     val callbackId = CallbackId(messageId, remote.nodeId)
     hooks.put(callbackId, promise).unit *>
-      (timeout(callbackId, messageTimeout).delay(messageTimeout).forkScoped.unit)
+      (timeout(callbackId, messageTimeout).delay(messageTimeout).forkScoped.unit) *>
+      ZIO.addFinalizerExit(exit => discardHook(exit, callbackId)).unit
+
+  private def discardHook(exit: Exit[Any, Any], callbackId: CallbackId): ZIO[Any, Nothing, Unit] =
+    ZIO.when(exit.isInterrupted)(hooks.remove(callbackId)).unit
 
   private def timeout(callbackId: CallbackId, timeout: Duration) =
     for {
@@ -74,8 +84,8 @@ private case class HooksLive(
           case Some(p) =>
             p.fail(Timeout(callbackId.messageId, callbackId.remote, timeout))
           case None =>
-            logger.error(
-              s"$callbackId not found in callback registry. This would have happened because call was completed before the timeout"
+            logger.warn(
+              s"$callbackId not found in callback registry. This could either be due to duplicate message ids or a bug in the library"
             )
         }
     } yield ()

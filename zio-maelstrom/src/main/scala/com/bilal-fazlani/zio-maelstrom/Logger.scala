@@ -6,6 +6,7 @@ import zio.Console.*
 private[zioMaelstrom] trait Logger:
   def debug(line: => String): UIO[Unit]
   def info(line: => String): UIO[Unit]
+  def warn(line: => String): UIO[Unit]
   def error(line: => String): UIO[Unit]
 
 private[zioMaelstrom] object Logger:
@@ -18,6 +19,7 @@ private[zioMaelstrom] object Logger:
 
   def debug(line: String): URIO[Logger, Unit] = ZIO.serviceWithZIO[Logger](_.debug(line))
   def info(line: String): URIO[Logger, Unit]  = ZIO.serviceWithZIO[Logger](_.info(line))
+  def warn(line: String): URIO[Logger, Unit]  = ZIO.serviceWithZIO[Logger](_.warn(line))
   def error(line: String): URIO[Logger, Unit] = ZIO.serviceWithZIO[Logger](_.error(line))
 
 private case class ColoredLogger(settings: Settings) extends Logger:
@@ -30,6 +32,10 @@ private case class ColoredLogger(settings: Settings) extends Logger:
     .when(settings.logLevel <= NodeLogLevel.Info)(printLineError(line.yellow).orDie)
     .unit
 
+  def warn(line: => String): UIO[Unit] = ZIO
+    .when(settings.logLevel <= NodeLogLevel.Warning)(printLineError(line.amber).orDie)
+    .unit
+
   def error(line: => String): UIO[Unit] = ZIO
     .when(settings.logLevel <= NodeLogLevel.Error)(printLineError(line.red).orDie)
     .unit
@@ -37,9 +43,11 @@ private case class ColoredLogger(settings: Settings) extends Logger:
 private object PlainLogger extends Logger:
   def debug(line: => String): UIO[Unit] = printLineError(line).orDie.unit
   def info(line: => String): UIO[Unit]  = printLineError(line).orDie.unit
+  def warn(line: => String): UIO[Unit]  = printLineError(line).orDie.unit
   def error(line: => String): UIO[Unit] = printLineError(line).orDie.unit
 
 private object DisabledLogger extends Logger:
   def debug(line: => String): UIO[Unit] = ZIO.unit
   def info(line: => String): UIO[Unit]  = ZIO.unit
+  def warn(line: => String): UIO[Unit]  = ZIO.unit
   def error(line: => String): UIO[Unit] = ZIO.unit

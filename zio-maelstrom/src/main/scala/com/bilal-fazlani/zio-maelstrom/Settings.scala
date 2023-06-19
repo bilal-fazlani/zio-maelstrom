@@ -3,8 +3,9 @@ package com.bilalfazlani.zioMaelstrom
 enum NodeLogLevel(val level: Int):
   case Debug    extends NodeLogLevel(1)
   case Info     extends NodeLogLevel(2)
-  case Error    extends NodeLogLevel(3)
-  case Disabled extends NodeLogLevel(4)
+  case Warning  extends NodeLogLevel(3)
+  case Error    extends NodeLogLevel(4)
+  case Disabled extends NodeLogLevel(5)
 
   private[zioMaelstrom] def <=(that: NodeLogLevel): Boolean = this.level <= that.level
 
@@ -18,7 +19,7 @@ enum LogFormat:
   *   easier to use a file. Default is stdin
   * @param logLevel
   *   You can log messages using logInfo or logError. Output logs can be filtered by setting this
-  *   value to either Debug, Info, Error or Disabled. Default is Info
+  *   value to either Debug, Info, Warning, Error or Disabled. Default is Info
   * @param logFormat
   *   You can choose between colored or plain logs. Default is colored
   * @param concurrency
