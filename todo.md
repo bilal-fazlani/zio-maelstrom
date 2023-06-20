@@ -1,11 +1,11 @@
 PENDING: 
 
-- [ ] Test kit
+- [ ] Fix the dam blinking debug messages
 - [ ] Test kit docs
 - [ ] Api ref docs
 - [ ] Tests
   - [X] Test overlap in console output manually tested
-  - [X] Test resource safety in hooks manually tested
+  - [X] Test resource safety in callbackRegistry manually tested
   - [ ] Automated tests
 - [ ] Out messages should not need to define types. Use class name. May need to use macros
 
@@ -30,4 +30,5 @@ DONE:
 - [X] Use intersection types for message hierarchy. IN messages don't need "type"
 - [X] Separate init from receive messages
 - [X] Create documentation
-- - [X] Add more examples
+- [X] Add more examples
+- [X] Test kit

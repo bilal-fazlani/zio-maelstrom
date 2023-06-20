@@ -4,7 +4,7 @@ import zio.*
 import protocol.*
 import zio.json.{JsonEncoder, EncoderOps}
 
-type TestRuntime = MaelstromRuntime & Queue[Message[Sendable]] & Queue[String] & Hooks
+type TestRuntime = MaelstromRuntime & Queue[Message[Sendable]] & Queue[String] & CallbackRegistry
 
 object TestRuntime:
   def layer(
@@ -23,7 +23,7 @@ object TestRuntime:
       OutputChannel.queue,
       InputStream.stream,
       InputChannel.live,
-      Hooks.live,
+      CallbackRegistry.live,
 
       // effectful layers
       Initialisation.fake(context),
@@ -42,4 +42,4 @@ object TestRuntime:
 
   def getCallbackState
       : ZIO[TestRuntime, Nothing, Map[CallbackId, Promise[AskError, GenericMessage]]] =
-    ZIO.serviceWithZIO[Hooks](_.getState)
+    ZIO.serviceWithZIO[CallbackRegistry](_.getState)

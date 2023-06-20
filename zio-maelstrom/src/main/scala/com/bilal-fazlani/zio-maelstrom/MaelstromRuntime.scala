@@ -20,7 +20,7 @@ object MaelstromRuntime:
       InputChannel.live,
       inputStream,
       OutputChannel.stdOut,
-      Hooks.live,
+      CallbackRegistry.live,
 
       // effectful layers
       Initialisation.run,

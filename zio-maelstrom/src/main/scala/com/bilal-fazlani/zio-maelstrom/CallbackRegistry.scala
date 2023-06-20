@@ -6,33 +6,34 @@ import zio.concurrent.ConcurrentMap
 
 case class DuplicateCallbackAttempt(callbackId: CallbackId)
 
-private[zioMaelstrom] trait Hooks:
-  def awaitRemote(
+private[zioMaelstrom] trait CallbackRegistry:
+  def awaitCallback(
       messageId: MessageId,
       remote: NodeId,
       timeout: Duration
   ): ZIO[Scope, AskError, GenericMessage]
 
-  def complete(message: GenericMessage): ZIO[Any, Nothing, Unit]
+  def completeCallback(message: GenericMessage): ZIO[Any, Nothing, Unit]
 
   def getState: ZIO[Any, Nothing, Map[CallbackId, Promise[AskError, GenericMessage]]]
 
-private[zioMaelstrom] object Hooks:
-  val live: ZLayer[Logger, Nothing, HooksLive] = {
-    val hooks = ZLayer.fromZIO(ConcurrentMap.empty[CallbackId, Promise[AskError, GenericMessage]])
-    hooks >>> ZLayer.fromFunction(HooksLive.apply)
+private[zioMaelstrom] object CallbackRegistry:
+  val live: ZLayer[Logger, Nothing, CallbackRegistryLive] = {
+    val callbackRegistry =
+      ZLayer.fromZIO(ConcurrentMap.empty[CallbackId, Promise[AskError, GenericMessage]])
+    callbackRegistry >>> ZLayer.fromFunction(CallbackRegistryLive.apply)
   }
 
 private case class CallbackId(messageId: MessageId, remote: NodeId) {
   override def toString(): String = s"CallbackId(messageId=$messageId, remote=$remote)"
 }
 
-private case class HooksLive(
-    hooks: ConcurrentMap[CallbackId, Promise[AskError, GenericMessage]],
+private case class CallbackRegistryLive(
+    callbackRegistry: ConcurrentMap[CallbackId, Promise[AskError, GenericMessage]],
     logger: Logger
-) extends Hooks:
+) extends CallbackRegistry:
 
-  def awaitRemote(
+  def awaitCallback(
       messageId: MessageId,
       remote: NodeId,
       timeout: Duration
@@ -43,13 +44,13 @@ private case class HooksLive(
       genericMessage <- promise.await
     } yield genericMessage
 
-  def getState = hooks.toList.map(_.toMap)
+  def getState = callbackRegistry.toList.map(_.toMap)
 
-  def complete(message: GenericMessage): ZIO[Any, Nothing, Unit] =
+  def completeCallback(message: GenericMessage): ZIO[Any, Nothing, Unit] =
     // .get is used here because we know that the message is a reply
     val callbackId = CallbackId(message.inReplyTo.get, message.src)
     for {
-      promise <- hooks.remove(callbackId)
+      promise <- callbackRegistry.remove(callbackId)
       _ <-
         promise match {
           case Some(p) =>
@@ -68,16 +69,16 @@ private case class HooksLive(
       messageTimeout: Duration
   ): URIO[Scope, Unit] =
     val callbackId = CallbackId(messageId, remote.nodeId)
-    hooks.put(callbackId, promise).unit *>
+    callbackRegistry.put(callbackId, promise).unit *>
       (timeout(callbackId, messageTimeout).delay(messageTimeout).forkScoped.unit) *>
       ZIO.addFinalizerExit(exit => discardHook(exit, callbackId)).unit
 
   private def discardHook(exit: Exit[Any, Any], callbackId: CallbackId): ZIO[Any, Nothing, Unit] =
-    ZIO.when(exit.isInterrupted)(hooks.remove(callbackId)).unit
+    ZIO.when(exit.isInterrupted)(callbackRegistry.remove(callbackId)).unit
 
   private def timeout(callbackId: CallbackId, timeout: Duration) =
     for {
-      promise <- hooks.remove(callbackId)
+      promise <- callbackRegistry.remove(callbackId)
       _ <-
         promise match {
           case Some(p) =>

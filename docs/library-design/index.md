@@ -53,7 +53,7 @@ Using effects to create layers makes these effects run before user's effect. In 
 graph BT
 L0("ZLayer.succeed(settings)") --> L1("Logger.live")
 
-L1 --> L2("Hooks.live")
+L1 --> L2("CallbackRegistry.live")
 
 L3("OutputChannel.live")
 
@@ -101,5 +101,5 @@ These two streams are subscribed by two different consumers. Message stream is c
 
 Every message that needs a reply needs to have a `msg_id` field and all the reply messages need to have `in_reply_to` field set to the `msg_id` of the original message. This is how maelstrom correlates messages and their replies.
 
-The `ask` api lets users send a message and also wait for a reply. It uses `Promise` to achieve this. When a message is sent, a `Promise` is created and stored in the `Hooks` layer. For every message in response stream, the `Hooks` layer completes corresponding promise with the message. The identification of reply in `Hooks` layer is based on combination of `msg_id` and `dest` of request message.
+The `ask` api lets users send a message and also wait for a reply. It uses `Promise` to achieve this. When a message is sent, a `Promise` is created and stored in the `CallbackRegistry` layer. For every message in response stream, the `CallbackRegistry` layer completes corresponding promise with the message. The identification of reply (`CallbackId`) is based on combination of `msg_id` and `dest` of request message.
 

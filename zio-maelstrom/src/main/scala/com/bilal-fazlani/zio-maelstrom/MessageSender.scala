@@ -28,8 +28,10 @@ private[zioMaelstrom] trait MessageSender:
   ): UIO[Unit]
 
 private[zioMaelstrom] object MessageSender:
-  val live: ZLayer[Initialisation & OutputChannel & Hooks & Logger, Nothing, MessageSender] = ZLayer
-    .fromFunction(MessageSenderLive.apply)
+  val live
+      : ZLayer[Initialisation & OutputChannel & CallbackRegistry & Logger, Nothing, MessageSender] =
+    ZLayer
+      .fromFunction(MessageSenderLive.apply)
 
   def send[A <: Sendable: JsonEncoder](body: A, to: NodeId): URIO[MessageSender, Unit] = ZIO
     .serviceWithZIO[MessageSender](_.send(body, to))
@@ -48,7 +50,7 @@ private[zioMaelstrom] object MessageSender:
 private case class MessageSenderLive(
     init: Initialisation,
     stdout: OutputChannel,
-    hooks: Hooks,
+    callbackRegistry: CallbackRegistry,
     logger: Logger
 ) extends MessageSender:
   def send[A <: Sendable: JsonEncoder](body: A, to: NodeId) =
@@ -63,7 +65,7 @@ private case class MessageSenderLive(
   ): IO[AskError, Res] = for {
     _ <- send(body, to)
     _ <- logger.debug(s"waiting for reply from ${to} for message id: ${body.msg_id}...")
-    genericMessage <- ZIO.scoped(hooks.awaitRemote(body.msg_id, to, timeout))
+    genericMessage <- ZIO.scoped(callbackRegistry.awaitCallback(body.msg_id, to, timeout))
     decoded <-
       if genericMessage.isError then {
         val error = JsonDecoder[Message[ErrorMessage]]
