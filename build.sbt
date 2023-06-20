@@ -80,6 +80,7 @@ lazy val maelstrom = project
   .in(file("zio-maelstrom"))
   .settings(
     name := "zio-maelstrom",
+    logo := "",
     scalacOptions += "-Wunused:all",
     libraryDependencies ++=
       Seq(
@@ -96,6 +97,7 @@ lazy val echo = project
   .in(file("examples/echo"))
   .settings(
     name := "echo",
+    logo := "",
     scalacOptions += "-Wunused:all",
     publish / skip      := isCI,
     Compile / mainClass := Some("com.example.echo.Main")
@@ -106,6 +108,7 @@ lazy val uniqueIds = project
   .in(file("examples/unique-ids"))
   .settings(
     name := "unique-ids",
+    logo := "",
     scalacOptions += "-Wunused:all",
     publish / skip      := isCI,
     Compile / mainClass := Some("com.example.uniqueIds.Main")
@@ -116,6 +119,7 @@ lazy val broadcast = project
   .in(file("examples/broadcast"))
   .settings(
     name := "broadcast",
+    logo := "",
     scalacOptions += "-Wunused:all",
     publish / skip      := isCI,
     Compile / mainClass := Some("com.example.broadcast.Main")

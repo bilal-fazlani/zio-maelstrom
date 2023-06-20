@@ -13,7 +13,7 @@ private object AnsiColors:
 
   def colored(rgb: RGB, str: String): String =
     val RGB(r, g, b) = rgb
-    val color        = s"\u001B[38;2;$r;$g;$b;5m"
+    val color        = s"\u001B[38;2;$r;$g;$b;6m"
     s"$color$str\u001B[0m"
 
 extension (s: String)
@@ -22,4 +22,3 @@ extension (s: String)
   def amber  = colored(amberColor, s)
   def yellow = colored(yellowColor, s)
   def green  = colored(greenColor, s)
-  
