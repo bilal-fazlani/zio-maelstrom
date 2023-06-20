@@ -20,13 +20,13 @@ object TestRuntime:
       RequestHandler.live,
       ZLayer.fromZIO(Queue.unbounded[Message[Sendable]]),
       ZLayer.fromZIO(Queue.unbounded[String]),
-      OutputChannel.queue,
-      InputStream.stream,
+      OutputChannel.queue, // FAKE
+      InputStream.queue,   // FAKE
       InputChannel.live,
       CallbackRegistry.live,
 
       // effectful layers
-      Initialisation.fake(context),
+      Initialisation.fake(context), // FAKE
       ResponseHandler.start
     )
 
