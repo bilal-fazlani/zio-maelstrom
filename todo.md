@@ -1,6 +1,5 @@
 PENDING: 
 
-- [ ] Fix the dam blinking debug messages
 - [ ] Test kit docs
 - [ ] Api ref docs
 - [ ] Tests
@@ -32,3 +31,4 @@ DONE:
 - [X] Create documentation
 - [X] Add more examples
 - [X] Test kit
+- [X] Fix the dam blinking debug messages

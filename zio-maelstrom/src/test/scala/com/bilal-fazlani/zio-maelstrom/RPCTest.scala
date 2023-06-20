@@ -48,8 +48,55 @@ object RPCTest extends ZIOSpecDefault {
         assertTrue(callbackState2.isEmpty))
         .provide(testRuntime)
     },
-    test("interruption") {
-      assertCompletes
+    test("interruption should remove the callback") {
+      (for {
+        fiber          <- NodeId("n2").ask[Pong](Ping(MessageId(1)), 4.seconds).fork
+        _              <- sleep(100.millis)
+        callbackState1 <- getCallbackState
+        _              <- TestClock.adjust(1.second)
+        _              <- fiber.interrupt
+        callbackState2 <- getCallbackState
+        _              <- inputMessage(Pong(MessageId(1)), NodeId("n2"))
+      } yield assertTrue(callbackState1.contains(CallbackId(MessageId(1), NodeId("n2")))) &&
+        assertTrue(callbackState2.isEmpty))
+        .provide(testRuntime)
+    },
+    test("interruption due to another zio failure should remove callback") {
+      (for {
+        fiber <- (NodeId("n2")
+          .ask[Pong](Ping(MessageId(1)), 4.seconds) zipPar ZIO.fail("fail").delay(1.second)).fork
+        _              <- sleep(100.millis)
+        callbackState1 <- getCallbackState
+        _              <- TestClock.adjust(4.second)
+        callbackState2 <- getCallbackState
+        _              <- inputMessage(Pong(MessageId(1)), NodeId("n2"))
+      } yield assertTrue(callbackState1.contains(CallbackId(MessageId(1), NodeId("n2")))) &&
+        assertTrue(callbackState2.isEmpty))
+        .provide(testRuntime)
+    },
+    test("two parallel responses from same node should be awaited concurrently") {
+      (for {
+        fiber1 <- NodeId("n2").ask[Pong](Ping(MessageId(1)), 4.seconds).fork
+        fiber2 <- NodeId("n2").ask[Pong](Ping(MessageId(2)), 4.seconds).fork
+        _      <- sleep(100.millis)
+        state0 <- getCallbackState
+        _      <- inputMessage(Pong(MessageId(2)), NodeId("n2"))
+        _      <- sleep(100.millis)
+        state1 <- getCallbackState
+        _      <- inputMessage(Pong(MessageId(1)), NodeId("n2"))
+        _      <- sleep(100.millis)
+        state2 <- getCallbackState
+        pong1  <- fiber1.join
+        pong2  <- fiber2.join
+      } yield assertTrue(pong1 == Pong(MessageId(1))) &&
+        assertTrue(pong2 == Pong(MessageId(2))) &&
+        assertTrue(state2.isEmpty) &&
+        assertTrue(state1.contains(CallbackId(MessageId(1), NodeId("n2")))) &&
+        assertTrue(
+          state0.contains(CallbackId(MessageId(1), NodeId("n2"))) &&
+            state0.contains(CallbackId(MessageId(2), NodeId("n2")))
+        ))
+        .provide(testRuntime)
     }
   ) @@ TestAspect.timeout(10.seconds) @@ TestAspect.sequential
 }
