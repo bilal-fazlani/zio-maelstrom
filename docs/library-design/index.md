@@ -103,4 +103,4 @@ The `ask` api lets users send a message and also wait for a reply. It uses `Prom
 
 Every message that needs a reply needs to have a `msg_id` field and all the reply messages need to have `in_reply_to` field set to the `msg_id` of the original message. This is how reply messages are correlated to the original message.
 
-The `ask` api is resource-safe. Meaning that if an `ask` operation is interrupted, the callback is removed the registry. Promises are also removed in the event of a timeout and when a reply is received. This is done using ZIO's Scope and its Finalizer.
+The `ask` api is resource-safe. Meaning if an `ask` operation is interrupted, the callback (promise) is removed the registry. Promises are also removed in the event of a timeout and when a reply is received. This is done using ZIO's Scope and its Finalizer.

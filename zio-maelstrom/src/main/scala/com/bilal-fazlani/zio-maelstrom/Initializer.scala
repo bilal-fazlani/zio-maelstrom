@@ -18,7 +18,7 @@ private[zioMaelstrom] object Initialisation:
 
   def fake(context: Context): ZLayer[InputChannel & Scope, Nothing, Initialisation] = ZLayer
     .fromFunction(TestInitializer.apply)
-    .flatMap(x => ZLayer.fromZIO(x.get.run(context)))
+    .flatMap(x => ZLayer.fromZIO(x.get.initialize(context)))
 
 private case class InitializerLive(
     logger: Logger,
@@ -69,6 +69,6 @@ private case class InitializerLive(
       .fold(ZIO.unit)(outputChannel.transport(_))
 
 private case class TestInitializer(inputChannel: InputChannel):
-  def run(context: Context): ZIO[Scope, Nothing, Initialisation] =
+  def initialize(context: Context): ZIO[Scope, Nothing, Initialisation] =
     for inputs <- inputChannel.readInputs
     yield Initialisation(context, inputs)

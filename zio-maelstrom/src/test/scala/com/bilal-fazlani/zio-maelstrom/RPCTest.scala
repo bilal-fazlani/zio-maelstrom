@@ -6,15 +6,15 @@ import com.bilalfazlani.zioMaelstrom.protocol.*
 import zio.json.*
 import TestRuntime.*
 
-case class Ping(msg_id: MessageId, `type`: String = "ping") extends Sendable, NeedsReply
-    derives JsonEncoder
-case class Pong(in_reply_to: MessageId) extends Reply derives JsonCodec
-
 object RPCTest extends ZIOSpecDefault {
   val settings                  = Settings(logLevel = NodeLogLevel.Debug)
   val context                   = Context(NodeId("n1"), List(NodeId("n2")))
   val testRuntime               = TestRuntime.layer(settings, context)
   def sleep(duration: Duration) = live(ZIO.sleep(duration))
+
+  case class Ping(msg_id: MessageId, `type`: String = "ping") extends Sendable, NeedsReply
+      derives JsonEncoder
+  case class Pong(in_reply_to: MessageId) extends Reply derives JsonCodec
 
   val spec = suite("RPC Tests")(
     test("successfully send and receive message") {

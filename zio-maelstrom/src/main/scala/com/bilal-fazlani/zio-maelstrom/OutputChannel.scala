@@ -17,7 +17,8 @@ private object OutputChannelLive extends OutputChannel:
     .orDie
 
 private case class TestOutputChannel(
-    messages: Queue[Message[Sendable]]
+    messages: Queue[Message[Sendable]],
+    logger: Logger
 ) extends OutputChannel:
   def transport[A <: Sendable: JsonEncoder](message: Message[A]): UIO[Unit] =
-    messages.offer(message).unit
+    logger.debug(s"out: ${message.toJson}") zipPar messages.offer(message).unit

@@ -5,7 +5,7 @@ import zio.stream.{ZStream, ZPipeline}
 import zio.{ZLayer, Queue}
 
 sealed trait InputStream:
-  val stream: ZStream[Any, Nothing, String]
+  def stream: ZStream[Any, Nothing, String]
 
 object InputStream:
   val stdIn: ZLayer[Any, Nothing, InputStream] = ZLayer.succeed(StdIn)
@@ -13,22 +13,23 @@ object InputStream:
   def file(path: Path): ZLayer[Logger, Nothing, InputStream] =
     ZLayer.succeed(path) >>> ZLayer.fromFunction(File.apply)
 
-  val queue: ZLayer[Queue[String], Nothing, InputStream] =
-    val stream = (queue: Queue[String]) => Stream(ZStream.fromQueue[String](queue))
-    ZLayer.fromFunction(stream)
+  val queue: ZLayer[Queue[String] & Logger, Nothing, InputStream] =
+    val func = (queue: Queue[String], logger: Logger) => Stream(ZStream.fromQueue(queue), logger)
+    ZLayer.fromFunction(func)
 
   case object StdIn extends InputStream:
-    val stream = ZStream
+    def stream = ZStream
       .fromInputStream(java.lang.System.in)
       .via(ZPipeline.utfDecode)
       .orDie
 
   case class File(path: Path, logger: Logger) extends InputStream:
-    val stream = ZStream
+    def stream = ZStream
       .fromFile(path.toFile, 128)
       .via(ZPipeline.utfDecode)
       .via(ZPipeline.splitLines)
       .tap(line => logger.debug(s"read: $line"))
       .orDie
 
-  case class Stream(stream: ZStream[Any, Nothing, String]) extends InputStream
+  case class Stream(strm: ZStream[Any, Nothing, String], logger: Logger) extends InputStream:
+    def stream = strm.tap(line => logger.debug(s"read: $line"))
