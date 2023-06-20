@@ -97,9 +97,10 @@ The first element of this stream is assumed to be `init` message because that is
 
 These two streams are subscribed by two different consumers. Message stream is consumed by the `receive` api (invoked by the user). Reply stream is consumed by the `ResponseHandler` which is invoked during creation of  `MaelstromRuntime` layer.
 
-### Request-Response
+### Request-Response pattern
 
-Every message that needs a reply needs to have a `msg_id` field and all the reply messages need to have `in_reply_to` field set to the `msg_id` of the original message. This is how maelstrom correlates messages and their replies.
+The `ask` api lets users send a message and also wait for a reply. It uses `Promise` to achieve this. When a message is sent, a `Promise` is created and stored in the `CallbackRegistry` layer in a map against a `CallbackId`. A callbackId is a combination of `msg_id` and `dest` of the message. When a reply is received, the `CallbackRegistry` layer completes the promise with the reply message.
 
-The `ask` api lets users send a message and also wait for a reply. It uses `Promise` to achieve this. When a message is sent, a `Promise` is created and stored in the `CallbackRegistry` layer. For every message in response stream, the `CallbackRegistry` layer completes corresponding promise with the message. The identification of reply (`CallbackId`) is based on combination of `msg_id` and `dest` of request message.
+Every message that needs a reply needs to have a `msg_id` field and all the reply messages need to have `in_reply_to` field set to the `msg_id` of the original message. This is how reply messages are correlated to the original message.
 
+The `ask` api is resource-safe. Meaning that if an `ask` operation is interrupted, the callback is removed the registry. Promises are also removed in the event of a timeout and when a reply is received. This is done using ZIO's Scope and its Finalizer.

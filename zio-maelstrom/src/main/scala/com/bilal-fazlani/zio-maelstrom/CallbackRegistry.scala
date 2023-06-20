@@ -69,11 +69,14 @@ private case class CallbackRegistryLive(
       messageTimeout: Duration
   ): URIO[Scope, Unit] =
     val callbackId = CallbackId(messageId, remote.nodeId)
-    callbackRegistry.put(callbackId, promise).unit *>
-      (timeout(callbackId, messageTimeout).delay(messageTimeout).forkScoped.unit) *>
-      ZIO.addFinalizerExit(exit => discardHook(exit, callbackId)).unit
+    ZIO.addFinalizerExit(exit => discardCallback(exit, callbackId)).unit *>
+      callbackRegistry.put(callbackId, promise).unit *>
+      (timeout(callbackId, messageTimeout).delay(messageTimeout).forkScoped.unit)
 
-  private def discardHook(exit: Exit[Any, Any], callbackId: CallbackId): ZIO[Any, Nothing, Unit] =
+  private def discardCallback(
+      exit: Exit[Any, Any],
+      callbackId: CallbackId
+  ): ZIO[Any, Nothing, Unit] =
     ZIO.when(exit.isInterrupted)(callbackRegistry.remove(callbackId)).unit
 
   private def timeout(callbackId: CallbackId, timeout: Duration) =
@@ -85,7 +88,7 @@ private case class CallbackRegistryLive(
             p.fail(Timeout(callbackId.messageId, callbackId.remote, timeout))
           case None =>
             logger.warn(
-              s"$callbackId not found in callback registry. This could either be due to duplicate message ids or a bug in the library"
+              s"$callbackId not found in callback registry. This could be due to a bug in the library"
             )
         }
     } yield ()
