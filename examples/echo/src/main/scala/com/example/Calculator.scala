@@ -19,13 +19,17 @@ case class Divide(a: Int, b: Int, msg_id: MessageId) extends CalculatorMessage d
 
 // OUT MESSAGES
 case class AddOk(result: Int, in_reply_to: MessageId, `type`: String = "add_ok")
-    extends Sendable, Reply derives JsonEncoder
+    extends Sendable,
+      Reply derives JsonEncoder
 case class SubtractOk(result: Int, in_reply_to: MessageId, `type`: String = "subtract_ok")
-    extends Sendable, Reply derives JsonEncoder
+    extends Sendable,
+      Reply derives JsonEncoder
 case class MultiplyOk(result: Int, in_reply_to: MessageId, `type`: String = "multiply_ok")
-    extends Sendable, Reply derives JsonEncoder
+    extends Sendable,
+      Reply derives JsonEncoder
 case class DivideOk(result: Int, in_reply_to: MessageId, `type`: String = "divide_ok")
-    extends Sendable, Reply derives JsonEncoder
+    extends Sendable,
+      Reply derives JsonEncoder
 
 object Calculator extends ZIOAppDefault:
   val run = receive[CalculatorMessage] {
@@ -36,7 +40,6 @@ object Calculator extends ZIOAppDefault:
       if divide.b == 0 then
         divide reply ErrorMessage(divide.msg_id, ErrorCode.Custom(55), "divide by zero")
       else divide reply DivideOk(divide.a / divide.b, divide.msg_id)
-  }.provide(MaelstromRuntime.live(Settings(
-    // nodeInput = NodeInput.FilePath("examples" / "echo" / "calculator.txt"),
-    concurrency = 1
-  )))
+  }.provide(
+    MaelstromRuntime.usingFile("examples" / "echo" / "calculator.txt", Settings(concurrency = 1))
+  )

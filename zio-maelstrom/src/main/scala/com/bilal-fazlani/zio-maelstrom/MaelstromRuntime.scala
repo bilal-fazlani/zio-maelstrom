@@ -1,11 +1,15 @@
 package com.bilalfazlani.zioMaelstrom
 
 import zio.{Scope, ZLayer}
+import java.nio.file.Path
 
 type MaelstromRuntime = Initialisation & RequestHandler & MessageSender & Logger & Settings
 
 object MaelstromRuntime:
-  def live(settings: Settings): ZLayer[Any, Nothing, MaelstromRuntime] = {
+  def live(
+      settings: Settings,
+      inputStream: ZLayer[Logger, Nothing, InputStream]
+  ): ZLayer[Any, Nothing, MaelstromRuntime] = {
     ZLayer.make[MaelstromRuntime](
       // pure layers
       Scope.default,
@@ -14,7 +18,7 @@ object MaelstromRuntime:
       Logger.live,
       RequestHandler.live,
       InputChannel.live,
-      InputStream.stdIn,
+      inputStream,
       OutputChannel.stdOut,
       Hooks.live,
 
@@ -24,4 +28,6 @@ object MaelstromRuntime:
     )
   }
 
-  val live: ZLayer[Any, Nothing, MaelstromRuntime] = Scope.default >>> live(Settings())
+  val live: ZLayer[Any, Nothing, MaelstromRuntime] = live(Settings(), InputStream.stdIn)
+  def usingFile(path: Path)                        = live(Settings(), InputStream.file(path))
+  def usingFile(path: Path, settings: Settings)    = live(settings, InputStream.file(path))
