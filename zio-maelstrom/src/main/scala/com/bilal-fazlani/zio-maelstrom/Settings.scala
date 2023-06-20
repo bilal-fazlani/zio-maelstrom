@@ -27,7 +27,6 @@ enum LogFormat:
   *   (receive api) + 1024 response messages (ask api) = 2048 messages can be processed in parallel.
   */
 case class Settings(
-    nodeInput: NodeInput = NodeInput.StdIn,
     logLevel: NodeLogLevel = NodeLogLevel.Info,
     logFormat: LogFormat = LogFormat.Colored,
     concurrency: Int = 1024

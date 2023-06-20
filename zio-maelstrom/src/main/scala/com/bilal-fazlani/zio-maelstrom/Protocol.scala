@@ -11,7 +11,8 @@ private[zioMaelstrom] case class Message[+Body](
     @jsonField("dest")
     destination: NodeId,
     body: Body
-) derives JsonDecoder, JsonEncoder
+) derives JsonDecoder,
+      JsonEncoder
 
 trait Sendable:
   val `type`: String
@@ -44,14 +45,16 @@ private[zioMaelstrom] object MaelstromInit {
 }
 
 private[zioMaelstrom] case class MaelstromInitOk(in_reply_to: MessageId, `type`: String = "init_ok")
-    extends Sendable with Reply derives JsonEncoder
+    extends Sendable
+    with Reply derives JsonEncoder
 
 case class ErrorMessage(
     in_reply_to: MessageId,
     code: ErrorCode,
     text: String,
     `type`: String = "error"
-) extends Sendable with Reply
+) extends Sendable
+    with Reply
     derives JsonCodec
 
 opaque type NodeId = String

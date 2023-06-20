@@ -1,10 +1,12 @@
 PENDING: 
 
-- [ ] Create documentation
+- [ ] Test kit
+- [ ] Test kit docs
+- [ ] Api ref docs
 - [ ] Tests
-  - [ ] Test overlap in console output
-  - [ ] Test resource safety in hooks
-- [ ] Add more examples
+  - [X] Test overlap in console output manually tested
+  - [X] Test resource safety in hooks manually tested
+  - [ ] Automated tests
 - [ ] Out messages should not need to define types. Use class name. May need to use macros
 
 TBD:
@@ -27,3 +29,5 @@ DONE:
 - [X] Ask pattern
 - [X] Use intersection types for message hierarchy. IN messages don't need "type"
 - [X] Separate init from receive messages
+- [X] Create documentation
+- - [X] Add more examples

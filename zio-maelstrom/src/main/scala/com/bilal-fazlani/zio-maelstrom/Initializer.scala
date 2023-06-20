@@ -16,23 +16,33 @@ private[zioMaelstrom] object Initialisation:
     .fromFunction(InitializerLive.apply)
     .flatMap(initializer => ZLayer.fromZIO(initializer.get.initialize))
 
-private case class InitializerLive(logger: Logger, stdout: OutputChannel, stdin: InputChannel):
+  def fake(context: Context): ZLayer[InputChannel & Scope, Nothing, Initialisation] = ZLayer
+    .fromFunction(TestInitializer.apply)
+    .flatMap(x => ZLayer.fromZIO(x.get.run(context)))
+
+private case class InitializerLive(
+    logger: Logger,
+    outputChannel: OutputChannel,
+    inputChannel: InputChannel
+):
   val initialize: ZIO[Scope, Nothing, Initialisation] =
     for
-      inputs <- stdin.readInputs
+      inputs <- inputChannel.readInputs
       init <- inputs.messageStream.peel(ZSink.head).flatMap {
         // happy case: found init message
         case (Some(genericMessage), remainder) =>
           val initMessage = JsonDecoder[Message[MaelstromInit]].fromJsonAST(genericMessage.raw)
           initMessage match
             // when decoded, send it to init handler
-            case Right(initMessage) => handleInit(initMessage) as
+            case Right(initMessage) =>
+              handleInit(initMessage) as
                 Initialisation(Context(initMessage), Inputs(inputs.responseStream, remainder))
 
             // if decoding failed, send an error message to sender and log error
             // because this was promised to be a init message, but was not,
             // we will have to shut down the node
-            case Left(error) => handleInitDecodingError(genericMessage) *>
+            case Left(error) =>
+              handleInitDecodingError(genericMessage) *>
                 ZIO.die(new Exception("init message decoding failed"))
         case (None, _) =>
           // if we don't have a some yet, it means we didn't get any init message
@@ -48,11 +58,17 @@ private case class InitializerLive(logger: Logger, stdout: OutputChannel, stdin:
       MaelstromInitOk(message.body.msg_id)
     )
     for {
-      _ <- stdout.transport(replyMessage)
+      _ <- outputChannel.transport(replyMessage)
       _ <- logger.info("initialised")
     } yield ()
 
   private def handleInitDecodingError(genericMessage: GenericMessage) = logger
     .error(s"could not decode init message $genericMessage") *>
-    genericMessage.makeError(ErrorCode.MalformedRequest, "init message is malformed")
-      .fold(ZIO.unit)(stdout.transport(_))
+    genericMessage
+      .makeError(ErrorCode.MalformedRequest, "init message is malformed")
+      .fold(ZIO.unit)(outputChannel.transport(_))
+
+private case class TestInitializer(inputChannel: InputChannel):
+  def run(context: Context): ZIO[Scope, Nothing, Initialisation] =
+    for inputs <- inputChannel.readInputs
+    yield Initialisation(context, inputs)

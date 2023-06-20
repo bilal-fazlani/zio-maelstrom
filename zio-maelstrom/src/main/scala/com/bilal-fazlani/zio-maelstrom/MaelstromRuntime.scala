@@ -6,22 +6,22 @@ type MaelstromRuntime = Initialisation & RequestHandler & MessageSender & Logger
 
 object MaelstromRuntime:
   def live(settings: Settings): ZLayer[Any, Nothing, MaelstromRuntime] = {
-    Scope.default >>> {
-      ZLayer.makeSome[Scope, MaelstromRuntime](
-        // pure layers
-        ZLayer.succeed(settings),
-        MessageSender.live,
-        Logger.live,
-        RequestHandler.live,
-        OutputChannel.live,
-        InputChannel.live,
-        Hooks.live,
+    ZLayer.make[MaelstromRuntime](
+      // pure layers
+      Scope.default,
+      ZLayer.succeed(settings),
+      MessageSender.live,
+      Logger.live,
+      RequestHandler.live,
+      InputChannel.live,
+      InputStream.stdIn,
+      OutputChannel.stdOut,
+      Hooks.live,
 
-        // effectful layers
-        Initialisation.run,
-        ResponseHandler.start
-      )
-    }
+      // effectful layers
+      Initialisation.run,
+      ResponseHandler.start
+    )
   }
 
   val live: ZLayer[Any, Nothing, MaelstromRuntime] = Scope.default >>> live(Settings())

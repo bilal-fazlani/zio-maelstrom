@@ -31,7 +31,7 @@ object PingPong extends ZIOAppDefault:
   val run = interruption.provide(
     MaelstromRuntime.live(
       Settings(
-        nodeInput = NodeInput.FilePath("examples" / "echo" / "ping-pong.txt"),
+        // nodeInput = NodeInput.FilePath("examples" / "echo" / "ping-pong.txt"),
         logLevel = NodeLogLevel.Debug
       )
     )

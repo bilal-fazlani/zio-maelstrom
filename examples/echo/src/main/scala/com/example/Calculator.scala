@@ -37,6 +37,6 @@ object Calculator extends ZIOAppDefault:
         divide reply ErrorMessage(divide.msg_id, ErrorCode.Custom(55), "divide by zero")
       else divide reply DivideOk(divide.a / divide.b, divide.msg_id)
   }.provide(MaelstromRuntime.live(Settings(
-    nodeInput = NodeInput.FilePath("examples" / "echo" / "calculator.txt"),
+    // nodeInput = NodeInput.FilePath("examples" / "echo" / "calculator.txt"),
     concurrency = 1
   )))

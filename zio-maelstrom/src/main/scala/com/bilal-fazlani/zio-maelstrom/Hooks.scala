@@ -15,7 +15,7 @@ private[zioMaelstrom] trait Hooks:
 
   def complete(message: GenericMessage): ZIO[Any, Nothing, Unit]
 
-  def exists(callbackId: CallbackId): ZIO[Any, Nothing, Boolean]
+  def getState: ZIO[Any, Nothing, Map[CallbackId, Promise[AskError, GenericMessage]]]
 
 private[zioMaelstrom] object Hooks:
   val live: ZLayer[Logger, Nothing, HooksLive] = {
@@ -43,8 +43,7 @@ private case class HooksLive(
       genericMessage <- promise.await
     } yield genericMessage
 
-  def exists(callbackId: CallbackId): ZIO[Any, Nothing, Boolean] =
-    hooks.get(callbackId).map(_.isDefined)
+  def getState = hooks.toList.map(_.toMap)
 
   def complete(message: GenericMessage): ZIO[Any, Nothing, Unit] =
     // .get is used here because we know that the message is a reply
@@ -56,8 +55,8 @@ private case class HooksLive(
           case Some(p) =>
             p.succeed(message).unit
           case None =>
-            logger.warn(
-              s"$callbackId not found in callback registry. This could be due to duplicate message ids"
+            logger.debug(
+              s"$callbackId not found in callback registry. This could be be because request was timed out or interrupted"
             )
         }
     } yield ()
