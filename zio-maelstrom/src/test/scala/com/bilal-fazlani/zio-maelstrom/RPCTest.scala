@@ -7,9 +7,10 @@ import zio.json.*
 import TestRuntime.*
 
 object RPCTest extends ZIOSpecDefault {
-  val settings                  = Settings(logLevel = NodeLogLevel.Debug)
-  val context                   = Context(NodeId("n1"), List(NodeId("n2")))
-  val testRuntime               = TestRuntime.layer(settings, context)
+  def isCI        = sys.env.get("CI").contains("true")
+  val settings    = Settings(logLevel = if isCI then NodeLogLevel.Info else NodeLogLevel.Debug)
+  val context     = Context(NodeId("n1"), List(NodeId("n2")))
+  val testRuntime = TestRuntime.layer(settings, context)
   def sleep(duration: Duration) = live(ZIO.sleep(duration))
 
   case class Ping(msg_id: MessageId, `type`: String = "ping") extends Sendable, NeedsReply

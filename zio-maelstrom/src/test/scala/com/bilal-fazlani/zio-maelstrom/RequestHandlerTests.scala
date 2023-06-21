@@ -1,15 +1,16 @@
 package com.bilalfazlani.zioMaelstrom
 
-import zio.test.{ErrorMessage => TestErrorMessage, *}
+import zio.test.*
 import zio.*
 import zio.json.*
 import TestRuntime.*
 import com.bilalfazlani.zioMaelstrom.protocol.*
 
 object RequestHandlerTest extends ZIOSpecDefault {
-  val settings                  = Settings(logLevel = NodeLogLevel.Debug)
-  val context                   = Context(NodeId("n1"), List(NodeId("n2")))
-  val testRuntime               = TestRuntime.layer(settings, context)
+  def isCI        = sys.env.get("CI").contains("true")
+  val settings    = Settings(logLevel = if isCI then NodeLogLevel.Info else NodeLogLevel.Debug)
+  val context     = Context(NodeId("n1"), List(NodeId("n2")))
+  val testRuntime = TestRuntime.layer(settings, context)
   def sleep(duration: Duration) = live(ZIO.sleep(duration))
 
   case class Ping(msg_id: MessageId) extends NeedsReply derives JsonCodec
