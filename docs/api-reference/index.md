@@ -90,11 +90,60 @@ However, we need to derive `JsonEncoder` for each outgoing message because there
 <!--/codeinclude-->
 
 !!! note
-    Outgoing message can also extend for input parent trait if they also need to be received by the node. They just need to derive `JsonDecoder` in that case.
+    Outgoing message can also extend for input parent trait if they also need to be received by the node. They just need to derive `JsonDecoder` additionally in that case.
 
-## I/O
+## I/O APIs
 
-### receive
+### `receive`
+
+`receive` api takes a handler function `I => ZIO[MaelstromRuntime & R, Nothing, Unit]`
+
+!!! note
+    1. `I` needs have a `zio.json.JsonDecoder` instance
+    2. `R` can be anything. You will need to provide `R` & `MaelstromRuntime` when you run the ZIO effect
+
+Here's an example
+
+<!--codeinclude-->
+[receive](../../examples/echo/src/main/scala/com/example/IODocs.scala) inside_block:Receive
+<!--/codeinclude-->
+
+1. `src` is the `NodeId` of the node that sent the message
+2. `me` is the `NodeId` of the node that received the message
+3. `others` is a list of `NodeId` received in the init message at the start of node
+
+`receive` is a context function and it it gives some variables in the context of the handler function. i.e. `me`, `others` and `src`
+
+### send
+
+You can send a message to any `NodeId` using `NodeId.send()` API. It takes a `Sendable` message which has a `zio.json.JsonEncoder` instance.
+
+<!--codeinclude-->
+[receive](../../examples/echo/src/main/scala/com/example/IODocs.scala) inside_block:Send
+<!--/codeinclude-->
+
+1. these will be sent to all nodes in cluster
+2. `NodeId.send()` can be called inside or outside of receive function
+
+!!! note
+    `NodeId.send()` can be called inside or outside of receive function
+
+### reply
+
+Ideal way to reply to a message is to use `reply` API
+
+<!--codeinclude-->
+[receive](../../examples/echo/src/main/scala/com/example/IODocs.scala) inside_block:Reply
+<!--/codeinclude-->
+
+1. this will be send to source of current Gossip message
+
+`reply` can be called inside or outside of receive function
+
+`reply` api takes an instance of `Sendable` & `Reply` message which has a `zio.json.JsonEncoder` instance. 
+
+!!! tip
+    `reply` can only be called on a message that extends from `NeedsReply` trait
 
 ### ask
 

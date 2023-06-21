@@ -3,7 +3,7 @@ package com.bilalfazlani.zioMaelstrom
 import zio.*
 import zio.Console.*
 
-private[zioMaelstrom] trait Logger:
+trait Logger:
   def debug(line: => String): UIO[Unit]
   def info(line: => String): UIO[Unit]
   def warn(line: => String): UIO[Unit]

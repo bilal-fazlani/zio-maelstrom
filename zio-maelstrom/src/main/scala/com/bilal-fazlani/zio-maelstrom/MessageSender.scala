@@ -13,7 +13,7 @@ case class Timeout(messageId: MessageId, remote: NodeId, timeout: Duration) {
 }
 case class DecodingFailure(error: String, message: GenericMessage)
 
-private[zioMaelstrom] trait MessageSender:
+trait MessageSender:
   def send[A <: Sendable: JsonEncoder](body: A, to: NodeId): UIO[Unit]
 
   def ask[Req <: Sendable & NeedsReply: JsonEncoder, Res <: Reply: JsonDecoder](

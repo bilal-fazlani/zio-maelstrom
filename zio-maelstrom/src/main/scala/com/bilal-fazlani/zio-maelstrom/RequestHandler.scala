@@ -6,7 +6,7 @@ import zio.json.*
 
 type Handler[R, I] = (MessageSource, Context) ?=> I => ZIO[MaelstromRuntime & R, Nothing, Unit]
 
-private[zioMaelstrom] trait RequestHandler:
+trait RequestHandler:
   def handle[R, I: JsonDecoder](handler: Handler[R, I]): ZIO[R & MaelstromRuntime, Nothing, Unit]
 
 private[zioMaelstrom] object RequestHandler:
@@ -31,13 +31,17 @@ private case class RequestHandlerLive(
         // process messages in parallel
         .mapZIOPar(settings.concurrency)(genericMessage =>
           logDebug(s"processing request: ${genericMessage.raw.toJson}") *>
-            ZIO.fromEither(GenericDecoder[I].decode(genericMessage))
-              .mapError(e => InvalidInput(genericMessage, e)).flatMap { message =>
+            ZIO
+              .fromEither(GenericDecoder[I].decode(genericMessage))
+              .mapError(e => InvalidInput(genericMessage, e))
+              .flatMap { message =>
                 given MessageSource = MessageSource(message.source)
                 given Context       = initialisation.context
                 handler apply message.body
-              }.catchAll(handleInvalidInput)
-        ).runDrain
+              }
+              .catchAll(handleInvalidInput)
+        )
+        .runDrain
     } yield ()
 
   private def handleInvalidInput(invalidInput: InvalidInput): ZIO[Any, Nothing, Unit] =
@@ -51,8 +55,8 @@ private case class RequestHandlerLive(
     for {
       _ <- logger.error(s"invalid input: $invalidInput")
       _ <- maybeResponse match {
-        case Some(errorMessageBody) => messageSender.send(errorMessageBody, invalidInput.input.src)
-            .ignore
+        case Some(errorMessageBody) =>
+          messageSender.send(errorMessageBody, invalidInput.input.src).ignore
         case None => ZIO.unit // if there was no msg id in msg, we can't send a reply
       }
     } yield ()
