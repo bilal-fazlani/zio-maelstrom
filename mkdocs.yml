@@ -90,6 +90,8 @@ markdown_extensions:
   - pymdownx.tilde
   - toc:
       permalink: "#"
+      title: On this page
+      toc_depth: 2
 
 plugins:
   - search

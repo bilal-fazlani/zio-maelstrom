@@ -32,6 +32,9 @@ object MaelstromRuntime:
   }
 
   val live: ZLayer[Any, Nothing, MaelstromRuntime] = live(Settings(), InputStream.stdIn)
+
+  def live(settings: Settings): ZLayer[Any, Nothing, MaelstromRuntime] =
+    live(settings, InputStream.stdIn)
   // }
 
   def usingFile(path: Path)                     = live(Settings(), InputStream.file(path))

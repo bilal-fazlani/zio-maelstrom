@@ -29,8 +29,5 @@ object PingPong extends ZIOAppDefault:
   } yield ()
 
   val run = interruption.provide(
-    MaelstromRuntime.usingFile(
-      "examples" / "echo" / "ping-pong.txt",
-      Settings(logLevel = NodeLogLevel.Debug)
-    )
+    MaelstromRuntime.live
   ) *> exit(ExitCode.success)

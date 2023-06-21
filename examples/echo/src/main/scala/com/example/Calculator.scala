@@ -5,31 +5,36 @@ import zio.*
 import com.bilalfazlani.zioMaelstrom.protocol.*
 import com.bilalfazlani.zioMaelstrom.*
 
-// IN MESSAGES
+// format: off
+
+// in_messages {
 @jsonDiscriminator("type")
 sealed trait CalculatorMessage extends NeedsReply derives JsonDecoder
-@jsonHint("add")
-case class Add(a: Int, b: Int, msg_id: MessageId) extends CalculatorMessage derives JsonDecoder
-@jsonHint("subtract")
-case class Subtract(a: Int, b: Int, msg_id: MessageId) extends CalculatorMessage derives JsonDecoder
-@jsonHint("multiply")
-case class Multiply(a: Int, b: Int, msg_id: MessageId) extends CalculatorMessage derives JsonDecoder
-@jsonHint("divide")
-case class Divide(a: Int, b: Int, msg_id: MessageId) extends CalculatorMessage derives JsonDecoder
 
-// OUT MESSAGES
-case class AddOk(result: Int, in_reply_to: MessageId, `type`: String = "add_ok")
-    extends Sendable,
-      Reply derives JsonEncoder
-case class SubtractOk(result: Int, in_reply_to: MessageId, `type`: String = "subtract_ok")
-    extends Sendable,
-      Reply derives JsonEncoder
-case class MultiplyOk(result: Int, in_reply_to: MessageId, `type`: String = "multiply_ok")
-    extends Sendable,
-      Reply derives JsonEncoder
-case class DivideOk(result: Int, in_reply_to: MessageId, `type`: String = "divide_ok")
-    extends Sendable,
-      Reply derives JsonEncoder
+@jsonHint("add") case class Add(a: Int, b: Int, msg_id: MessageId) extends CalculatorMessage
+
+@jsonHint("subtract") case class Subtract(a: Int, b: Int, msg_id: MessageId) extends CalculatorMessage
+
+@jsonHint("multiply") case class Multiply(a: Int, b: Int, msg_id: MessageId) extends CalculatorMessage
+
+@jsonHint("divide") case class Divide(a: Int, b: Int, msg_id: MessageId) extends CalculatorMessage
+//}
+
+// out_messages {
+case class AddOk(result: Int, in_reply_to: MessageId, `type`: String = "add_ok") 
+  extends Sendable, Reply derives JsonEncoder
+
+case class SubtractOk(result: Int, in_reply_to: MessageId, `type`: String = "subtract_ok") 
+  extends Sendable, Reply derives JsonEncoder
+
+case class MultiplyOk(result: Int, in_reply_to: MessageId, `type`: String = "multiply_ok") 
+  extends Sendable, Reply derives JsonEncoder
+
+case class DivideOk(result: Int, in_reply_to: MessageId, `type`: String = "divide_ok") 
+  extends Sendable, Reply derives JsonEncoder
+//}
+
+// format: on
 
 object Calculator extends ZIOAppDefault:
   val run = receive[CalculatorMessage] {
