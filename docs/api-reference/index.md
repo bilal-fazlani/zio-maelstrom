@@ -94,7 +94,7 @@ However, we need to derive `JsonEncoder` for each outgoing message because there
 
 ## I/O APIs
 
-### `receive`
+### 1. `receive`
 
 `receive` api takes a handler function `I => ZIO[MaelstromRuntime & R, Nothing, Unit]`
 
@@ -114,7 +114,7 @@ Here's an example
 
 `receive` is a context function and it it gives some variables in the context of the handler function. i.e. `me`, `others` and `src`
 
-### send
+### 2. `send`
 
 You can send a message to any `NodeId` using `NodeId.send()` API. It takes a `Sendable` message which has a `zio.json.JsonEncoder` instance.
 
@@ -128,7 +128,7 @@ You can send a message to any `NodeId` using `NodeId.send()` API. It takes a `Se
 !!! note
     `NodeId.send()` can be called inside or outside of receive function
 
-### reply
+### 3. `reply`
 
 Ideal way to reply to a message is to use `reply` API
 
@@ -145,9 +145,9 @@ Ideal way to reply to a message is to use `reply` API
 !!! tip
     `reply` can only be called on a message that extends from `NeedsReply` trait
 
-### ask
+### 4. `ask`
 
-### error messages
+## Error messages
 
 ## Settings
 
