@@ -3,9 +3,12 @@ package com.bilalfazlani.zioMaelstrom
 import zio.{Scope, ZLayer}
 import java.nio.file.Path
 
+// definition {
 type MaelstromRuntime = Initialisation & RequestHandler & MessageSender & Logger & Settings
+// }
 
 object MaelstromRuntime:
+  // doc_incluide {
   def live(
       settings: Settings,
       inputStream: ZLayer[Logger, Nothing, InputStream]
@@ -29,5 +32,7 @@ object MaelstromRuntime:
   }
 
   val live: ZLayer[Any, Nothing, MaelstromRuntime] = live(Settings(), InputStream.stdIn)
-  def usingFile(path: Path)                        = live(Settings(), InputStream.file(path))
-  def usingFile(path: Path, settings: Settings)    = live(settings, InputStream.file(path))
+  // }
+
+  def usingFile(path: Path)                     = live(Settings(), InputStream.file(path))
+  def usingFile(path: Path, settings: Settings) = live(settings, InputStream.file(path))
