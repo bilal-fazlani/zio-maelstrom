@@ -20,7 +20,7 @@ object Main extends ZIOAppDefault {
     for {
       generated <- ZIO.serviceWithZIO[Ref[Int]](_.updateAndGet(_ + 1))
       combinedId = s"${me}_${generated}" // (1)!
-      _ <- request reply GenerateOk(id = combinedId, in_reply_to = request.msg_id)
+      _ <- reply(GenerateOk(id = combinedId, in_reply_to = request.msg_id))
     } yield ()
   }
 

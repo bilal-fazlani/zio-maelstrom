@@ -59,15 +59,15 @@ object Main extends ZIOAppDefault {
   val handleMessages: ZIO[MaelstromRuntime & Ref[State] & Scope, Nothing, Unit] =
     receive[InMessage] {
       case msg @ Broadcast(broadcast, messageId) => updateState(_.addBroadcast(broadcast)) *>
-          (msg reply BroadcastOk(messageId)) // (3)!
+          reply(BroadcastOk(messageId)) // (3)!
 
       case msg @ Read(messageId) => getState.map(_.messages)
-          .flatMap(messages => msg reply ReadOk(messages, messageId))
+          .flatMap(messages => reply(ReadOk(messages, messageId)))
 
       case msg @ Topology(topology, messageId) =>
         val neighbours = topology(me).toSet // (4)!
         updateState(_.addNeighbours(neighbours)) // (5)!
-        *> (msg reply TopologyOk(messageId))     // (6)!
+        *> reply(TopologyOk(messageId))     // (6)!
         *> startGossip.forkScoped.unit           // (7)!
       // .forkScoped adds a `Scope` requirement in the environment
 

@@ -28,7 +28,7 @@ object RequestHandlerTest extends ZIOSpecDefault {
   val spec = suite("RequestHandler Tests")(
     test("successfully send and receive message") {
       (for {
-        fiber  <- receive[Ping](ping => ping reply PingOk(ping.msg_id)).fork
+        fiber  <- receive[Ping](ping => reply(PingOk(ping.msg_id))).fork
         _      <- inputMessage(Ping(MessageId(1)), NodeId("n2"))
         pingOk <- getNextMessage
         _      <- fiber.interrupt
@@ -40,7 +40,7 @@ object RequestHandlerTest extends ZIOSpecDefault {
         fiber <- receive[GetNumber] { case msg @ GetNumber(msg_id, from, _) =>
           from
             .ask[Number](GetNumber(MessageId(2), from), 2.seconds)
-            .flatMap(nmber => msg reply Number(msg_id, nmber.value))
+            .flatMap(nmber => reply(Number(msg_id, nmber.value)))
             .catchAll(e => ZIO.dieMessage(e.toString))
         }.fork
         _ <- inputMessage(

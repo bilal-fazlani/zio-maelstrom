@@ -105,7 +105,7 @@ However, we need to derive `JsonEncoder` for each outgoing message because there
 Here's an example
 
 <!--codeinclude-->
-[receive](../../examples/echo/src/main/scala/com/example/IODocs.scala) inside_block:Receive
+[Receive](../../examples/echo/src/main/scala/com/example/IODocs.scala) inside_block:Receive
 <!--/codeinclude-->
 
 1. `src` is the `NodeId` of the node that sent the message
@@ -119,35 +119,77 @@ Here's an example
 You can send a message to any `NodeId` using `NodeId.send()` API. It takes a `Sendable` message which has a `zio.json.JsonEncoder` instance.
 
 <!--codeinclude-->
-[receive](../../examples/echo/src/main/scala/com/example/IODocs.scala) inside_block:Send
+[Send](../../examples/echo/src/main/scala/com/example/IODocs.scala) inside_block:Send
 <!--/codeinclude-->
-
+ 
 1. these will be sent to all nodes in cluster
-2. `NodeId.send()` can be called inside or outside of receive function
-
-!!! note
-    `NodeId.send()` can be called inside or outside of receive function
 
 ### 3. `reply`
 
-Ideal way to reply to a message is to use `reply` API
+From within `receive` function, you can call `reply` api to send a reply message to the source of the current message.
 
 <!--codeinclude-->
-[receive](../../examples/echo/src/main/scala/com/example/IODocs.scala) inside_block:Reply
+[Reply](../../examples/echo/src/main/scala/com/example/IODocs.scala) inside_block:Reply
 <!--/codeinclude-->
-
-1. this will be send to source of current Gossip message
-
-`reply` can be called inside or outside of receive function
 
 `reply` api takes an instance of `Sendable` & `Reply` message which has a `zio.json.JsonEncoder` instance. 
 
 !!! tip
-    `reply` can only be called on a message that extends from `NeedsReply` trait
+    `reply` can be called only inside of receive function. Outside of the `receive` function, you can use `send` api which takes a remote `NodeId` argument.
 
 ### 4. `ask`
 
+`ask` api is a combination of `send` and `receive`. It sends a message to a remote node and waits for a reply. It takes a `Sendable` & `Receive` message and returns a `Reply` message. It also takes a timeout argument which is the maximum time to wait for a reply. It expects a `zio.json.JsonDecoder` instance for the reply & a `zio.json.JsonEncoder` instance for the request message. `ask` api can be called from within and outside of `receive` function.
+
+<!--codeinclude-->
+[Ask](../../examples/echo/src/main/scala/com/example/IODocs.scala) inside_block:Ask
+<!--/codeinclude-->
+
+The `ask` api can return either a successful response or an `AskError`.
+
+<!--codeinclude-->
+[AskError](../../zio-maelstrom/src/main/scala/com/bilal-fazlani/zio-maelstrom/MessageSender.scala) inside_block:ask_error
+<!--/codeinclude-->
+
+Ask error can be one of the following: 
+
+1. `Timeout` if the reply was not received within given duration
+2. `DecodingFailure` if the reply could not be decoded into the given type
+3. `ErrorMessage` if the sender sends an error message instead instead of the reply message. 
+   
+<!--codeinclude-->
+[Ask error handling](../../examples/echo/src/main/scala/com/example/ErrorDocs.scala) inside_block:GetErrorMessage
+<!--/codeinclude-->
+
+Sender can send an error message if it encounters an error while processing the request message or when request is invalid. You can read more about error messages in the [next section](#error-messages).
+
 ## Error messages
+
+zio-maelstrom has a built in data type for error messages called `ErrorMessage`
+
+<!--codeinclude-->
+[ErrorMessage](../../zio-maelstrom/src/main/scala/com/bilal-fazlani/zio-maelstrom/Protocol.scala) inside_block:errorMessage
+<!--/codeinclude-->
+
+It supports all the [standard maelstrom error codes](https://github.com/jepsen-io/maelstrom/blob/main/doc/protocol.md#errors) as well as ability to send custom error codes
+
+??? note "View all error codes"
+    <!--codeinclude-->
+    [Error codes](../../zio-maelstrom/src/main/scala/com/bilal-fazlani/zio-maelstrom/Protocol.scala) inside_block:errorCodes
+    <!--/codeinclude-->
+
+You can send an error message to any node id as a reply to another message. Here's an example
+
+<!--codeinclude-->
+[Send standard error](../../examples/echo/src/main/scala/com/example/ErrorDocs.scala) inside_block:ReplyStandardError
+<!--/codeinclude-->
+
+1. You can set any text in `text` field
+
+<!--codeinclude-->
+[Send custom error](../../examples/echo/src/main/scala/com/example/ErrorDocs.scala) inside_block:ReplyCustomError
+<!--/codeinclude-->
+
 
 ## Settings
 

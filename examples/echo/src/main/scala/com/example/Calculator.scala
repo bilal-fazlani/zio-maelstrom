@@ -38,13 +38,13 @@ case class DivideOk(result: Int, in_reply_to: MessageId, `type`: String = "divid
 
 object Calculator extends ZIOAppDefault:
   val run = receive[CalculatorMessage] {
-    case add: Add           => add reply AddOk(add.a + add.b, add.msg_id)
-    case subtract: Subtract => subtract reply SubtractOk(subtract.a - subtract.b, subtract.msg_id)
-    case multiply: Multiply => multiply reply MultiplyOk(multiply.a * multiply.b, multiply.msg_id)
+    case add: Add           => reply(AddOk(add.a + add.b, add.msg_id))
+    case subtract: Subtract => reply(SubtractOk(subtract.a - subtract.b, subtract.msg_id))
+    case multiply: Multiply => reply(MultiplyOk(multiply.a * multiply.b, multiply.msg_id))
     case divide: Divide =>
       if divide.b == 0 then
-        divide reply ErrorMessage(divide.msg_id, ErrorCode.Custom(55), "divide by zero")
-      else divide reply DivideOk(divide.a / divide.b, divide.msg_id)
+        reply(ErrorMessage(divide.msg_id, ErrorCode.Custom(55), "divide by zero"))
+      else reply(DivideOk(divide.a / divide.b, divide.msg_id))
   }.provide(
     MaelstromRuntime.usingFile("examples" / "echo" / "calculator.txt", Settings(concurrency = 1))
   )

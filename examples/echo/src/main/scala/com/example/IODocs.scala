@@ -4,20 +4,13 @@ import com.bilalfazlani.zioMaelstrom.*
 import com.bilalfazlani.zioMaelstrom.protocol.*
 import zio.json.JsonCodec
 import zio.*
-import com.bilalfazlani.zioMaelstrom.MessageSender
 
-object HandlerDocumentation:
-
-  case class Gossip(`type`: String, msg_id: MessageId, numbers: Seq[Int])
-      extends NeedsReply,
-        Sendable derives JsonCodec
-
-  
+object IODocs:
 
   //format: off        
   object Receive {
     case class Gossip(msg_id: MessageId, numbers: Seq[Int], `type`: String = "gossip")
-      extends NeedsReply, Sendable derives JsonCodec
+       derives JsonCodec
 
     val messageHandler: ZIO[MaelstromRuntime, Nothing, Unit] = 
       receive[Gossip] { 
@@ -31,10 +24,7 @@ object HandlerDocumentation:
 
   object Send {
     case class Gossip(msg_id: MessageId, numbers: Seq[Int], `type`: String = "gossip")
-      extends NeedsReply, Sendable derives JsonCodec
-
-    case class GossipOk(in_reply_to: MessageId, myNumbers: Seq[Int], `type`: String = "gossip_ok")
-          extends Reply, Sendable derives JsonCodec  
+      extends Sendable derives JsonCodec
 
     val messageHandler = 
       receive[Gossip] { 
@@ -42,19 +32,19 @@ object HandlerDocumentation:
           ZIO.foreach(others)(_.send(Gossip(MessageId(5), Seq(1,2)))).unit //(1)!
       }
 
-    val result = NodeId("n5") send Gossip(MessageId(1), Seq(1,2)) //(2)!
+    val result = NodeId("n5") send Gossip(MessageId(1), Seq(1,2))
   }
 
   object Reply {
     case class Gossip(msg_id: MessageId, numbers: Seq[Int], `type`: String = "gossip")
-      extends NeedsReply, Sendable derives JsonCodec
+      extends NeedsReply derives JsonCodec
 
     case class GossipOk(in_reply_to: MessageId, myNumbers: Seq[Int], `type`: String = "gossip_ok")
       extends Reply, Sendable derives JsonCodec  
 
     val messageHandler =  
       receive[Gossip] { 
-        case msg: Gossip => msg reply GossipOk(msg.msg_id, Seq(1,2)) //(1)!
+        case msg: Gossip => reply(GossipOk(msg.msg_id, Seq(1,2)))
       }
   }
 
@@ -63,10 +53,10 @@ object HandlerDocumentation:
       extends NeedsReply, Sendable derives JsonCodec
 
     case class GossipOk(in_reply_to: MessageId, myNumbers: Seq[Int], `type`: String = "gossip_ok")
-      extends Reply, Sendable derives JsonCodec  
+      extends Reply derives JsonCodec  
 
-    val gosspiResult: ZIO[MessageSender, ErrorMessage | DecodingFailure | Timeout, GossipOk] = //(1)!
-      NodeId("n2").ask[GossipOk](Gossip(MessageId(1), Seq(1,2)), 5.seconds) //(2)!
+    val gosspiResult: ZIO[MessageSender, AskError, GossipOk] = 
+      NodeId("n2").ask[GossipOk](Gossip(MessageId(1), Seq(1,2)), 5.seconds)
   }
 
   //format: on

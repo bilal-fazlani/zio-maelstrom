@@ -4,8 +4,9 @@ import protocol.*
 import zio.*
 import zio.json.{JsonEncoder, JsonDecoder}
 
-// type AskError = ErrorMessage | DecodingFailure | Timeout | DuplicateCallbackAttempt
+// ask_error {
 type AskError = ErrorMessage | DecodingFailure | Timeout
+// }
 
 case class Timeout(messageId: MessageId, remote: NodeId, timeout: Duration) {
   override def toString(): String =
@@ -22,11 +23,6 @@ trait MessageSender:
       timeout: Duration
   ): IO[AskError, Res]
 
-  def reply[Req <: NeedsReply, Res <: Sendable & Reply: JsonEncoder](
-      message: Message[Req],
-      reply: Res
-  ): UIO[Unit]
-
 private[zioMaelstrom] object MessageSender:
   val live
       : ZLayer[Initialisation & OutputChannel & CallbackRegistry & Logger, Nothing, MessageSender] =
@@ -41,11 +37,6 @@ private[zioMaelstrom] object MessageSender:
       to: NodeId,
       timeout: Duration
   ): ZIO[MessageSender, AskError, Res] = ZIO.serviceWithZIO[MessageSender](_.ask(body, to, timeout))
-
-  def reply[Req <: NeedsReply, Res <: Sendable & Reply: JsonEncoder](
-      message: Message[Req],
-      reply: Res
-  ): URIO[MessageSender, Unit] = ZIO.serviceWithZIO[MessageSender](_.reply(message, reply))
 
 private case class MessageSenderLive(
     init: Initialisation,
@@ -90,8 +81,3 @@ private case class MessageSenderLive(
           )
       }
   } yield decoded.body
-
-  def reply[Req <: NeedsReply, Res <: Sendable & Reply: JsonEncoder](
-      message: Message[Req],
-      reply: Res
-  ): UIO[Unit] = send(reply, message.source)
