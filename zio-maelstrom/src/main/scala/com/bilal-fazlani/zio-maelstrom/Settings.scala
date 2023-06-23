@@ -1,12 +1,13 @@
 package com.bilalfazlani.zioMaelstrom
 
+// log_levels {
 enum NodeLogLevel(val level: Int):
   case Debug    extends NodeLogLevel(1)
   case Info     extends NodeLogLevel(2)
   case Warning  extends NodeLogLevel(3)
   case Error    extends NodeLogLevel(4)
   case Disabled extends NodeLogLevel(5)
-
+//}
   private[zioMaelstrom] def <=(that: NodeLogLevel): Boolean = this.level <= that.level
 
 enum LogFormat:

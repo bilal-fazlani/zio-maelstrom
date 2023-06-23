@@ -190,8 +190,34 @@ You can send an error message to any node id as a reply to another message. Here
 [Send custom error](../../examples/echo/src/main/scala/com/example/ErrorDocs.scala) inside_block:ReplyCustomError
 <!--/codeinclude-->
 
-
 ## Settings
+
+Below are the settings that can be configured for a node
+
+1. **NodeLogLevel**
+
+    ??? note "View all log levels"
+        <!--codeinclude-->
+        [NodeLogLevel](../../zio-maelstrom/src/main/scala/com/bilal-fazlani/zio-maelstrom/Settings.scala) inside_block:log_levels
+        <!--/codeinclude-->
+
+    The default log level is `NodeLogLevel.Info`. If you want more detailed logs, you can set it to `NodeLogLevel.Debug`. If you want to disable logs, you can set it to `NodeLogLevel.Off`
+
+2. **LogFormat**
+
+    Log format can be either Plain or Colored. Default is colored.
+
+3. **Concurrency**
+
+    This is the concurrency level for processing messages. Default is 1024. This means 1024 request messages(receive api) + 1024 response messages (ask api) = 2048 messages can be processed in parallel.
+
+<!--codeinclude-->
+[Default](../../examples/echo/src/main/scala/com/example/SettingsDocs.scala) inside_block:DefaultSettingsDocs
+<!--/codeinclude-->
+
+<!--codeinclude-->
+[Custom](../../examples/echo/src/main/scala/com/example/SettingsDocs.scala) inside_block:CustomSettingsDocs
+<!--/codeinclude-->
 
 ## Logging
 
