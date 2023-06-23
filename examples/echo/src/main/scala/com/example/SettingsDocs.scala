@@ -1,7 +1,6 @@
 package com.example
 
 import com.bilalfazlani.zioMaelstrom.*
-import com.bilalfazlani.zioMaelstrom.protocol.*
 import zio.*
 
 object DefaultSettingsDocs {

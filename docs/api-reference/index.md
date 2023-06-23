@@ -221,6 +221,25 @@ Below are the settings that can be configured for a node
 
 ## Logging
 
+You can log at different levels using below APIs:
+
+```scala
+def logDebug(message: => String)
+def logInfo(message: => String)
+def logWarn(message: => String)
+def logError(message: => String)
+```
+
+All these APIs log to STDERR because STDOUT is used for sending messages. You can configure the log level using `NodeLogLevel` setting. By default LogFormat is colored. You can change it to plain using `LogFormat` setting.
+
+<!--codeinclude-->
+[Logging](../../examples/echo/src/main/scala/com/example/LogDocs.scala) inside_block:Main
+<!--/codeinclude-->
+
+Above program, when initialized, will output the following:
+
+![log-output](logs.png)
+
 ## Testing
 
 ### With Files
