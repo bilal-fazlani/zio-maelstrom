@@ -233,7 +233,7 @@ def logError(message: => String)
 All these APIs log to STDERR because STDOUT is used for sending messages. You can configure the log level using `NodeLogLevel` setting. By default LogFormat is colored. You can change it to plain using `LogFormat` setting.
 
 <!--codeinclude-->
-[Logging](../../examples/echo/src/main/scala/com/example/LogDocs.scala) inside_block:Main
+[Logging](../../examples/echo/src/main/scala/com/example/LogDocs.scala) inside_block:MainApplication
 <!--/codeinclude-->
 
 Above program, when initialized, will output the following:

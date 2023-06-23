@@ -3,7 +3,7 @@ package com.example
 import zio.*
 import com.bilalfazlani.zioMaelstrom.*
 
-object Main extends ZIOAppDefault {
+object MainApplication extends ZIOAppDefault {
   val program = for
     _ <- logDebug("Starting node")
     _ <- logInfo("Received message")
