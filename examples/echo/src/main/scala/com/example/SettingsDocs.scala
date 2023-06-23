@@ -16,7 +16,7 @@ object DefaultSettingsDocs {
 object CustomSettingsDocs {
   object MainApp extends ZIOAppDefault {
 
-    val nodeProgram: ZIO[String & Int, Nothing, Unit] = ???
+    val nodeProgram: ZIO[MaelstromRuntime, Nothing, Unit] = ???
 
     val settings = Settings(
       logLevel = NodeLogLevel.Debug,
@@ -24,9 +24,6 @@ object CustomSettingsDocs {
       concurrency = 1
     )
 
-    def aa(z: ZIO[String, Nothing, Unit]) = ???
-    aa(nodeProgram)
-
-    val run = ???//nodeProgram.provide(MaelstromRuntime.live(settings))
+    val run = nodeProgram.provide(MaelstromRuntime.live(settings))
   }
 }
