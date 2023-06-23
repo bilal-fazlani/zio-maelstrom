@@ -37,6 +37,16 @@
   place-items: center;
 }
 
+.home-page img[alt=logo] {
+  filter: drop-shadow(0px 1.3rem 0.7rem rgb(0 0 0 / 0.4));
+}
+
+@media screen and (max-width: 600px) {
+  .home-page img[alt=logo] {
+    filter: drop-shadow(0px 1rem 0.7rem rgb(0 0 0 / 0.4));
+  }
+}
+
 .home-page>h1 {
   grid-area: title;
 }
