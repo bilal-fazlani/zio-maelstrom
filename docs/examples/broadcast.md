@@ -74,7 +74,7 @@ reply_messages
 8.  Add gossip received by other nodes to node's state
 
 !!! tip
-    This is a naive implementation of gossip protocol. We are sending all the number in a node's state to all its neighbors. This will not scale well. Find a better way to do this.
+    This is a naive implementation of gossip protocol. We are sending all the numbers in a node's state to all its neighbors. This will not scale well. Find a better way to do this.
 
 !!! note
     Source code for this example can be found on [:simple-github: Github](https://github.com/bilal-fazlani/zio-maelstrom/blob/main/examples/broadcast/src/main/scala/com/example/Main.scala)

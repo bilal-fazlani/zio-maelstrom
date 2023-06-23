@@ -242,6 +242,19 @@ Above program, when initialized, will output the following:
 
 ## Testing
 
-### With Files
+When developing a solution, you sometimes want to test it without maelstrom. And manually entering the same inputs every time can be time consuming. You can configure the runtime to read the input from a file.
 
-### With TestRuntime
+<!--codeinclude-->
+[With Files](../../examples/echo/src/main/scala/com/example/FileInputDocs.scala) block:Main
+<!--/codeinclude-->
+
+<!--codeinclude-->
+[fileinput.txt](../../examples/echo/fileinput.txt)
+<!--/codeinclude-->
+
+This will run the entire program with the input from the file. With file input you also get to simulate delay in inputs using sleep statements as shown above.
+
+![file-input](fileinput.png)
+
+!!! tip
+    When debugging an issue, you can use file inputs, set log level to debug and set concurrency to 1. This might help you isolate the issue.
