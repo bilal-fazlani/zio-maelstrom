@@ -155,7 +155,7 @@ Ask error can be one of the following:
 
 1. `Timeout` if the reply was not received within given duration
 2. `DecodingFailure` if the reply could not be decoded into the given type
-3. `ErrorMessage` if the sender sends an error message instead instead of the reply message. 
+3. `ErrorMessage` if the sender sends an error message instead of the reply message. 
    
 <!--codeinclude-->
 [Ask error handling](../../examples/echo/src/main/scala/com/example/ErrorDocs.scala) inside_block:GetErrorMessage
