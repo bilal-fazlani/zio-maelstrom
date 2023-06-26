@@ -62,11 +62,15 @@ private case class InitializerLive(
       _ <- logger.info("initialised")
     } yield ()
 
-  private def handleInitDecodingError(genericMessage: GenericMessage) = logger
-    .error(s"could not decode init message $genericMessage") *>
-    genericMessage
-      .makeError(ErrorCode.MalformedRequest, "init message is malformed")
-      .fold(ZIO.unit)(outputChannel.transport(_))
+  private def handleInitDecodingError(genericMessage: GenericMessage) =
+    logger.error(s"could not decode init message from ${genericMessage.raw}")
+      *> logger.warn("please check maelstrom documentation about initialisation message format")
+      *> logger.info(
+        "https://github.com/jepsen-io/maelstrom/blob/main/doc/protocol.md#initialization"
+      )
+      *> genericMessage
+        .makeError(ErrorCode.MalformedRequest, "init message is malformed")
+        .fold(ZIO.unit)(outputChannel.transport(_))
 
 private case class TestInitializer(inputChannel: InputChannel):
   def initialize(context: Context): ZIO[Scope, Nothing, Initialisation] =

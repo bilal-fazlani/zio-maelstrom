@@ -6,6 +6,7 @@ val scala3Version = "3.3.0"
 ThisBuild / scalaVersion     := scala3Version
 ThisBuild / organization     := "com.bilal-fazlani"
 ThisBuild / organizationName := "Bilal Fazlani"
+ThisBuild / version          := { if (isCI) version.value else "0.1.0-SNAPSHOT" }
 
 ThisBuild / scmInfo := Some(
   ScmInfo(

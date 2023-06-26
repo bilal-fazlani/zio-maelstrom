@@ -25,8 +25,8 @@ private case class InputChannelLive(logger: Logger, inputStream: InputStream) ex
     .map(str => JsonDecoder[GenericMessage].decodeJson(str).left.map(e => InvalidInput(str, e)))
     .tap {
       case Left(errorMessage) =>
-        logger
-          .error(s"could not read `${errorMessage.input}`, error: ${errorMessage.error}")
+        logger.error(s"could decode input json message: `${errorMessage.input.trim}`")
+          *> logger.warn(s"${errorMessage.error}")
       case Right(genericMessage) => ZIO.unit
     }
     .collectRight
