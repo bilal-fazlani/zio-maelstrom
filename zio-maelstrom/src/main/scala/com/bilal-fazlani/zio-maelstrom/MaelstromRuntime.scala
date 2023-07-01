@@ -11,8 +11,10 @@ object MaelstromRuntime:
   // doc_incluide {
   def live(
       settings: Settings,
-      inputStream: ZLayer[Logger, Nothing, InputStream]
+      inputStream: ZLayer[Logger, Nothing, InputStream],
+      initContext: Option[Context]
   ): ZLayer[Any, Nothing, MaelstromRuntime] = {
+    val contextLayer = initContext.fold(Initialisation.run)(Initialisation.fake)
     ZLayer.make[MaelstromRuntime](
       // pure layers
       Scope.default,
@@ -26,16 +28,20 @@ object MaelstromRuntime:
       CallbackRegistry.live,
 
       // effectful layers
-      Initialisation.run,
+      contextLayer,
       ResponseHandler.start
     )
   }
 
-  val live: ZLayer[Any, Nothing, MaelstromRuntime] = live(Settings(), InputStream.stdIn)
+  val live: ZLayer[Any, Nothing, MaelstromRuntime] = live(Settings(), InputStream.stdIn, None)
 
   def live(settings: Settings): ZLayer[Any, Nothing, MaelstromRuntime] =
-    live(settings, InputStream.stdIn)
+    live(settings, InputStream.stdIn, None)
   // }
 
-  def usingFile(path: Path)                     = live(Settings(), InputStream.file(path))
-  def usingFile(path: Path, settings: Settings) = live(settings, InputStream.file(path))
+  def usingFile(path: Path)                     = live(Settings(), InputStream.file(path), None)
+  def usingFile(path: Path, settings: Settings) = live(settings, InputStream.file(path), None)
+  def usingFile(path: Path, context: Context) =
+    live(Settings(), InputStream.file(path), Some(context))
+  def usingFile(path: Path, settings: Settings, context: Context) =
+    live(settings, InputStream.file(path), Some(context))
