@@ -57,11 +57,7 @@ usefulTasks := {
 
 lazy val bootstrap = taskKey[Unit]("Create a fat jar file")
 
-def isCI: Boolean = {
-  val ci = sys.env.get("CI")
-  println(s">>>>>>>>>>>>>>>>>  CI: $ci")
-  ci.nonEmpty
-}
+def isCI: Boolean = sys.env.get("CI").nonEmpty
 
 bootstrap := {
   val projectsToPlublish = Seq("echo", "unique-ids", "broadcast")
