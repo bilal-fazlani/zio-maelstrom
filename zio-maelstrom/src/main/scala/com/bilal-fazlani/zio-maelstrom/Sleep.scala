@@ -32,6 +32,8 @@ private[zioMaelstrom] object Sleep:
     parseDuration(duration).fold(
       err => ZIO.die(Throwable(err.toString)),
       sleep =>
-        logger.info(s"input paused for ${sleep.duration.render}") *> ZIO.sleep(sleep.duration) *>
+        logger.info(s"input paused for ${sleep.duration.renderDetailed}") *> ZIO.sleep(
+          sleep.duration
+        ) *>
           logger.info(s"input resumed")
     )

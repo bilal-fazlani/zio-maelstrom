@@ -18,9 +18,10 @@ private[zioMaelstrom] object Initialisation:
     .fromFunction(InitializerLive.apply)
     .flatMap(initializer => ZLayer.fromZIO(initializer.get.initialize))
 
-  def fake(context: Context): ZLayer[InputChannel & Scope, Nothing, Initialisation] = ZLayer
-    .fromFunction(TestInitializer.apply)
-    .flatMap(x => ZLayer.fromZIO(x.get.initialize(context)))
+  def fake(context: Context): ZLayer[InputChannel & Logger & Scope, Nothing, Initialisation] =
+    ZLayer
+      .fromFunction(TestInitializer.apply)
+      .flatMap(x => ZLayer.fromZIO(x.get.initialize(context)))
 
 private case class InitializerLive(
     logger: Logger,
@@ -45,49 +46,14 @@ private case class InitializerLive(
         case gap if gap.toSeconds < 60  => logger.warn(_)
         case _                          => logger.error(_)
       }
-      _ <- loggerf(s"init message not received in ${renderDuration(gap)}")
+      _ <- loggerf(s"init message not received in ${gap.renderDetailed}")
     } yield ()
-
-  private def renderDuration(duration: Duration): String = {
-    val seconds = duration.toSeconds()
-    val minutes = seconds / 60
-    val hours   = minutes / 60
-    val days    = hours / 24
-    val years   = days / 365
-    val months  = years / 12
-
-    val remainingSeconds = seconds % 60
-    val remainingMinutes = minutes % 60
-    val remainingHours   = hours   % 24
-    val remainingDays    = days    % 365
-    val remainingMonths  = months  % 12
-
-    val parts = Seq(
-      (remainingMonths, "month"),
-      (remainingDays, "day"),
-      (remainingHours, "hour"),
-      (remainingMinutes, "minute"),
-      (remainingSeconds, "second")
-    )
-
-    val nonZeroParts = parts.filter(_._1 > 0)
-
-    if (nonZeroParts.isEmpty) {
-      "0 seconds"
-    } else {
-      nonZeroParts
-        .map { case (value, unit) =>
-          s"$value ${unit}${if (value > 1) "s" else ""}"
-        }
-        .mkString(" ")
-    }
-  }
 
   val initialize: ZIO[Scope, Nothing, Initialisation] =
     for
       warningFiber <- preInitMessages
       _            <- ZIO.addFinalizer(warningFiber.interrupt)
-      inputs       <- inputChannel.readInputs
+      inputs       <- inputChannel.partitionInputs
       init <- inputs.messageStream.peel(ZSink.head).flatMap {
         // happy case: found init message
         case (Some(genericMessage), remainder) =>
@@ -132,7 +98,9 @@ private case class InitializerLive(
         .makeError(ErrorCode.MalformedRequest, "init message is malformed")
         .fold(ZIO.unit)(outputChannel.transport(_))
 
-private case class TestInitializer(inputChannel: InputChannel):
+private case class TestInitializer(inputChannel: InputChannel, logger: Logger):
   def initialize(context: Context): ZIO[Scope, Nothing, Initialisation] =
-    for inputs <- inputChannel.readInputs
+    for
+      _      <- logger.warn(s"initialised with fake context: $context")
+      inputs <- inputChannel.partitionInputs
     yield Initialisation(context, inputs)

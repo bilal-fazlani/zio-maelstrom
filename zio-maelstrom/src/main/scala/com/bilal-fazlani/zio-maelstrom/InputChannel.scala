@@ -6,7 +6,7 @@ import zio.json.JsonDecoder
 import protocol.*
 
 private[zioMaelstrom] trait InputChannel:
-  def readInputs: ZIO[Scope, Nothing, Inputs]
+  def partitionInputs: ZIO[Scope, Nothing, Inputs]
 
 private object InputChannel:
   val live = ZLayer.fromFunction(InputChannelLive.apply)
@@ -14,7 +14,7 @@ private object InputChannel:
 private case class InvalidInput(input: String, error: String)
 
 private case class InputChannelLive(logger: Logger, inputStream: InputStream) extends InputChannel:
-  val readInputs = spliStream(inputStream.stream, logger)
+  val partitionInputs = spliStream(inputStream.stream, logger)
 
   private def spliStream(strings: ZStream[Any, Nothing, String], logger: Logger) = strings
     .collectZIO {
