@@ -6,7 +6,6 @@ val scala3Version = "3.3.0"
 ThisBuild / scalaVersion     := scala3Version
 ThisBuild / organization     := "com.bilal-fazlani"
 ThisBuild / organizationName := "Bilal Fazlani"
-ThisBuild / version          := { if (isCI) version.value else "0.1.0-SNAPSHOT" }
 
 ThisBuild / scmInfo := Some(
   ScmInfo(
@@ -26,30 +25,43 @@ ThisBuild / licenses :=
   List("MIT License" -> url("https://github.com/bilal-fazlani/zio-maelstrom/blob/main/LICENSE"))
 ThisBuild / homepage := Some(url("https://zio-maelstrom.bilal-fazlani.com/"))
 
-logo := raw"""
-     |
-     |███████ ██  ██████        ███    ███  █████  ███████ ██      ███████ ████████ ██████   ██████  ███    ███ 
-     |   ███  ██ ██    ██       ████  ████ ██   ██ ██      ██      ██         ██    ██   ██ ██    ██ ████  ████ 
-     |  ███   ██ ██    ██ █████ ██ ████ ██ ███████ █████   ██      ███████    ██    ██████  ██    ██ ██ ████ ██ 
-     | ███    ██ ██    ██       ██  ██  ██ ██   ██ ██      ██           ██    ██    ██   ██ ██    ██ ██  ██  ██ 
-     |███████ ██  ██████        ██      ██ ██   ██ ███████ ███████ ███████    ██    ██   ██  ██████  ██      ██ 
-     |                                                                                                          
-     |${scala.Console.GREEN}Scala ${scalaVersion.value}${scala.Console.RESET}
-     |
-     |""".stripMargin
+logo := {
+  if (isCI) ""
+  else {
+    raw"""
+       |
+       |███████ ██  ██████        ███    ███  █████  ███████ ██      ███████ ████████ ██████   ██████  ███    ███ 
+       |   ███  ██ ██    ██       ████  ████ ██   ██ ██      ██      ██         ██    ██   ██ ██    ██ ████  ████ 
+       |  ███   ██ ██    ██ █████ ██ ████ ██ ███████ █████   ██      ███████    ██    ██████  ██    ██ ██ ████ ██ 
+       | ███    ██ ██    ██       ██  ██  ██ ██   ██ ██      ██           ██    ██    ██   ██ ██    ██ ██  ██  ██ 
+       |███████ ██  ██████        ██      ██ ██   ██ ███████ ███████ ███████    ██    ██   ██  ██████  ██      ██ 
+       |                                                                                                          
+       |${scala.Console.GREEN}Scala ${scalaVersion.value}${scala.Console.RESET}
+       |
+       |""".stripMargin
+  }
+}
 
 logoColor        := scala.Console.BLUE
 aliasColor       := scala.Console.GREEN
 descriptionColor := scala.Console.YELLOW
 
-usefulTasks := Seq(
-  UsefulTask("publishLocal;bootstrap", "Create a fat jar file"),
-  UsefulTask("test", "Run unit tests")
-)
+usefulTasks := {
+  if (isCI) usefulTasks.value
+  else
+    Seq(
+      UsefulTask("publishLocal;bootstrap", "Create a fat jar file"),
+      UsefulTask("test", "Run unit tests")
+    )
+}
 
 lazy val bootstrap = taskKey[Unit]("Create a fat jar file")
 
-lazy val isCI = sys.env.get("CI").nonEmpty
+def isCI: Boolean = {
+  val ci = sys.env.get("CI")
+  println(s">>>>>>>>>>>>>>>>>  CI: $ci")
+  ci.nonEmpty
+}
 
 bootstrap := {
   val projectsToPlublish = Seq("echo", "unique-ids", "broadcast")
@@ -100,6 +112,7 @@ lazy val echo = project
     name := "echo",
     logo := "",
     scalacOptions += "-Wunused:all",
+    version             := "0.1.0-SNAPSHOT",
     publish / skip      := isCI,
     Compile / mainClass := Some("com.example.echo.Main")
   )
@@ -111,6 +124,7 @@ lazy val uniqueIds = project
     name := "unique-ids",
     logo := "",
     scalacOptions += "-Wunused:all",
+    version             := "0.1.0-SNAPSHOT",
     publish / skip      := isCI,
     Compile / mainClass := Some("com.example.uniqueIds.Main")
   )
@@ -122,6 +136,7 @@ lazy val broadcast = project
     name := "broadcast",
     logo := "",
     scalacOptions += "-Wunused:all",
+    version             := "0.1.0-SNAPSHOT",
     publish / skip      := isCI,
     Compile / mainClass := Some("com.example.broadcast.Main")
   )
