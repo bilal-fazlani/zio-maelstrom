@@ -21,6 +21,7 @@ object InputStream:
     def stream = ZStream
       .fromInputStream(java.lang.System.in)
       .via(ZPipeline.utfDecode)
+      .via(ZPipeline.splitLines)
       .orDie
 
   case class File(path: Path, logger: Logger) extends InputStream:
