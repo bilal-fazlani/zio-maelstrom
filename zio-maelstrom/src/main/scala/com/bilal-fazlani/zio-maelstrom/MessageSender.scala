@@ -55,7 +55,7 @@ private case class MessageSenderLive(
       timeout: Duration
   ): IO[AskError, Res] = for {
     _ <- send(body, to)
-    _ <- logger.debug(s"waiting for reply from ${to} for message id: ${body.msg_id}...")
+    _ <- logger.debug(s"waiting for reply from ${to} for message id ${body.msg_id}...")
     genericMessage <- ZIO.scoped(callbackRegistry.awaitCallback(body.msg_id, to, timeout))
     decoded <-
       if genericMessage.isError then {
@@ -67,16 +67,16 @@ private case class MessageSenderLive(
         error.fold(ZIO.fail, ZIO.fail).tapError {
           case DecodingFailure(e, _) =>
             logger
-              .error(s"decoding failed for response from ${to} for message id: ${body.msg_id}".red)
+              .error(s"decoding failed for response from ${to} for message id ${body.msg_id}".red)
           case e: ErrorMessage =>
-            logger.error(s"error response received from: ${to} for message id: ${body.msg_id}")
+            logger.error(s"error response received from: ${to} for message id ${body.msg_id}")
         }
       } else {
         ZIO
           .fromEither(JsonDecoder[Message[Res]].fromJsonAST(genericMessage.raw))
           .mapError(e => DecodingFailure(e, genericMessage))
           .tapError(e =>
-            logger.error(s"decoding failed for response from ${to} for message id: ${body.msg_id}")
+            logger.error(s"decoding failed for response from ${to} for message id ${body.msg_id}")
           )
       }
   } yield decoded.body

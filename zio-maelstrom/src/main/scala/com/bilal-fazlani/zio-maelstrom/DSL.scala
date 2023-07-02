@@ -24,7 +24,7 @@ def receive[I]: ReceivePartiallyApplied[I] = new ReceivePartiallyApplied[I]
 
 //RECEIVE CONTEXTFUL - BEGIN
 def me(using Context): NodeId          = summon[Context].me
-def others(using Context): Seq[NodeId] = summon[Context].others
+def others(using Context): Set[NodeId] = summon[Context].others
 def src(using MessageSource): NodeId   = summon[MessageSource].nodeId
 def reply[B <: Sendable & Reply: JsonEncoder](out: B)(using MessageSource) =
   MessageSender.send(out, src)

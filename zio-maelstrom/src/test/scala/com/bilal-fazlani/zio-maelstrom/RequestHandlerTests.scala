@@ -9,7 +9,7 @@ import com.bilalfazlani.zioMaelstrom.protocol.*
 object RequestHandlerTest extends ZIOSpecDefault {
   def isCI        = sys.env.get("CI").contains("true")
   val settings    = Settings(logLevel = if isCI then NodeLogLevel.Info else NodeLogLevel.Debug)
-  val context     = Context(NodeId("n1"), List(NodeId("n2")))
+  val context     = Context(NodeId("n1"), Set(NodeId("n2")))
   val testRuntime = TestRuntime.layer(settings, context)
   def sleep(duration: Duration) = live(ZIO.sleep(duration))
 

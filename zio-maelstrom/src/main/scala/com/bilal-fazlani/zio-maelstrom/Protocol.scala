@@ -26,7 +26,7 @@ trait Reply:
 private[zioMaelstrom] case class MaelstromInit(
     msg_id: MessageId,
     node_id: NodeId,
-    node_ids: Seq[NodeId]
+    node_ids: Set[NodeId]
 ) extends NeedsReply
     derives JsonDecoder
 
