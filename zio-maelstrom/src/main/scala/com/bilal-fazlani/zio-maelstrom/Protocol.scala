@@ -89,6 +89,10 @@ object MessageId:
   given JsonFieldEncoder[MessageId] = JsonFieldEncoder.int.contramap(identity)
   given JsonFieldDecoder[MessageId] = JsonFieldDecoder.int.map(MessageId(_))
 
+  extension (id: MessageId)
+    @targetName("messageIdInc")
+    infix def inc: MessageId = MessageId(id.toInt + 1)
+
 // format: off  
  // errorCodes {
 sealed trait ErrorCode(val code: Int, val definite: Boolean)
