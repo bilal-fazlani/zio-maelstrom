@@ -12,9 +12,10 @@ private object AnsiColors:
   case class RGB(r: Int, g: Int, b: Int)
 
   def colored(rgb: RGB, str: String): String =
+    val styleNumber  = 22
     val RGB(r, g, b) = rgb
-    val color        = s"\u001B[38;2;$r;$g;$b;6m"
-    s"$color$str\u001B[0m"
+    val color        = s"\u001b[38;2;$r;$g;$b;${styleNumber}m"
+    s"$color$str\u001B[${styleNumber}m"
 
 extension (s: String)
   def gray   = colored(grayColor, s)
