@@ -29,8 +29,6 @@ object InputStream:
       .fromFile(path.toFile, 128)
       .via(ZPipeline.utfDecode)
       .via(ZPipeline.splitLines)
-      .tap(line => logger.debug(s"read: $line"))
       .orDie
 
-  case class Stream(strm: ZStream[Any, Nothing, String], logger: Logger) extends InputStream:
-    def stream = strm.tap(line => logger.debug(s"read: $line"))
+  case class Stream(stream: ZStream[Any, Nothing, String], logger: Logger) extends InputStream

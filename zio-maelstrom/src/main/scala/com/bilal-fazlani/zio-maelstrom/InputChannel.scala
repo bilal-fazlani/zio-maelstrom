@@ -1,7 +1,6 @@
 package com.bilalfazlani.zioMaelstrom
 
 import zio.{Scope, ZIO, ZLayer}
-import zio.stream.{ZStream}
 import zio.json.JsonDecoder
 import protocol.*
 
@@ -14,9 +13,8 @@ private object InputChannel:
 private case class InvalidInput(input: String, error: String)
 
 private case class InputChannelLive(logger: Logger, inputStream: InputStream) extends InputChannel:
-  val partitionInputs = spliStream(inputStream.stream, logger)
-
-  private def spliStream(strings: ZStream[Any, Nothing, String], logger: Logger) = strings
+  val partitionInputs = inputStream.stream
+    .tap(str => logger.debug(s"read: $str"))
     .collectZIO {
       case str @ Sleep(duration) => Sleep.conditionally(logger, duration) *> ZIO.succeed(None)
       case str                   => ZIO.succeed(Some(str))
@@ -24,9 +22,9 @@ private case class InputChannelLive(logger: Logger, inputStream: InputStream) ex
     .collectSome
     .map(str => JsonDecoder[GenericMessage].decodeJson(str).left.map(e => InvalidInput(str, e)))
     .tap {
-      case Left(errorMessage) =>
-        logger.error(s"could decode input json message: `${errorMessage.input.trim}`")
-          *> logger.warn(s"${errorMessage.error}")
+      case Left(InvalidInput(input, error)) =>
+        logger.error(s"could not decode input json message: `${input.trim}`")
+          *> logger.warn(s"${error}")
       case Right(genericMessage) => ZIO.unit
     }
     .collectRight

@@ -42,4 +42,4 @@ object TestRuntime:
 
   def getCallbackState
       : ZIO[TestRuntime, Nothing, Map[CallbackId, Promise[AskError, GenericMessage]]] =
-    ZIO.serviceWithZIO[CallbackRegistry](_.getState)
+    ZIO.serviceWithZIO[CallbackRegistry](_.getState.map(_.mapValues(_.promise).toMap))
