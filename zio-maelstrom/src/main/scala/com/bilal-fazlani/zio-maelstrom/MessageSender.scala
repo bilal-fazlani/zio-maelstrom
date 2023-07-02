@@ -74,7 +74,6 @@ private case class MessageSenderLive(
       } else {
         ZIO
           .fromEither(JsonDecoder[Message[Res]].fromJsonAST(genericMessage.raw))
-          .tap(x => logger.debug(s"received reply from ${to} for message id: ${body.msg_id}"))
           .mapError(e => DecodingFailure(e, genericMessage))
           .tapError(e =>
             logger.error(s"decoding failed for response from ${to} for message id: ${body.msg_id}")
