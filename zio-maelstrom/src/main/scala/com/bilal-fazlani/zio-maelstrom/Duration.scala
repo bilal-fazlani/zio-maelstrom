@@ -4,13 +4,15 @@ import zio.Duration
 
 extension (duration: Duration)
   def renderDetailed =
-    val seconds = duration.toSeconds
+    val millis  = duration.toMillis
+    val seconds = millis / 1000
     val minutes = seconds / 60
     val hours   = minutes / 60
     val days    = hours / 24
     val years   = days / 365
     val months  = years / 12
 
+    val remainingMillis  = millis  % 1000
     val remainingSeconds = seconds % 60
     val remainingMinutes = minutes % 60
     val remainingHours   = hours   % 24
@@ -22,13 +24,14 @@ extension (duration: Duration)
       (remainingDays, "day"),
       (remainingHours, "hour"),
       (remainingMinutes, "minute"),
-      (remainingSeconds, "second")
+      (remainingSeconds, "second"),
+      (remainingMillis, "millisecond")
     )
 
     val nonZeroParts = parts.filter(_._1 > 0)
 
     if (nonZeroParts.isEmpty) {
-      "0 seconds"
+      "0 milliseconds"
     } else {
       nonZeroParts
         .map { case (value, unit) =>
