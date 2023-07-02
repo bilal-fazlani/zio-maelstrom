@@ -83,9 +83,9 @@ bootstrap := {
 lazy val root = project
   .in(file("."))
   .settings(name := "zio-maelstrom-root", publish / skip := true, scalacOptions += "-Wunused:all")
-  .aggregate(maelstrom, echo, uniqueIds, broadcast)
+  .aggregate(zioMaelstrom, echo, uniqueIds, broadcast)
 
-lazy val maelstrom = project
+lazy val zioMaelstrom = project
   .in(file("zio-maelstrom"))
   .settings(
     name := "zio-maelstrom",
@@ -112,7 +112,7 @@ lazy val echo = project
     publish / skip      := isCI,
     Compile / mainClass := Some("com.example.echo.Main")
   )
-  .dependsOn(maelstrom)
+  .dependsOn(zioMaelstrom)
 
 lazy val uniqueIds = project
   .in(file("examples/unique-ids"))
@@ -124,7 +124,7 @@ lazy val uniqueIds = project
     publish / skip      := isCI,
     Compile / mainClass := Some("com.example.uniqueIds.Main")
   )
-  .dependsOn(maelstrom)
+  .dependsOn(zioMaelstrom)
 
 lazy val broadcast = project
   .in(file("examples/broadcast"))
@@ -136,4 +136,4 @@ lazy val broadcast = project
     publish / skip      := isCI,
     Compile / mainClass := Some("com.example.broadcast.Main")
   )
-  .dependsOn(maelstrom)
+  .dependsOn(zioMaelstrom)
