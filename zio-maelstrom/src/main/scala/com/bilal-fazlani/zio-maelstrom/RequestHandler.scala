@@ -25,12 +25,21 @@ private case class RequestHandlerLive(
 ) extends RequestHandler:
   private case class InvalidInput(input: GenericMessage, error: String)
 
+  private def processingMessageLog(message: GenericMessage) =
+    Seq(
+      Some("processing request"),
+      message.messageType,
+      message.messageId.fold(None)(id => Some(s"[$id]")),
+      Some("from"),
+      Some(message.src.toString)
+    ).flatten.mkString(" ")
+
   def handle[R, I: JsonDecoder](handler: Handler[R, I]): ZIO[R & MaelstromRuntime, Nothing, Unit] =
     for {
       _ <- initialisation.inputs.messageStream
         // process messages in parallel
         .mapZIOPar(settings.concurrency)(genericMessage =>
-          logDebug(s"processing request: ${genericMessage.raw.toJson}") *>
+          logDebug(processingMessageLog(genericMessage)) *>
             ZIO
               .fromEither(GenericDecoder[I].decode(genericMessage))
               .mapError(e => InvalidInput(genericMessage, e))
