@@ -1,4 +1,4 @@
-git+https://${GH_USERNAME}:${GH_TOKEN}@github.com/${GH_USERNAME}/mkdocs-material-insiders.git@0fa547a#egg=mkdocs-material
+git+https://${GH_USERNAME}:${GH_TOKEN}@github.com/${GH_USERNAME}/mkdocs-material-insiders.git@9.1.18-insiders-4.37.0#egg=mkdocs-material
 git+https://github.com/bilal-fazlani/mkdocs-codeinclude-plugin.git@0.2.2#egg=mkdocs-codeinclude-plugin
 mkdocs-awesome-pages-plugin == 2.8.0
 mkdocs-git-revision-date-localized-plugin == 1.1.0
