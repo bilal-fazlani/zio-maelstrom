@@ -15,7 +15,8 @@ object LinTso:
   def ts(messageId: MessageId, timeout: Duration): ZIO[LinTso, AskError, Long] =
     ZIO.serviceWithZIO(_.ts(messageId, timeout))
 
-  private[zioMaelstrom] val live: ZLayer[MessageSender, Nothing, LinTso] = ???
+  private[zioMaelstrom] val live: ZLayer[MessageSender, Nothing, LinTso] = 
+    ZLayer.fromFunction(LinTsoImpl.apply)
 
 private case class LinTsoImpl(sender: MessageSender) extends LinTso:
   def ts(messageId: MessageId, timeout: Duration): ZIO[Any, AskError, Long] =
