@@ -3,7 +3,8 @@ package com.bilalfazlani.zioMaelstrom
 import zio.test.*
 import zio.*
 import zio.json.*
-import TestRuntime.*
+import testkit.TestRuntime
+import testkit.TestRuntime.*
 import com.bilalfazlani.zioMaelstrom.protocol.*
 
 object RequestHandlerTest extends ZIOSpecDefault {

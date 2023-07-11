@@ -1,11 +1,13 @@
 PENDING: 
 
+- [ ] auto message ids
+- [ ] docs for services
 - [ ] Test kit docs
-- [ ] Api ref docs
+- [x] Api ref docs
 - [ ] Tests
   - [X] Test overlap in console output manually tested
   - [X] Test resource safety in callbackRegistry manually tested
-  - [ ] Automated tests
+  - [x] Automated tests
 - [ ] Out messages should not need to define types. Use class name. May need to use macros
 
 TBD:

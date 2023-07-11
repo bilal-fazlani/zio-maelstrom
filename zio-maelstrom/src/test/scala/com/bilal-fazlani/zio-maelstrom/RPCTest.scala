@@ -4,7 +4,8 @@ import zio.test.*
 import zio.*
 import com.bilalfazlani.zioMaelstrom.protocol.*
 import zio.json.*
-import TestRuntime.*
+import testkit.TestRuntime
+import testkit.TestRuntime.*
 
 object RPCTest extends ZIOSpecDefault {
   def isCI        = sys.env.get("CI").contains("true")
