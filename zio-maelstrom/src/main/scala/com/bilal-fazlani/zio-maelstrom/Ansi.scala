@@ -15,7 +15,7 @@ private object AnsiColors:
     val styleNumber  = 22
     val RGB(r, g, b) = rgb
     val color        = s"\u001b[38;2;$r;$g;$b;${styleNumber}m"
-    s"$color$str\u001B[${styleNumber}m"
+    s"$color$str\u001B[${0}m"
 
 extension (s: String)
   def gray   = colored(grayColor, s)
