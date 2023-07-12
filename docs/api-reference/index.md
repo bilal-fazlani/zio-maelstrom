@@ -190,6 +190,39 @@ You can send an error message to any node id as a reply to another message. Here
 [Send custom error](../../examples/echo/src/main/scala/com/example/ErrorDocs.scala) inside_block:ReplyCustomError
 <!--/codeinclude-->
 
+## Maelstrom services
+
+Maelstrom starts some services at the beginning of every simulation by default
+
+These are their node ids:
+
+1. lin-kv
+2. lww-kv
+3. seq-kv
+4. lin-tso
+
+You can read more these services on the [maelstrom docs](https://github.com/jepsen-io/maelstrom/blob/main/doc/services.md)
+
+ZIO-Maelstrom provides `LinkKv`, `LwwKv`, `SeqKv` & `LinTso` clients to interact with these services. 
+
+<!--codeinclude-->
+[Key value store](../../examples/echo/src/main/scala/com/example/KvStoreDocs.scala) inside_block:SeqKvExample
+<!--/codeinclude--> 
+
+`SeqKv`, `LwwKv` & `LinKv` are all key value stores. They have the same api but different consistency guarantees.
+
+!!! note
+    `read`, `write` and `cas` apis are all built on top of [`ask`](#4-ask) api. So they can return an `AskError` which you may need to handle. According to [maelstrom documentation](https://github.com/jepsen-io/maelstrom/blob/main/doc/workloads.md#rpc-cas), they can return `KeyDoesNotExist` or `PreconditionFailed` error codes.
+
+!!! tip
+    key and value of the key value store can be any type that has a `zio.json.JsonCodec` instance
+
+[`LinTso`](https://github.com/jepsen-io/maelstrom/blob/main/doc/services.md#lin-tso) is a linearizable timestamp oracle. It has the following api
+
+<!--codeinclude-->
+[Linearizable timestamp oracle](../../examples/echo/src/main/scala/com/example/TsoDocs.scala) inside_block:TsoExample
+<!--/codeinclude-->
+
 ## Settings
 
 Below are the settings that can be configured for a node
