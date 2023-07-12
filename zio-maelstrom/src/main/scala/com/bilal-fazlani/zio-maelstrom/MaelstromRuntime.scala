@@ -3,8 +3,11 @@ package com.bilalfazlani.zioMaelstrom
 import zio.{Scope, ZLayer}
 import java.nio.file.Path
 
+type Services = LinKv & SeqKv & LwwKv & LinTso
+
 // definition {
-type MaelstromRuntime = Initialisation & RequestHandler & MessageSender & Logger & Settings
+type MaelstromRuntime = Initialisation & RequestHandler & MessageSender & Services & Logger &
+  Settings
 // }
 
 object MaelstromRuntime:
@@ -26,6 +29,11 @@ object MaelstromRuntime:
       inputStream,
       OutputChannel.stdOut,
       CallbackRegistry.live,
+      // Services
+      LinKv.live,
+      SeqKv.live,
+      LwwKv.live,
+      LinTso.live,
 
       // effectful layers
       contextLayer,

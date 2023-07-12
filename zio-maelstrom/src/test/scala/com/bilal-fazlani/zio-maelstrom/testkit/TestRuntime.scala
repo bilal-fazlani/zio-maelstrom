@@ -1,4 +1,5 @@
 package com.bilalfazlani.zioMaelstrom
+package testkit
 
 import zio.*
 import protocol.*
@@ -24,6 +25,11 @@ object TestRuntime:
       InputStream.queue,   // FAKE
       InputChannel.live,
       CallbackRegistry.live,
+      // Services
+      KvFake.linKv,
+      KvFake.seqKv,
+      KvFake.lwwKv,
+      LinTsoFake.make,
 
       // effectful layers
       Initialisation.fake(context), // FAKE
