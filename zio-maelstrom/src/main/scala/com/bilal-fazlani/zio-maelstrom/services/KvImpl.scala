@@ -8,14 +8,12 @@ private[zioMaelstrom] trait KvService:
 
   def read[Key: JsonEncoder, Value: JsonDecoder](
       key: Key,
-      messageId: MessageId,
       timeout: Duration
   ): ZIO[Any, AskError, Value]
 
   def write[Key: JsonEncoder, Value: JsonEncoder](
       key: Key,
       value: Value,
-      messageId: MessageId,
       timeout: Duration
   ): ZIO[Any, AskError, Unit]
 
@@ -24,7 +22,6 @@ private[zioMaelstrom] trait KvService:
       from: Value,
       to: Value,
       createIfNotExists: Boolean,
-      messageId: MessageId,
       timeout: Duration
   ): ZIO[Any, AskError, Unit]
 
@@ -35,43 +32,46 @@ private[zioMaelstrom] case class KvImpl(
 
   override def read[Key: JsonEncoder, Value: JsonDecoder](
       key: Key,
-      messageId: MessageId,
       timeout: Duration
   ): ZIO[Any, AskError, Value] =
-    sender
-      .ask[KvRead[Key], KvReadOk[Value]](KvRead(key, messageId), remote, timeout)
-      .map(_.value)
+    MessageId.random.flatMap { messageId =>
+      sender
+        .ask[KvRead[Key], KvReadOk[Value]](KvRead(key, messageId), remote, timeout)
+        .map(_.value)
+    }
 
   override def write[Key: JsonEncoder, Value: JsonEncoder](
       key: Key,
       value: Value,
-      messageId: MessageId,
       timeout: Duration
   ): ZIO[Any, AskError, Unit] =
-    sender
-      .ask[KvWrite[Key, Value], KvWriteOk](KvWrite(key, value, messageId), remote, timeout)
-      .unit
+    MessageId.random.flatMap { messageId =>
+      sender
+        .ask[KvWrite[Key, Value], KvWriteOk](KvWrite(key, value, messageId), remote, timeout)
+        .unit
+    }
 
   override def cas[Key: JsonEncoder, Value: JsonEncoder](
       key: Key,
       from: Value,
       to: Value,
       createIfNotExists: Boolean,
-      messageId: MessageId,
       timeout: Duration
   ): ZIO[Any, AskError, Unit] =
-    sender
-      .ask[CompareAndSwap[Key, Value], CompareAndSwapOk](
-        CompareAndSwap(key, from, to, createIfNotExists, messageId),
-        remote,
-        timeout
-      )
-      .unit
+    MessageId.random.flatMap { messageId =>
+      sender
+        .ask[CompareAndSwap[Key, Value], CompareAndSwapOk](
+          CompareAndSwap(key, from, to, createIfNotExists, messageId),
+          remote,
+          timeout
+        )
+        .unit
+    }
 }
 
-case class PartiallyAppliedKvRead[Kv <: KvService: Tag, Value](private val dummy: Boolean = false) {
-  def apply[Key: JsonEncoder](key: Key, messageId: MessageId, timeout: Duration)(using
+class PartiallyAppliedKvRead[Kv <: KvService: Tag, Value] {
+  def apply[Key: JsonEncoder](key: Key, timeout: Duration)(using
       JsonDecoder[Value]
   ): ZIO[Kv, AskError, Value] =
-    ZIO.serviceWithZIO[Kv](_.read[Key, Value](key, messageId, timeout))
+    ZIO.serviceWithZIO[Kv](_.read[Key, Value](key, timeout))
 }

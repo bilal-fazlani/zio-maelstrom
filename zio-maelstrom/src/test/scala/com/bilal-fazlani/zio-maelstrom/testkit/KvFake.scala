@@ -8,7 +8,6 @@ import protocol.*
 case class KvFake(ref: Ref.Synchronized[Map[Any, Any]]) extends KvService:
   override def read[Key: JsonEncoder, Value: JsonDecoder](
       key: Key,
-      messageId: MessageId,
       timeout: Duration
   ): ZIO[Any, AskError, Value] =
     ref.get.map(_.get(key).get.asInstanceOf[Value])
@@ -16,7 +15,6 @@ case class KvFake(ref: Ref.Synchronized[Map[Any, Any]]) extends KvService:
   override def write[Key: JsonEncoder, Value: JsonEncoder](
       key: Key,
       value: Value,
-      messageId: MessageId,
       timeout: Duration
   ): ZIO[Any, AskError, Unit] =
     ref.update(_ + (key -> value)).unit
@@ -26,7 +24,6 @@ case class KvFake(ref: Ref.Synchronized[Map[Any, Any]]) extends KvService:
       from: Value,
       to: Value,
       createIfNotExists: Boolean,
-      messageId: MessageId,
       timeout: Duration
   ): ZIO[Any, AskError, Unit] =
     ref.updateZIO { map =>
@@ -34,13 +31,17 @@ case class KvFake(ref: Ref.Synchronized[Map[Any, Any]]) extends KvService:
         case Some(`from`)              => ZIO.succeed(map + (key -> to))
         case None if createIfNotExists => ZIO.succeed(map + (key -> to))
         case None =>
-          ZIO.fail(ErrorMessage(messageId, ErrorCode.KeyDoesNotExist, s"Key $key does not exist"))
+          MessageId.random.flatMap(messageId =>
+            ZIO.fail(ErrorMessage(messageId, ErrorCode.KeyDoesNotExist, s"Key $key does not exist"))
+          )
         case Some(other) =>
-          ZIO.fail(
-            ErrorMessage(
-              messageId,
-              ErrorCode.PreconditionFailed,
-              s"Expected $from but found $other"
+          MessageId.random.flatMap(messageId =>
+            ZIO.fail(
+              ErrorMessage(
+                messageId,
+                ErrorCode.PreconditionFailed,
+                s"Expected $from but found $other"
+              )
             )
           )
       }
