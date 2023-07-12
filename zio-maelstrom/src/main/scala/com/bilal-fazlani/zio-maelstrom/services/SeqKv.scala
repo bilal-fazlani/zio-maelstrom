@@ -7,13 +7,8 @@ import zio.json.*
 trait SeqKv extends KvService
 
 object SeqKv:
-  def read[Key: JsonEncoder, Value: JsonDecoder](
-      key: Key,
-      messageId: MessageId,
-      timeout: Duration
-  ): ZIO[SeqKv, AskError, Value] =
-    ZIO.serviceWithZIO[SeqKv](_.read(key, messageId, timeout))
-  
+  def read[Value] = PartiallyAppliedKvRead[SeqKv, Value]()
+
   def write[Key: JsonEncoder, Value: JsonEncoder](
       key: Key,
       value: Value,
@@ -21,7 +16,7 @@ object SeqKv:
       timeout: Duration
   ): ZIO[SeqKv, AskError, Unit] =
     ZIO.serviceWithZIO[SeqKv](_.write(key, value, messageId, timeout))
-  
+
   def cas[Key: JsonEncoder, Value: JsonEncoder](
       key: Key,
       from: Value,

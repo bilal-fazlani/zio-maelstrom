@@ -5,17 +5,20 @@ import zio.json.*
 import protocol.*
 
 private[zioMaelstrom] trait KvService:
+
   def read[Key: JsonEncoder, Value: JsonDecoder](
       key: Key,
       messageId: MessageId,
       timeout: Duration
   ): ZIO[Any, AskError, Value]
+
   def write[Key: JsonEncoder, Value: JsonEncoder](
       key: Key,
       value: Value,
       messageId: MessageId,
       timeout: Duration
   ): ZIO[Any, AskError, Unit]
+
   def cas[Key: JsonEncoder, Value: JsonEncoder](
       key: Key,
       from: Value,
@@ -26,9 +29,10 @@ private[zioMaelstrom] trait KvService:
   ): ZIO[Any, AskError, Unit]
 
 private[zioMaelstrom] case class KvImpl(
-    remote: NodeId,
-    sender: MessageSender
+    private val remote: NodeId,
+    private val sender: MessageSender
 ) extends KvService {
+
   override def read[Key: JsonEncoder, Value: JsonDecoder](
       key: Key,
       messageId: MessageId,
@@ -63,4 +67,11 @@ private[zioMaelstrom] case class KvImpl(
         timeout
       )
       .unit
+}
+
+case class PartiallyAppliedKvRead[Kv <: KvService: Tag, Value](private val dummy: Boolean = false) {
+  def apply[Key: JsonEncoder](key: Key, messageId: MessageId, timeout: Duration)(using
+      JsonDecoder[Value]
+  ): ZIO[Kv, AskError, Value] =
+    ZIO.serviceWithZIO[Kv](_.read[Key, Value](key, messageId, timeout))
 }
