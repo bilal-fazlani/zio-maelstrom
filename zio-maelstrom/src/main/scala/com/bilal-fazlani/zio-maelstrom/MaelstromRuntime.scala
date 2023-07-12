@@ -53,3 +53,7 @@ object MaelstromRuntime:
     live(Settings(), InputStream.file(path), Some(context))
   def usingFile(path: Path, settings: Settings, context: Context) =
     live(settings, InputStream.file(path), Some(context))
+
+  def usingContext(context: Context) = live(Settings(), InputStream.stdIn, Some(context))
+  def usingContext(context: Context, settings: Settings) =
+    live(settings, InputStream.stdIn, Some(context))
