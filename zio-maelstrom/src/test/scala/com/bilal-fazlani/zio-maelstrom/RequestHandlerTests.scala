@@ -5,7 +5,6 @@ import zio.*
 import zio.json.*
 import testkit.TestRuntime
 import testkit.TestRuntime.*
-import com.bilalfazlani.zioMaelstrom.protocol.*
 
 object RequestHandlerTest extends ZIOSpecDefault {
   def isCI        = sys.env.get("CI").contains("true")

@@ -7,11 +7,10 @@ hide:
 # API Reference
 
 !!! tip
-    All the functionality of zio-maelstrom is available via two import statements
+    All the functionality of zio-maelstrom is available via following import statement
     
     ```scala
     import com.bilalfazlani.zioMaelstrom.*
-    import com.bilalfazlani.zioMaelstrom.protocol.*
     ```
 
 ## Primitive Types

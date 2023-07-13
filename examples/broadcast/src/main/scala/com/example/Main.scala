@@ -4,7 +4,6 @@ package com.example.broadcast
 import zio.json.*
 import zio.*
 import com.bilalfazlani.zioMaelstrom.*
-import com.bilalfazlani.zioMaelstrom.protocol.*
 // }
 
 // input_messages {

@@ -1,7 +1,6 @@
 package com.bilalfazlani.zioMaelstrom
 
 import zio.*
-import protocol.*
 import zio.concurrent.ConcurrentMap
 
 private case class TimedPromise(promise: Promise[AskError, GenericMessage], startTime: Long) {

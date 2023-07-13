@@ -1,6 +1,5 @@
 package com.bilalfazlani.zioMaelstrom
 
-import protocol.*
 import zio.*
 import zio.stream.{ZStream, ZSink}
 import zio.json.JsonDecoder

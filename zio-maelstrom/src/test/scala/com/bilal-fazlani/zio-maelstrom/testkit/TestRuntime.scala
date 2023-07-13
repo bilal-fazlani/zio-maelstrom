@@ -2,7 +2,6 @@ package com.bilalfazlani.zioMaelstrom
 package testkit
 
 import zio.*
-import protocol.*
 import zio.json.{JsonEncoder, EncoderOps}
 
 type TestRuntime = MaelstromRuntime & Queue[Message[Sendable]] & Queue[String] & CallbackRegistry

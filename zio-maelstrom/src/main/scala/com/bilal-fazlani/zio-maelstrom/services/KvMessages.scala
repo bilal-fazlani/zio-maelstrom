@@ -2,7 +2,6 @@ package com.bilalfazlani.zioMaelstrom
 
 import zio.*
 import zio.json.*
-import protocol.*
 
 private[zioMaelstrom] case class KvRead[Key](key: Key, msg_id: MessageId, `type`: String = "read")
     extends NeedsReply,

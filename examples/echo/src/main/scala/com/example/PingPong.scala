@@ -2,7 +2,6 @@ package com.example.pingpong
 
 import zio.json.*
 import zio.*
-import com.bilalfazlani.zioMaelstrom.protocol.*
 import com.bilalfazlani.zioMaelstrom.*
 
 case class Ping(msg_id: MessageId, `type`: String = "ping") extends Sendable, NeedsReply

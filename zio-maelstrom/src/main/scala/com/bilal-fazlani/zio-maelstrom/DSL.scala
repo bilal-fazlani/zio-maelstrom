@@ -1,7 +1,6 @@
 package com.bilalfazlani.zioMaelstrom
 
 import java.nio.file.Path
-import protocol.*
 import zio.json.*
 import zio.*
 

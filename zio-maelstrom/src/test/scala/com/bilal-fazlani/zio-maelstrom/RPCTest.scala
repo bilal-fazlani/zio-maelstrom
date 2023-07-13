@@ -2,7 +2,6 @@ package com.bilalfazlani.zioMaelstrom
 
 import zio.test.*
 import zio.*
-import com.bilalfazlani.zioMaelstrom.protocol.*
 import zio.json.*
 import testkit.TestRuntime
 import testkit.TestRuntime.*

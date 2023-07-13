@@ -1,6 +1,5 @@
 package com.bilalfazlani.zioMaelstrom
 
-import protocol.*
 import zio.*
 import zio.json.{JsonEncoder, JsonDecoder}
 
@@ -54,8 +53,8 @@ private case class MessageSenderLive(
       to: NodeId,
       timeout: Duration
   ): IO[AskError, Res] = for {
-    _ <- send(body, to)
-    _ <- logger.debug(s"waiting for reply from ${to} for message id ${body.msg_id}...")
+    _              <- send(body, to)
+    _              <- logger.debug(s"waiting for reply from ${to} for message id ${body.msg_id}...")
     genericMessage <- ZIO.scoped(callbackRegistry.awaitCallback(body.msg_id, to, timeout))
     decoded <-
       if genericMessage.isError then {

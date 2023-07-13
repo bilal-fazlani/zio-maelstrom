@@ -2,7 +2,6 @@ package com.example.calculator
 
 import zio.json.*
 import zio.*
-import com.bilalfazlani.zioMaelstrom.protocol.*
 import com.bilalfazlani.zioMaelstrom.*
 
 // format: off

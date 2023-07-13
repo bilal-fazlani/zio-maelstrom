@@ -1,7 +1,6 @@
 package com.bilalfazlani.zioMaelstrom
 
 import zio.*
-import protocol.*
 import zio.json.{JsonEncoder, EncoderOps}
 
 private[zioMaelstrom] trait OutputChannel:

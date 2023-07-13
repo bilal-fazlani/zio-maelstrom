@@ -2,7 +2,6 @@ package com.example
 
 import zio.*
 import com.bilalfazlani.zioMaelstrom.*
-import com.bilalfazlani.zioMaelstrom.protocol.*
 import zio.json.*
 
 object Main extends ZIOAppDefault {

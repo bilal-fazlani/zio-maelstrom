@@ -1,7 +1,5 @@
 package com.bilalfazlani.zioMaelstrom
 
-import protocol.*
-
 case class Context(me: NodeId, others: Set[NodeId])
 
 object Context:
