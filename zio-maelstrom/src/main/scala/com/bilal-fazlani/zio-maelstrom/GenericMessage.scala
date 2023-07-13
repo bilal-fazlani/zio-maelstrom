@@ -1,5 +1,4 @@
 package com.bilalfazlani.zioMaelstrom
-package protocol
 
 import zio.json.ast.Json
 import zio.json.JsonDecoder
@@ -12,9 +11,13 @@ private[zioMaelstrom] case class GenericDetails(
 
 extension (parent: Json)
   private def getChildOptional[A: JsonDecoder](field: String): Either[String, Option[A]] =
-    parent.asObject.flatMap(_.get(field)).fold(Right(None))(json => JsonDecoder[A].fromJsonAST(json).map(Some(_)))
+    parent.asObject
+      .flatMap(_.get(field))
+      .fold(Right(None))(json => JsonDecoder[A].fromJsonAST(json).map(Some(_)))
   private def getChild[A: JsonDecoder](field: String): Either[String, A] =
-    parent.asObject.flatMap(_.get(field)).fold(Left(s"missing field '$field'"))(json => JsonDecoder[A].fromJsonAST(json))
+    parent.asObject
+      .flatMap(_.get(field))
+      .fold(Left(s"missing field '$field'"))(json => JsonDecoder[A].fromJsonAST(json))
 
 private[zioMaelstrom] object GenericDetails {
   val empty = GenericDetails(None, None, None)
@@ -60,12 +63,22 @@ private[zioMaelstrom] case class GenericMessage(
 private[zioMaelstrom] object GenericMessage {
   given JsonDecoder[GenericMessage] = JsonDecoder[Json].mapOrFail[GenericMessage](ast =>
     for {
-      obj     <- ast.asObject.toRight("message is not a json object")
-      src     <- obj.getChild[NodeId]("src")
-      dest    <- obj.getChild[NodeId]("dest")
-      body    <- obj.getChildOptional[Json]("body")
-      details <- body.fold(Right(GenericDetails.empty))(body => JsonDecoder[GenericDetails].fromJsonAST(body))
-    } yield GenericMessage(src, dest, details.messageType, details.messageId, details.inReplyTo, body, ast)
+      obj  <- ast.asObject.toRight("message is not a json object")
+      src  <- obj.getChild[NodeId]("src")
+      dest <- obj.getChild[NodeId]("dest")
+      body <- obj.getChildOptional[Json]("body")
+      details <- body.fold(Right(GenericDetails.empty))(body =>
+        JsonDecoder[GenericDetails].fromJsonAST(body)
+      )
+    } yield GenericMessage(
+      src,
+      dest,
+      details.messageType,
+      details.messageId,
+      details.inReplyTo,
+      body,
+      ast
+    )
   )
 }
 

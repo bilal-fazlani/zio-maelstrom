@@ -1,5 +1,4 @@
 package com.bilalfazlani.zioMaelstrom
-package protocol
 
 import zio.json.*
 import scala.annotation.targetName

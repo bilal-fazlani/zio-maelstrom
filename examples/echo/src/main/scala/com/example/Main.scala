@@ -3,7 +3,6 @@ package com.example.echo
 //imports {
 import zio.json.{JsonEncoder, JsonDecoder}
 import zio.{ZIOAppDefault, ZIO}
-import com.bilalfazlani.zioMaelstrom.protocol.*
 import com.bilalfazlani.zioMaelstrom.*
 //}
 

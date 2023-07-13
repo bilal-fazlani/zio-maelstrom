@@ -1,7 +1,6 @@
 package com.example.tso
 
 import com.bilalfazlani.zioMaelstrom.*
-import com.bilalfazlani.zioMaelstrom.protocol.*
 import zio.*
 
 object TsoExample {

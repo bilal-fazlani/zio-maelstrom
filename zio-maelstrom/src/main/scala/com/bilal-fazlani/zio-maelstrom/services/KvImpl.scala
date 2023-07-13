@@ -2,7 +2,6 @@ package com.bilalfazlani.zioMaelstrom
 
 import zio.*
 import zio.json.*
-import protocol.*
 
 private[zioMaelstrom] trait KvService:
 

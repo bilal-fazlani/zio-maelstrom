@@ -3,7 +3,6 @@ package testkit
 
 import zio.*
 import zio.json.*
-import protocol.*
 
 case class KvFake(ref: Ref.Synchronized[Map[Any, Any]], messageIdStore: MessageIdStore)
     extends KvService:

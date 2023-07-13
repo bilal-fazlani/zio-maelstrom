@@ -2,7 +2,6 @@ package com.bilalfazlani.zioMaelstrom
 
 import zio.{Scope, ZIO, ZLayer}
 import zio.json.JsonDecoder
-import protocol.*
 
 private[zioMaelstrom] trait InputChannel:
   def partitionInputs: ZIO[Scope, Nothing, Inputs]

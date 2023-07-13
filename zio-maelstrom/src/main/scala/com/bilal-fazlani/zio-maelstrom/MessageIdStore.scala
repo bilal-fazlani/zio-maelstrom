@@ -1,7 +1,6 @@
 package com.bilalfazlani.zioMaelstrom
 
 import zio.{ZIO, Ref, ZLayer}
-import protocol.MessageId
 
 trait MessageIdStore:
   def next: ZIO[Any, Nothing, MessageId]

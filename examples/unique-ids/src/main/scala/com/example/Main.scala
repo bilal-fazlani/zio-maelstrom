@@ -1,7 +1,6 @@
 package com.example.uniqueIds
 
 //imports {
-import com.bilalfazlani.zioMaelstrom.protocol.*
 import com.bilalfazlani.zioMaelstrom.*
 import zio.json.{JsonDecoder, JsonEncoder}
 import zio.{ZIOAppDefault, ZIO, Ref, ZLayer}
