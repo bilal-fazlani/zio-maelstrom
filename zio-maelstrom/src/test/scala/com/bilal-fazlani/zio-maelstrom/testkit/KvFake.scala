@@ -5,7 +5,8 @@ import zio.*
 import zio.json.*
 import protocol.*
 
-case class KvFake(ref: Ref.Synchronized[Map[Any, Any]]) extends KvService:
+case class KvFake(ref: Ref.Synchronized[Map[Any, Any]], messageIdStore: MessageIdStore)
+    extends KvService:
   override def read[Key: JsonEncoder, Value: JsonDecoder](
       key: Key,
       timeout: Duration
@@ -31,11 +32,11 @@ case class KvFake(ref: Ref.Synchronized[Map[Any, Any]]) extends KvService:
         case Some(`from`)              => ZIO.succeed(map + (key -> to))
         case None if createIfNotExists => ZIO.succeed(map + (key -> to))
         case None =>
-          MessageId.random.flatMap(messageId =>
+          messageIdStore.next.flatMap(messageId =>
             ZIO.fail(ErrorMessage(messageId, ErrorCode.KeyDoesNotExist, s"Key $key does not exist"))
           )
         case Some(other) =>
-          MessageId.random.flatMap(messageId =>
+          messageIdStore.next.flatMap(messageId =>
             ZIO.fail(
               ErrorMessage(
                 messageId,
@@ -48,23 +49,38 @@ case class KvFake(ref: Ref.Synchronized[Map[Any, Any]]) extends KvService:
     }
 
 object KvFake:
-  val linKv = ZLayer.fromZIO(Ref.Synchronized.make(Map.empty[Any, Any]).map { r =>
-    val impl = KvFake(r)
-    new LinKv {
-      export impl.*
-    }
-  })
 
-  val seqKv = ZLayer.fromZIO(Ref.Synchronized.make(Map.empty[Any, Any]).map { r =>
-    val impl = KvFake(r)
-    new SeqKv {
-      export impl.*
-    }
-  })
+  private val mapLayer = ZLayer.fromZIO(Ref.Synchronized.make(Map.empty[Any, Any]))
 
-  val lwwKv = ZLayer.fromZIO(Ref.Synchronized.make(Map.empty[Any, Any]).map { r =>
-    val impl = KvFake(r)
-    new LwwKv {
-      export impl.*
-    }
-  })
+  val linKv: ZLayer[Any, Nothing, LinKv] = ZLayer.make[LinKv](
+    ZLayer.fromFunction(KvFake.apply),
+    mapLayer,
+    MessageIdStore.live,
+    ZLayer.fromFunction((fake: KvFake) =>
+      new LinKv {
+        export fake.*
+      }
+    )
+  )
+
+  val seqKv: ZLayer[Any, Nothing, SeqKv] = ZLayer.make[SeqKv](
+    ZLayer.fromFunction(KvFake.apply),
+    mapLayer,
+    MessageIdStore.live,
+    ZLayer.fromFunction((fake: KvFake) =>
+      new SeqKv {
+        export fake.*
+      }
+    )
+  )
+
+  val lwwKv: ZLayer[Any, Nothing, LwwKv] = ZLayer.make[LwwKv](
+    ZLayer.fromFunction(KvFake.apply),
+    mapLayer,
+    MessageIdStore.live,
+    ZLayer.fromFunction((fake: KvFake) =>
+      new LwwKv {
+        export fake.*
+      }
+    )
+  )
