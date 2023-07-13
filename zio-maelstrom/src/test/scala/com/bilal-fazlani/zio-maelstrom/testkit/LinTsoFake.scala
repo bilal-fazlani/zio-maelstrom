@@ -2,10 +2,9 @@ package com.bilalfazlani.zioMaelstrom
 package testkit
 
 import zio.*
-import protocol.*
 
 case class LinTsoFake(ref: Ref[Int]) extends LinTso:
-  override def ts(messageId: MessageId, timeout: Duration): ZIO[Any, AskError, Int] =
+  override def ts(timeout: Duration): ZIO[Any, AskError, Int] =
     ref.updateAndGet(_ + 1)
 
 object LinTsoFake:

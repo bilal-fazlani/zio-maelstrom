@@ -12,20 +12,18 @@ object SeqKv:
   def write[Key: JsonEncoder, Value: JsonEncoder](
       key: Key,
       value: Value,
-      messageId: MessageId,
       timeout: Duration
   ): ZIO[SeqKv, AskError, Unit] =
-    ZIO.serviceWithZIO[SeqKv](_.write(key, value, messageId, timeout))
+    ZIO.serviceWithZIO[SeqKv](_.write(key, value, timeout))
 
   def cas[Key: JsonEncoder, Value: JsonEncoder](
       key: Key,
       from: Value,
       to: Value,
       createIfNotExists: Boolean,
-      messageId: MessageId,
       timeout: Duration
   ): ZIO[SeqKv, AskError, Unit] =
-    ZIO.serviceWithZIO[SeqKv](_.cas(key, from, to, createIfNotExists, messageId, timeout))
+    ZIO.serviceWithZIO[SeqKv](_.cas(key, from, to, createIfNotExists, timeout))
 
   private[zioMaelstrom] val live: ZLayer[MessageSender, Nothing, SeqKv] = ZLayer.fromZIO(
     for

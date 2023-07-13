@@ -196,10 +196,10 @@ Maelstrom starts some services at the beginning of every simulation by default
 
 These are their node ids:
 
-1. lin-kv
-2. lww-kv
-3. seq-kv
-4. lin-tso
+1. `lin-kv`
+2. `lww-kv`
+3. `seq-kv`
+4. `lin-tso`
 
 You can read more these services on the [maelstrom docs](https://github.com/jepsen-io/maelstrom/blob/main/doc/services.md)
 

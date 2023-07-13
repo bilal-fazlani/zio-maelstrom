@@ -88,6 +88,7 @@ object MessageId:
   given JsonDecoder[MessageId]      = JsonDecoder.int.map(MessageId(_))
   given JsonFieldEncoder[MessageId] = JsonFieldEncoder.int.contramap(identity)
   given JsonFieldDecoder[MessageId] = JsonFieldDecoder.int.map(MessageId(_))
+  val random = Random.nextIntBounded(Int.MaxValue).map(MessageId(_))
 
   extension (id: MessageId)
     @targetName("messageIdInc")
