@@ -6,8 +6,8 @@ import java.nio.file.Path
 type Services = LinKv & SeqKv & LwwKv & LinTso
 
 // definition {
-type MaelstromRuntime = Initialisation & RequestHandler & MessageSender & Services & Logger &
-  Settings
+type MaelstromRuntime = Initialisation & RequestHandler & MessageSender & MessageIdStore &
+  Services & Logger & Settings
 // }
 
 object MaelstromRuntime:
@@ -29,6 +29,8 @@ object MaelstromRuntime:
       inputStream,
       OutputChannel.stdOut,
       CallbackRegistry.live,
+      MessageIdStore.live,
+
       // Services
       LinKv.live,
       SeqKv.live,

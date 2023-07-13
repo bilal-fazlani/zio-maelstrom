@@ -27,14 +27,15 @@ private[zioMaelstrom] trait KvService:
 
 private[zioMaelstrom] case class KvImpl(
     private val remote: NodeId,
-    private val sender: MessageSender
+    private val sender: MessageSender,
+    private val messageIdStore: MessageIdStore
 ) extends KvService {
 
   override def read[Key: JsonEncoder, Value: JsonDecoder](
       key: Key,
       timeout: Duration
   ): ZIO[Any, AskError, Value] =
-    MessageId.random.flatMap { messageId =>
+    messageIdStore.next.flatMap { messageId =>
       sender
         .ask[KvRead[Key], KvReadOk[Value]](KvRead(key, messageId), remote, timeout)
         .map(_.value)
@@ -45,7 +46,7 @@ private[zioMaelstrom] case class KvImpl(
       value: Value,
       timeout: Duration
   ): ZIO[Any, AskError, Unit] =
-    MessageId.random.flatMap { messageId =>
+    messageIdStore.next.flatMap { messageId =>
       sender
         .ask[KvWrite[Key, Value], KvWriteOk](KvWrite(key, value, messageId), remote, timeout)
         .unit
@@ -58,7 +59,7 @@ private[zioMaelstrom] case class KvImpl(
       createIfNotExists: Boolean,
       timeout: Duration
   ): ZIO[Any, AskError, Unit] =
-    MessageId.random.flatMap { messageId =>
+    messageIdStore.next.flatMap { messageId =>
       sender
         .ask[CompareAndSwap[Key, Value], CompareAndSwapOk](
           CompareAndSwap(key, from, to, createIfNotExists, messageId),

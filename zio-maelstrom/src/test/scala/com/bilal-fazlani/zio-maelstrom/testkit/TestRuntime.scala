@@ -25,6 +25,8 @@ object TestRuntime:
       InputStream.queue,   // FAKE
       InputChannel.live,
       CallbackRegistry.live,
+      MessageIdStore.live,
+
       // Services
       KvFake.linKv,
       KvFake.seqKv,

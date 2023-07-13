@@ -124,20 +124,7 @@ You can send a message to any `NodeId` using `NodeId.send()` API. It takes a `Se
  
 1. these will be sent to all nodes in cluster
 
-### 3. `reply`
-
-From within `receive` function, you can call `reply` api to send a reply message to the source of the current message.
-
-<!--codeinclude-->
-[Reply](../../examples/echo/src/main/scala/com/example/IODocs.scala) inside_block:Reply
-<!--/codeinclude-->
-
-`reply` api takes an instance of `Sendable` & `Reply` message which has a `zio.json.JsonEncoder` instance. 
-
-!!! tip
-    `reply` can be called only inside of receive function. Outside of the `receive` function, you can use `send` api which takes a remote `NodeId` argument.
-
-### 4. `ask`
+### 3. `ask`
 
 `ask` api is a combination of `send` and `receive`. It sends a message to a remote node and waits for a reply. It takes a `Sendable` & `Receive` message and returns a `Reply` message. It also takes a timeout argument which is the maximum time to wait for a reply. It expects a `zio.json.JsonDecoder` instance for the reply & a `zio.json.JsonEncoder` instance for the request message. `ask` api can be called from within and outside of `receive` function.
 
@@ -145,7 +132,15 @@ From within `receive` function, you can call `reply` api to send a reply message
 [Ask](../../examples/echo/src/main/scala/com/example/IODocs.scala) inside_block:Ask
 <!--/codeinclude-->
 
-The `ask` api can return either a successful response or an `AskError`.
+1. `MessageId.next` gives next sequential message id
+
+!!! tip
+    Use `MessageId.next` to generate a new message id. It is a sequential id generator
+
+!!! important danger
+    Make sure to use different message ids for different messages. If you use the same message id for different messages, the receiver will not be able to map the response to the request    
+
+The `ask` api can return either a successful response or an `AskError`
 
 <!--codeinclude-->
 [AskError](../../zio-maelstrom/src/main/scala/com/bilal-fazlani/zio-maelstrom/MessageSender.scala) inside_block:ask_error
@@ -161,7 +156,20 @@ Ask error can be one of the following:
 [Ask error handling](../../examples/echo/src/main/scala/com/example/ErrorDocs.scala) inside_block:GetErrorMessage
 <!--/codeinclude-->
 
-Sender can send an error message if it encounters an error while processing the request message or when request is invalid. You can read more about error messages in the [next section](#error-messages).
+Sender can send an error message if it encounters an error while processing the request message or when request is invalid. You can read more about error messages in the [error messages section](#error-messages)
+
+### 4. `reply`
+
+From within `receive` function, you can call `reply` api to send a reply message to the source of the current message.
+
+<!--codeinclude-->
+[Reply](../../examples/echo/src/main/scala/com/example/IODocs.scala) inside_block:Reply
+<!--/codeinclude-->
+
+`reply` api takes an instance of `Sendable` & `Reply` message which has a `zio.json.JsonEncoder` instance. 
+
+!!! tip
+    `reply` can be called only inside of receive function. Outside of the `receive` function, you can use `send` api which takes a remote `NodeId` argument.
 
 ## Error messages
 
@@ -212,7 +220,7 @@ ZIO-Maelstrom provides `LinkKv`, `LwwKv`, `SeqKv` & `LinTso` clients to interact
 `SeqKv`, `LwwKv` & `LinKv` are all key value stores. They have the same api but different consistency guarantees.
 
 !!! note
-    `read`, `write` and `cas` apis are all built on top of [`ask`](#4-ask) api. So they can return an `AskError` which you may need to handle. According to [maelstrom documentation](https://github.com/jepsen-io/maelstrom/blob/main/doc/workloads.md#rpc-cas), they can return `KeyDoesNotExist` or `PreconditionFailed` error codes.
+    `read`, `write` and `cas` apis are all built on top of [`ask`](#3-ask) api. So they can return an `AskError` which you may need to handle. According to [maelstrom documentation](https://github.com/jepsen-io/maelstrom/blob/main/doc/workloads.md#rpc-cas), they can return `KeyDoesNotExist` or `PreconditionFailed` error codes.
 
 !!! tip
     key and value of the key value store can be any type that has a `zio.json.JsonCodec` instance

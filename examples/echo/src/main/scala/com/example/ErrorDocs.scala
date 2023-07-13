@@ -30,16 +30,19 @@ object ErrorDocs:
 
     case class Answer(in_reply_to: MessageId, text: String) extends Reply derives JsonCodec
 
-    val askResponse: ZIO[MaelstromRuntime, Nothing, Unit] =
-      NodeId("g4")
-        .ask[Answer](Query(1, MessageId(1)), 5.seconds)
-        .flatMap(answer => logInfo(s"answer: $answer"))
-        .catchAll {
-          case t: Timeout         => logError(s"timeout: ${t.timeout}")
-          case d: DecodingFailure => logError(s"decoding failure: ${d.error}")
-          case e: ErrorMessage =>
-            val code: ErrorCode = e.code
-            val text: String    = e.text
-            logError(s"error code: $code, error text: $text")
-        }
+    val askResponse: ZIO[MaelstromRuntime, AskError, Unit] = for
+      msgId  <- MessageId.next
+      answer <- NodeId("g4").ask[Answer](Query(1, msgId), 5.seconds)
+      _      <- logInfo(s"answer: $answer")
+    yield ()
+
+    askResponse
+      .catchAll {
+        case t: Timeout         => logError(s"timeout: ${t.timeout}")
+        case d: DecodingFailure => logError(s"decoding failure: ${d.error}")
+        case e: ErrorMessage =>
+          val code: ErrorCode = e.code
+          val text: String    = e.text
+          logError(s"error code: $code, error text: $text")
+      }
   }
