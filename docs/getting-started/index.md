@@ -35,7 +35,24 @@ Since Maelstrom is Closure program, you will need JVM installed on your machine.
 brew install openjdk graphviz gnuplot
 ```
 
-## Installation
+## Get started using template
+
+The easiest way to get started is to create a new project using zio-maelstrom github template
+
+[View template :simple-github:](https://github.com/bilal-fazlani/gossip-glomers-scala-template){ .md-button .md-button--primary }
+
+The template contains
+
+- [x] sbt project with zio-maelstrom dependency
+- [x] empty directory structure for all the solutions
+- [x] scripts to compile solutions using graalvm native image
+- [x] scripts to run solutions with expected workload
+ 
+You can find the instructions to use it in the [README](https://github.com/bilal-fazlani/gossip-glomers-scala-template#readme) of the template project
+
+---
+
+## Get started from scratch 
 
 Create an sbt project with Scala 3 and add the following dependency:
 
@@ -45,25 +62,44 @@ Create an sbt project with Scala 3 and add the following dependency:
 libraryDependencies += "com.bilal-fazlani" %% "zio-maelstrom" % "<VERSION>"
 ```
 
-## Creating a node
+**Creating a node**
 
 A node is a process that can receive messages and respond to them. It can also send messages to other nodes. Take a look at [Challenge #1: Echo](https://fly.io/dist-sys/1/) to understand the basics of a node. This node is implemented in Go. You can find an equivalent implementation in Scala [here](echo.md)
 
-## Running a node
+**Running a node**
 
-Maelstrom requires a binary executable file to launch a node. There are several ways to create a binary executable file:
+Maelstrom requires a binary executable file to launch a node. There are several ways to create a binary executable file
 
-- Create a fat JAR using [sbt-assembly](https://www.baeldung.com/scala/sbt-fat-jar) plugin
-- Create a fat JAR using [Coursier bootstrap](https://get-coursier.io/docs/cli-bootstrap)
-- Create an OS native app using [sbt-native-image](https://github.com/scalameta/sbt-native-image) plugin
+***Option 1. Create a fat JAR using [sbt-assembly](https://www.baeldung.com/scala/sbt-fat-jar) plugin***
+  
+This is very simple to use, but the resulting JAR does not contain any preamble so you have to run it using `java -jar` command. This is not ideal for Maelstrom because it requires a binary executable file. Because of this reason, we have to create wrapper scripts like:
 
-I have tested with Coursier bootstrap and it works well. But sbt-assembly should be even more simple to work with.
+```bash
+#!/bin/bash
+if [[ $BASH_SOURCE = */* ]]; then
+DIR=${BASH_SOURCE%/*}/
+else
+DIR=./
+fi
+exec java -jar "$DIR/echo.jar"
+``` 
+
+And then using this script to run maelstrom simulation
+  
+***Create a fat JAR using [Coursier bootstrap](https://get-coursier.io/docs/cli-bootstrap)***
+  
+I have tried using coursier bootstrap and it is better than sbt-assembly because it creates a preamble in the JAR file. This means that you can run the JAR file directly without any wrapper scripts. But we still have a problem. Challenges which require a lot of nodes, for example [Challenge #3d](https://fly.io/dist-sys/3d/), don't work well because of JVM startup overhead time.
+
+***Create an OS native app using [sbt-native-image](https://github.com/scalameta/sbt-native-image) plugin***
+
+This is the best option. Unfortunately also the most complicated one among the three. sbt-native-image does help you create a native executable file, but it also requires reflection configurations. native image agent can help you generate the configurations automatically, but there is still some work to be done. You first have to run the solution with agent with basic load to generate the configs. Then you can create the native executable file. The [template project](#get-started-using-template) has scripts to do automate this process.
+
 
 Once you have an executable file, you can run it using the Maelstrom CLI. 
 
 ```bash
 ./maelstrom test -w echo \ # (1)!
-  --bin ./echo.jar \ # (2)!
+  --bin ./target/echo \ # (2)!
   --node-count 1 \ # (3)!
   --time-limit 10 \ # (4)!
 ```

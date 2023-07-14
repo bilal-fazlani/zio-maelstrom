@@ -38,3 +38,13 @@ Implement a broadcast system that gossips messages between all nodes in the clus
 [View Challenge](https://fly.io/dist-sys/3b/){ .md-button }
 
 </div>
+
+---
+
+<div markdown="1" class="quote">
+<div markdown="1" class="quotation-mark">“</div>
+<div markdown="1" class="quote-content">
+Wan't to discuss solutions or get help? Join the [discord :simple-discord: channel!](https://discord.gg/MYpwA9THKD). To view all the solutions, check out [this repository](https://github.com/bilal-fazlani/gossip-glomers-scala)
+</div>
+</div>
+
