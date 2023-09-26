@@ -7,13 +7,12 @@ private[zioMaelstrom] trait ResponseHandler:
 
 private[zioMaelstrom] object ResponseHandler:
   private val live: ZLayer[Initialisation & CallbackRegistry & Settings, Nothing, ResponseHandler] =
-    ZLayer
-      .fromFunction(ResponseHandlerLive.apply)
+    ZLayer.derive[ResponseHandlerLive]
 
   val start: ZLayer[Scope & Initialisation & CallbackRegistry & Settings, Nothing, Unit] =
-    live >>> ZLayer.fromZIO(ZIO.serviceWithZIO[ResponseHandler](_.handle).forkScoped.unit)
+    live >>> ZLayer(ZIO.serviceWithZIO[ResponseHandler](_.handle).forkScoped.unit)
 
-private case class ResponseHandlerLive(
+private class ResponseHandlerLive(
     callbackRegistry: CallbackRegistry,
     init: Initialisation,
     settings: Settings

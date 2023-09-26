@@ -74,5 +74,5 @@ object Main extends ZIOAppDefault {
     }
 
   val run = handleMessages
-    .provideSome[Scope](MaelstromRuntime.live, ZLayer.fromZIO(Ref.make(State())))
+    .provideSome[Scope](MaelstromRuntime.live, ZLayer(Ref.make(State())))
 }

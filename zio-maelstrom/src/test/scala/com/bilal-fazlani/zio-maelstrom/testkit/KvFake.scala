@@ -49,7 +49,7 @@ case class KvFake(ref: Ref.Synchronized[Map[Any, Any]], messageIdStore: MessageI
 
 object KvFake:
 
-  private val mapLayer = ZLayer.fromZIO(Ref.Synchronized.make(Map.empty[Any, Any]))
+  private val mapLayer = ZLayer(Ref.Synchronized.make(Map.empty[Any, Any]))
 
   val linKv: ZLayer[Any, Nothing, LinKv] = ZLayer.make[LinKv](
     ZLayer.fromFunction(KvFake.apply),

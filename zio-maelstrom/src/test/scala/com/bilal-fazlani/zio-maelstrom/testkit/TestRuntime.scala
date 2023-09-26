@@ -18,8 +18,8 @@ object TestRuntime:
       MessageSender.live,
       Logger.live,
       RequestHandler.live,
-      ZLayer.fromZIO(Queue.unbounded[Message[Sendable]]),
-      ZLayer.fromZIO(Queue.unbounded[String]),
+      ZLayer(Queue.unbounded[Message[Sendable]]),
+      ZLayer(Queue.unbounded[String]),
       OutputChannel.queue, // FAKE
       InputStream.queue,   // FAKE
       InputChannel.live,

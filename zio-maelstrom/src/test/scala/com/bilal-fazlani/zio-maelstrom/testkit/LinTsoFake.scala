@@ -8,7 +8,7 @@ case class LinTsoFake(ref: Ref[Int]) extends LinTso:
     ref.updateAndGet(_ + 1)
 
 object LinTsoFake:
-  val make = ZLayer.fromZIO(Ref.make(0).map { r =>
+  val make = ZLayer(Ref.make(0).map { r =>
     val impl = LinTsoFake(r)
     new LinTso:
       export impl.*

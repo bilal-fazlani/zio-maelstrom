@@ -7,11 +7,12 @@ private[zioMaelstrom] trait InputChannel:
   def partitionInputs: ZIO[Scope, Nothing, Inputs]
 
 private object InputChannel:
-  val live = ZLayer.fromFunction(InputChannelLive.apply)
+  val live: ZLayer[Logger & InputStream, Nothing, InputChannel] =
+    ZLayer.derive[InputChannelLive]
 
 private case class InvalidInput(input: String, error: String)
 
-private case class InputChannelLive(logger: Logger, inputStream: InputStream) extends InputChannel:
+private class InputChannelLive(logger: Logger, inputStream: InputStream) extends InputChannel:
   val partitionInputs = inputStream.stream
     .tap(str => logger.debug(s"read: $str"))
     .collectZIO {

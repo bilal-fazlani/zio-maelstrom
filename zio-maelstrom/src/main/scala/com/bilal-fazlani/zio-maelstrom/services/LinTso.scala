@@ -15,9 +15,9 @@ object LinTso:
     ZIO.serviceWithZIO(_.ts(timeout))
 
   private[zioMaelstrom] val live: ZLayer[MessageSender & MessageIdStore, Nothing, LinTso] =
-    ZLayer.fromFunction(LinTsoImpl.apply)
+    ZLayer.derive[LinTsoImpl]
 
-private case class LinTsoImpl(sender: MessageSender, messageIdStore: MessageIdStore) extends LinTso:
+private class LinTsoImpl(sender: MessageSender, messageIdStore: MessageIdStore) extends LinTso:
   def ts(timeout: Duration): ZIO[Any, AskError, Int] =
     messageIdStore.next.flatMap { messageId =>
       sender.ask[Ts, TsOk](Ts(messageId), NodeId("lin-tso"), timeout).map(_.ts)
