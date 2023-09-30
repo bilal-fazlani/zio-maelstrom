@@ -25,17 +25,14 @@ private[zioMaelstrom] trait CallbackRegistry:
   def getState: ZIO[Any, Nothing, Map[CallbackId, TimedPromise]]
 
 private[zioMaelstrom] object CallbackRegistry:
-  val live: ZLayer[Logger, Nothing, CallbackRegistryLive] = {
-    val callbackRegistry =
-      ZLayer.fromZIO(ConcurrentMap.empty[CallbackId, TimedPromise])
-    callbackRegistry >>> ZLayer.fromFunction(CallbackRegistryLive.apply)
-  }
+  val live: ZLayer[Logger, Nothing, CallbackRegistry] =
+    ZLayer(ConcurrentMap.empty[CallbackId, TimedPromise]) >>> ZLayer.derive[CallbackRegistryLive]
 
 private case class CallbackId(messageId: MessageId, remote: NodeId) {
   override def toString: String = s"CallbackId(messageId=$messageId, remote=$remote)"
 }
 
-private case class CallbackRegistryLive(
+private class CallbackRegistryLive(
     callbackRegistry: ConcurrentMap[CallbackId, TimedPromise],
     logger: Logger
 ) extends CallbackRegistry:

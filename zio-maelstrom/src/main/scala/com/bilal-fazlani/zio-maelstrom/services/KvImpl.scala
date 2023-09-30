@@ -24,7 +24,7 @@ private[zioMaelstrom] trait KvService:
       timeout: Duration
   ): ZIO[Any, AskError, Unit]
 
-private[zioMaelstrom] case class KvImpl(
+private[zioMaelstrom] class KvImpl(
     private val remote: NodeId,
     private val sender: MessageSender,
     private val messageIdStore: MessageIdStore

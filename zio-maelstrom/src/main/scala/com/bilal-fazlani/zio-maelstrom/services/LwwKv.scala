@@ -25,7 +25,7 @@ object LwwKv:
     ZIO.serviceWithZIO[LwwKv](_.cas(key, from, to, createIfNotExists, timeout))
 
   private[zioMaelstrom] val live: ZLayer[MessageSender & MessageIdStore, Nothing, LwwKv] =
-    ZLayer.fromZIO(
+    ZLayer(
       for
         sender         <- ZIO.service[MessageSender]
         messageIdStore <- ZIO.service[MessageIdStore]

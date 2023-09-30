@@ -23,5 +23,5 @@ object Main extends ZIOAppDefault {
     } yield ()
   }
 
-  val run = handler.provide(MaelstromRuntime.live, ZLayer.fromZIO(Ref.make(0)))
+  val run = handler.provide(MaelstromRuntime.live, ZLayer(Ref.make(0)))
 }

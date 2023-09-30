@@ -11,7 +11,7 @@ object InputStream:
   val stdIn: ZLayer[Any, Nothing, InputStream] = ZLayer.succeed(StdIn)
 
   def file(path: Path): ZLayer[Logger, Nothing, InputStream] =
-    ZLayer.succeed(path) >>> ZLayer.fromFunction(File.apply)
+    ZLayer.succeed(path) >>> ZLayer.derive[File]
 
   val queue: ZLayer[Queue[String] & Logger, Nothing, InputStream] =
     val func = (queue: Queue[String], logger: Logger) => Stream(ZStream.fromQueue(queue), logger)

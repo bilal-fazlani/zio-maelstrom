@@ -26,7 +26,7 @@ private[zioMaelstrom] object MessageSender:
   val live
       : ZLayer[Initialisation & OutputChannel & CallbackRegistry & Logger, Nothing, MessageSender] =
     ZLayer
-      .fromFunction(MessageSenderLive.apply)
+      .derive[MessageSenderLive]
 
   def send[A <: Sendable: JsonEncoder](body: A, to: NodeId): URIO[MessageSender, Unit] = ZIO
     .serviceWithZIO[MessageSender](_.send(body, to))
@@ -37,7 +37,7 @@ private[zioMaelstrom] object MessageSender:
       timeout: Duration
   ): ZIO[MessageSender, AskError, Res] = ZIO.serviceWithZIO[MessageSender](_.ask(body, to, timeout))
 
-private case class MessageSenderLive(
+private class MessageSenderLive(
     init: Initialisation,
     stdout: OutputChannel,
     callbackRegistry: CallbackRegistry,

@@ -9,8 +9,8 @@ private[zioMaelstrom] object MessageIdStore:
   val next: ZIO[MessageIdStore, Nothing, MessageId] = ZIO.serviceWithZIO(_.next)
 
   val live: ZLayer[Any, Nothing, MessageIdStore] =
-    ZLayer.fromZIO(Ref.make(0)) >>> ZLayer.fromFunction(MessageIdStoreImpl.apply)
+    ZLayer(Ref.make(0)) >>> ZLayer.derive[MessageIdStoreImpl]
 
-private case class MessageIdStoreImpl(ref: Ref[Int]) extends MessageIdStore:
+private class MessageIdStoreImpl(ref: Ref[Int]) extends MessageIdStore:
   def next: ZIO[Any, Nothing, MessageId] =
     ref.updateAndGet(_ + 1).map(MessageId(_))

@@ -9,14 +9,13 @@ trait RequestHandler:
   def handle[R, I: JsonDecoder](handler: Handler[R, I]): ZIO[R & MaelstromRuntime, Nothing, Unit]
 
 private[zioMaelstrom] object RequestHandler:
-  val live
-      : ZLayer[Initialisation & Logger & MessageSender & Settings, Nothing, RequestHandlerLive] =
-    ZLayer.fromFunction(RequestHandlerLive.apply)
+  val live: ZLayer[Initialisation & Logger & MessageSender & Settings, Nothing, RequestHandler] =
+    ZLayer.derive[RequestHandlerLive]
 
   def handle[R, I: JsonDecoder](handler: Handler[R, I]): ZIO[R & MaelstromRuntime, Nothing, Unit] =
     ZIO.serviceWithZIO[RequestHandler](_.handle(handler))
 
-private case class RequestHandlerLive(
+private class RequestHandlerLive(
     initialisation: Initialisation,
     logger: Logger,
     messageSender: MessageSender,

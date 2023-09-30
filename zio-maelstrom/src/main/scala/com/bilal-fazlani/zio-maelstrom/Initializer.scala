@@ -3,7 +3,6 @@ package com.bilalfazlani.zioMaelstrom
 import zio.*
 import zio.stream.{ZStream, ZSink}
 import zio.json.JsonDecoder
-import java.lang.{System => JSystem}
 import java.time.OffsetDateTime
 
 private[zioMaelstrom] type MessageStream = ZStream[Any, Nothing, GenericMessage]
@@ -14,15 +13,15 @@ private[zioMaelstrom] case class Initialisation(context: Context, inputs: Inputs
 
 private[zioMaelstrom] object Initialisation:
   val run: ZLayer[Scope & Logger & InputChannel & OutputChannel, Nothing, Initialisation] = ZLayer
-    .fromFunction(InitializerLive.apply)
-    .flatMap(initializer => ZLayer.fromZIO(initializer.get.initialize))
+    .derive[InitializerLive]
+    .flatMap(initializer => ZLayer(initializer.get.initialize))
 
   def fake(context: Context): ZLayer[InputChannel & Logger & Scope, Nothing, Initialisation] =
     ZLayer
-      .fromFunction(TestInitializer.apply)
-      .flatMap(x => ZLayer.fromZIO(x.get.initialize(context)))
+      .derive[TestInitializer]
+      .flatMap(x => ZLayer(x.get.initialize(context)))
 
-private case class InitializerLive(
+private class InitializerLive(
     logger: Logger,
     outputChannel: OutputChannel,
     inputChannel: InputChannel

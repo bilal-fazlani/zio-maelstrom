@@ -25,7 +25,7 @@ object SeqKv:
     ZIO.serviceWithZIO[SeqKv](_.cas(key, from, to, createIfNotExists, timeout))
 
   private[zioMaelstrom] val live: ZLayer[MessageSender & MessageIdStore, Nothing, SeqKv] =
-    ZLayer.fromZIO(
+    ZLayer(
       for
         sender         <- ZIO.service[MessageSender]
         messageIdStore <- ZIO.service[MessageIdStore]
