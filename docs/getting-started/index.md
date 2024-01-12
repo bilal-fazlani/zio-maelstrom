@@ -16,7 +16,7 @@ The challenges are built on top of a platform called [:simple-github: Maelstrom]
 <div markdown="1" class="quote">
 <div markdown="1" class="quotation-mark">“</div>
 <div markdown="1" class="quote-content">
-ZIO-Maelstrom is a high level Scala driver for Maelstrom which abstracts away the low level details of the platform and let you focus on solving distributed systems challenges
+ZIO-Maelstrom is a high level Scala driver for Maelstrom which abstracts away the low level details of the platform and let's you focus on solving distributed systems challenges
 </div>
 </div>
 
