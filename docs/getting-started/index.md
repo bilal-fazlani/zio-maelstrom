@@ -27,13 +27,44 @@ ZIO-Maelstrom is a high level Scala driver for Maelstrom which abstracts away th
 
 ## Prerequisites
 
-The first thing to do is to [download and setup](https://github.com/jepsen-io/maelstrom/blob/main/doc/01-getting-ready/index.md#getting-ready) the Maelstrom CLI. It can be downloaded from [here](https://github.com/jepsen-io/maelstrom/releases/latest)
+### 1. Java
 
-Since Maelstrom is Closure program, you will need JVM installed on your machine. You will also need graphviz & gnuplot.
+Since Maelstrom is Closure program, you will need JVM installed on your machine. This templates makes use of graalvm native image to create OS native executable files for improved node performance. I have used [sdkman](https://sdkman.io) to install java.
 
 ```bash
-brew install openjdk graphviz gnuplot
+sdk install java 21.0.2-graal
 ```
+
+### 2. SBT
+
+SBT is a build tool for Scala projects.
+
+```bash
+brew install sbt
+```
+
+### 3. Maelstrom
+
+It can be downloaded from [here](https://github.com/jepsen-io/maelstrom/releases/latest)
+
+!!! important warning
+    Ensure that maelstrom is added in your `PATH` variable so it can be run using `maelstrom` command from anywhere
+
+You will also need graphviz & gnuplot. These are maelstrom dependencies for visualizing the simulation results.
+
+```bash
+brew install graphviz gnuplot
+```
+
+### 4. Coursier
+
+Coursier is the Scala application and artifact manager. You can download it from [here](https://get-coursier.io/docs/cli-installation)
+
+```bash
+brew install coursier/formulas/coursier
+```
+
+Verify that it is available in your `PATH` variable and you can running it using `coursier` command
 
 ## Get started using template
 
@@ -47,64 +78,155 @@ The template contains
 - [x] empty directory structure for all the solutions
 - [x] scripts to compile solutions using graalvm native image
 - [x] scripts to run solutions with expected workload
- 
-You can find the instructions to use it in the [README](https://github.com/bilal-fazlani/gossip-glomers-scala-template#readme) of the template project
 
----
+Create a new project using the template repository or clone the repository
 
-## Get started from scratch 
+!!! important warning
+    If you have not installed graalvm using [sdkman](https://sdkman.io), please update "nativeImageGraalHome" in build.sbt to point to your graalvm installation directory. You may have to install `native-image` component using `gu install native-image` command if it is not already installed
 
-Create an sbt project with Scala 3 and add the following dependency:
+Echo challenge for example, has `echo/src/main/scala/gossipGlomers/Main.scala` as shown below
 
-![Sonatype Nexus (Releases)](https://img.shields.io/nexus/r/com.bilal-fazlani/zio-maelstrom_3?color=%23099C05&label=STABLE%20VERSION&server=https%3A%2F%2Foss.sonatype.org&style=for-the-badge)
+=== "Template"
+    ```scala
+    package gossipGlomers
 
-```scala
-libraryDependencies += "com.bilal-fazlani" %% "zio-maelstrom" % "<VERSION>"
-```
+    import zio.ZIOAppDefault
 
-**Creating a node**
+    object Main extends ZIOAppDefault {
 
-A node is a process that can receive messages and respond to them. It can also send messages to other nodes. Take a look at [Challenge #1: Echo](https://fly.io/dist-sys/1/) to understand the basics of a node. This node is implemented in Go. You can find an equivalent implementation in Scala [here](echo.md)
+      def run = ???
 
-**Running a node**
+    }
+    ```
+=== "Solution"
+    ```scala
+    package gossipGlomers
 
-Maelstrom requires a binary executable file to launch a node. There are several ways to create a binary executable file
+    import zio.*
+    import zio.json.*
+    import com.bilalfazlani.zioMaelstrom.*
 
-***Option 1. Create a fat JAR using [sbt-assembly](https://www.baeldung.com/scala/sbt-fat-jar) plugin***
-  
-This is very simple to use, but the resulting JAR does not contain any preamble so you have to run it using `java -jar` command. This is not ideal for Maelstrom because it requires a binary executable file. Because of this reason, we have to create wrapper scripts like:
+    case class Echo(echo: String, msg_id: MessageId) extends NeedsReply derives JsonCodec
+
+    case class EchoOk(in_reply_to: MessageId, echo: String, `type`: String = "echo_ok") extends Sendable, Reply
+        derives JsonCodec
+
+    object Main extends ZIOAppDefault {
+
+      def handler = receive[Echo] { 
+        case Echo(echo, msg_id) => reply(EchoOk(msg_id, echo))
+      }
+
+      def run = handler.provideSome[Scope](
+        MaelstromRuntime.live(Settings(logLevel = NodeLogLevel.Debug))
+      )
+    }
+    ```
+
+After writing the solution, we can run the solution using either using a JVM process or a native image
+
+## Running the simulation
+
+### Create and run a fat JAR
+
+=== "Commands"
+    ```bash
+    # This command will compile and create a fat jar and a runner script
+    sbt "echo/bootstrap"
+
+    # This command will run maelstraom with appropriate work load arguments
+    ./echo/target/testjar.sh
+    ```
+=== "Output"
+    ```
+    jepsen.core {:perf {:latency-graph {:valid? true},
+            :rate-graph {:valid? true},
+            :valid? true},
+    :timeline {:valid? true},
+    :exceptions {:valid? true},
+    :stats {:valid? true,
+            :count 45,
+            :ok-count 45,
+            :fail-count 0,
+            :info-count 0,
+            :by-f {:echo {:valid? true,
+                          :count 45,
+                          :ok-count 45,
+                          :fail-count 0,
+                          :info-count 0}}},
+    :availability {:valid? true, :ok-fraction 1.0},
+    :net {:all {:send-count 92,
+                :recv-count 92,
+                :msg-count 92,
+                :msgs-per-op 2.0444446},
+          :clients {:send-count 92, :recv-count 92, :msg-count 92},
+          :servers {:send-count 0,
+                    :recv-count 0,
+                    :msg-count 0,
+                    :msgs-per-op 0.0},
+          :valid? true},
+    :workload {:valid? true, :errors ()},
+    :valid? true}
+    
+    
+    Everything looks good! ヽ(‘ー`)ノ
+    ```
+
+### Create and run a graalvm native image
+
+=== "Commands"
+    ```bash
+    # This command will run a reduced workload to generate graalvm native reflection configurations
+    # Those configurations will be stored in resources/META-INF/native-image dir of the project
+    sbt "echo/maelstromRunAgent"
+
+    # This command will compile and create a native image and a runner script
+    # It will use the reflection configurations generated in previous step
+    sbt "echo/nativePackage"
+
+    # This command will run maelstraom with appropriate work load arguments
+    ./echo/target/test.sh
+    ```
+=== "Output"
+    ```
+    jepsen.core {:perf {:latency-graph {:valid? true},
+            :rate-graph {:valid? true},
+            :valid? true},
+    :timeline {:valid? true},
+    :exceptions {:valid? true},
+    :stats {:valid? true,
+            :count 44,
+            :ok-count 44,
+            :fail-count 0,
+            :info-count 0,
+            :by-f {:echo {:valid? true,
+                          :count 44,
+                          :ok-count 44,
+                          :fail-count 0,
+                          :info-count 0}}},
+    :availability {:valid? true, :ok-fraction 1.0},
+    :net {:all {:send-count 90,
+                :recv-count 90,
+                :msg-count 90,
+                :msgs-per-op 2.0454545},
+          :clients {:send-count 90, :recv-count 90, :msg-count 90},
+          :servers {:send-count 0,
+                    :recv-count 0,
+                    :msg-count 0,
+                    :msgs-per-op 0.0},
+          :valid? true},
+    :workload {:valid? true, :errors ()},
+    :valid? true}
+
+
+    Everything looks good! ヽ(‘ー`)ノ
+    ```
+
+## Maelstrom reports
+
+To view run results, run
 
 ```bash
-#!/bin/bash
-if [[ $BASH_SOURCE = */* ]]; then
-DIR=${BASH_SOURCE%/*}/
-else
-DIR=./
-fi
-exec java -jar "$DIR/echo.jar"
-``` 
-
-And then using this script to run maelstrom simulation
-  
-***Create a fat JAR using [Coursier bootstrap](https://get-coursier.io/docs/cli-bootstrap)***
-  
-I have tried using coursier bootstrap and it is better than sbt-assembly because it creates a preamble in the JAR file. This means that you can run the JAR file directly without any wrapper scripts. But we still have a problem. Challenges which require a lot of nodes, for example [Challenge #3d](https://fly.io/dist-sys/3d/), don't work well because of JVM startup overhead time.
-
-***Create an OS native app using [sbt-native-image](https://github.com/scalameta/sbt-native-image) plugin***
-
-This is the best option. Unfortunately also the most complicated one among the three. sbt-native-image does help you create a native executable file, but it also requires reflection configurations. native image agent can help you generate the configurations automatically, but there is still some work to be done. You first have to run the solution with agent with basic load to generate the configs. Then you can create the native executable file. The [template project](#get-started-using-template) has scripts to do automate this process.
-
-
-Once you have an executable file, you can run it using the Maelstrom CLI. 
-
-```bash
-./maelstrom test -w echo \ # (1)!
-  --bin ./target/echo \ # (2)!
-  --node-count 1 \ # (3)!
-  --time-limit 10 \ # (4)!
+# This command starts a web server on port 8080 where you can view the results
+maelstrom serve
 ```
-
-1.  `-w` is the workload. Each challenge may have a different workload
-2.  `--bin` is the path to the executable file
-3.  `--node-count` is the number of nodes to run
-4.  `--time-limit` specifies the duration of simulation in seconds
