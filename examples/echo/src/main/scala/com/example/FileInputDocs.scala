@@ -14,9 +14,9 @@ object Main extends ZIOAppDefault {
   val program = receive[Ping](ping => reply(Pong(ping.msg_id)))
 
   val run = program.provide(
-    MaelstromRuntime.usingFile(
-      "examples" / "echo" / "fileinput.txt",
-      Settings(logLevel = NodeLogLevel.Debug)
+    MaelstromRuntime.live(
+      _.inputFile("examples" / "echo" / "fileinput.txt")
+        .logLevel(NodeLogLevel.Debug)
     )
   )
 }

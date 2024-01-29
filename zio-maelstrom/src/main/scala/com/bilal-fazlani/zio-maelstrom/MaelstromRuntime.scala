@@ -12,7 +12,7 @@ type MaelstromRuntime = Initialisation & RequestHandler & MessageSender & Messag
 
 object MaelstromRuntime:
   // doc_incluide {
-  def live(
+  private def live(
       settings: Settings,
       inputStream: ZLayer[Logger, Nothing, InputStream],
       initContext: Option[Context]
@@ -42,20 +42,21 @@ object MaelstromRuntime:
       ResponseHandler.start
     )
   }
+  // }
 
   val live: ZLayer[Any, Nothing, MaelstromRuntime] = live(Settings(), InputStream.stdIn, None)
 
-  def live(settings: Settings): ZLayer[Any, Nothing, MaelstromRuntime] =
-    live(settings, InputStream.stdIn, None)
-  // }
+  def live(build: RuntimeBuilder => RuntimeBuilder): ZLayer[Any, Nothing, MaelstromRuntime] =
+    val builder = build(RuntimeBuilder())
+    live(builder.settings, builder.inputStream, builder.initContext)
 
-  def usingFile(path: Path)                     = live(Settings(), InputStream.file(path), None)
-  def usingFile(path: Path, settings: Settings) = live(settings, InputStream.file(path), None)
-  def usingFile(path: Path, context: Context) =
-    live(Settings(), InputStream.file(path), Some(context))
-  def usingFile(path: Path, settings: Settings, context: Context) =
-    live(settings, InputStream.file(path), Some(context))
-
-  def usingContext(context: Context) = live(Settings(), InputStream.stdIn, Some(context))
-  def usingContext(context: Context, settings: Settings) =
-    live(settings, InputStream.stdIn, Some(context))
+case class RuntimeBuilder(
+    private[zioMaelstrom] val settings: Settings = Settings(),
+    private[zioMaelstrom] val inputStream: ZLayer[Logger, Nothing, InputStream] = InputStream.stdIn,
+    private[zioMaelstrom] val initContext: Option[Context] = None
+):
+  def inputFile(filePath: Path)                = copy(inputStream = InputStream.file(filePath))
+  def context(me: NodeId, others: Set[NodeId]) = copy(initContext = Some(Context(me, others)))
+  def logLevel(logLevel: NodeLogLevel)         = copy(settings = settings.copy(logLevel = logLevel))
+  def logFormat(logFormat: LogFormat) = copy(settings = settings.copy(logFormat = logFormat))
+  def concurrency(concurrency: Int)   = copy(settings = settings.copy(concurrency = concurrency))

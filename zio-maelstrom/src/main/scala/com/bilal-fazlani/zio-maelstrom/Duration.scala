@@ -11,13 +11,13 @@ private enum TimeUnit(val multiplier: Int):
   case Hour        extends TimeUnit(60 * 60 * 1000)
   case Day         extends TimeUnit(24 * 60 * 60 * 1000)
 
-private[zioMaelstrom] case class TimeValue(value: Double):
+private case class TimeValue(value: Double):
   override def toString: String =
     val formatter = DecimalFormat("0.##")
     formatter.format(value)
 
-private[zioMaelstrom] case class TimeSegment private (value: TimeValue, unit: TimeUnit):
-  val isEmpty: Boolean = value.value == 0
+private case class TimeSegment private (value: TimeValue, unit: TimeUnit):
+  private[zioMaelstrom] val isEmpty: Boolean = value.value == 0
 
   override def toString: String =
     val unitRendered = unit.toString.toLowerCase
@@ -28,10 +28,10 @@ private[zioMaelstrom] case class TimeSegment private (value: TimeValue, unit: Ti
         s"$value ${unitRendered}s"
     }
 
-private[zioMaelstrom] object TimeSegment:
-  val zero = TimeSegment(TimeValue(0), TimeUnit.Millisecond)
+private object TimeSegment:
+  private[zioMaelstrom] val zero = TimeSegment(TimeValue(0), TimeUnit.Millisecond)
 
-  def apply(value: TimeValue, unit: TimeUnit): TimeSegment =
+  private[zioMaelstrom] def apply(value: TimeValue, unit: TimeUnit): TimeSegment =
     (value, unit) match {
       case (TimeValue(millis), TimeUnit.Millisecond) if 1000 - millis < 0.01 =>
         new TimeSegment(TimeValue(1), TimeUnit.Second)

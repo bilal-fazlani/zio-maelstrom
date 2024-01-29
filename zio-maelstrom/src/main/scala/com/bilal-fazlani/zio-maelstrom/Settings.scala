@@ -27,7 +27,7 @@ enum LogFormat:
   *   Concurrency level for processing messages. Default is 1024. This means 1024 request messages
   *   (receive api) + 1024 response messages (ask api) = 2048 messages can be processed in parallel.
   */
-case class Settings(
+private[zioMaelstrom] case class Settings(
     logLevel: NodeLogLevel = NodeLogLevel.Info,
     logFormat: LogFormat = LogFormat.Colored,
     concurrency: Int = 1024

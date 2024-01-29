@@ -17,12 +17,12 @@ object CustomSettingsDocs {
 
     val nodeProgram: ZIO[MaelstromRuntime, Nothing, Unit] = ???
 
-    val settings = Settings(
-      logLevel = NodeLogLevel.Debug,
-      logFormat = LogFormat.Plain,
-      concurrency = 1
+    val run = nodeProgram.provide(
+      MaelstromRuntime.live(
+        _.logLevel(NodeLogLevel.Debug)
+          .logFormat(LogFormat.Plain)
+          .concurrency(1)
+      )
     )
-
-    val run = nodeProgram.provide(MaelstromRuntime.live(settings))
   }
 }

@@ -12,6 +12,6 @@ object MainApplication extends ZIOAppDefault {
   yield ()
 
   val run = program.provide(
-    MaelstromRuntime.live(Settings(logLevel = NodeLogLevel.Debug))
+    MaelstromRuntime.live(_.logLevel(NodeLogLevel.Debug))
   )
 }
