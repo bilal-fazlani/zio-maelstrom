@@ -117,9 +117,7 @@ Echo challenge for example, has `echo/src/main/scala/gossipGlomers/Main.scala` a
         case Echo(echo, msg_id) => reply(EchoOk(msg_id, echo))
       }
 
-      def run = handler.provideSome[Scope](
-        MaelstromRuntime.live(Settings(logLevel = NodeLogLevel.Debug))
-      )
+      def run = handler.provideSome[Scope](MaelstromRuntime.live)
     }
     ```
 

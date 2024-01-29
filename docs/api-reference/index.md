@@ -282,6 +282,8 @@ Above program, when initialized, will output the following:
 
 ## Testing
 
+**Using static input files:**
+
 When developing a solution, you sometimes want to test it without maelstrom. And manually entering the same inputs every time can be time consuming. You can configure the runtime to read the input from a file.
 
 <!--codeinclude-->
@@ -298,3 +300,21 @@ This will run the entire program with the input from the file. With file input y
 
 !!! tip
     When debugging an issue, you can use file inputs, set log level to debug and set concurrency to 1. This might help you isolate the issue.
+
+**Using a fake context:**
+
+Context is combination of node's id and the list of other nodes in the cluster. Context is received in the init message (sent by maelstrom server) at the start of the node.
+
+When testing a node without maelstrom, if you are using a static input file, you have to manually create the context by including an init message in the file as shown above. When using stdIn you have manually enter the same message in terminal.
+
+You can hardcode a "Fake" context in your program and use it for testing. This will allow you to test your program without maelstrom. Here's an example:
+
+<!--codeinclude-->
+[Fake Context](../../examples/echo/src/main/scala/com/example/ContextDocs.scala) inside_block:ContextDocs
+<!--/codeinclude-->
+
+This program will not wait for any input for initialization. Output:
+
+```
+initialised with fake context: Context(node1,Set(node2, node3, node4))
+```
