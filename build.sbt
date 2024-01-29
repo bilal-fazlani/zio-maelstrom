@@ -1,7 +1,7 @@
 import sbtwelcome._
 import scala.sys.process._
 
-val scala3Version = "3.3.0"
+val scala3Version = "3.3.1"
 
 ThisBuild / scalaVersion     := scala3Version
 ThisBuild / organization     := "com.bilal-fazlani"
