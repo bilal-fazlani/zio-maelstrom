@@ -44,7 +44,7 @@ private class InitializerLive(
         case gap if gap.toSeconds < 60  => logger.warn(_)
         case _                          => logger.error(_)
       }
-      _ <- loggerf(s"init message not received in ${gap.renderDetailed}")
+      _ <- loggerf(s"init message not received in ${gap.renderDecimal}")
     } yield ()
 
   val initialize: ZIO[Scope, Nothing, Initialisation] =

@@ -22,8 +22,10 @@ private[zioMaelstrom] case class TimeSegment private (value: TimeValue, unit: Ti
   override def toString: String =
     val unitRendered = unit.toString.toLowerCase
     this match {
-      case TimeSegment(TimeValue(1), unit) => s"1 $unitRendered"
-      case TimeSegment(value, unit)        => s"$value ${unitRendered}s"
+      case TimeSegment(TimeValue(1), unit) =>
+        s"1 $unitRendered"
+      case TimeSegment(value, unit) =>
+        s"$value ${unitRendered}s"
     }
 
 private[zioMaelstrom] object TimeSegment:
@@ -39,8 +41,9 @@ private[zioMaelstrom] object TimeSegment:
         new TimeSegment(TimeValue(1), TimeUnit.Hour)
       case (TimeValue(hours), TimeUnit.Hour) if 24 - hours < 0.01 =>
         new TimeSegment(TimeValue(1), TimeUnit.Day)
-      case (_) =>
-        new TimeSegment(value, unit)
+      case (TimeValue(hours), unit) =>
+        val v = BigDecimal(value.value).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
+        new TimeSegment(TimeValue(v), unit)
     }
 
 extension (duration: Duration)
@@ -71,8 +74,6 @@ extension (duration: Duration)
 
   def renderDetailed: String =
     nonZeroParts.map(_.toString).mkString(" ")
-
-  def renderApproximate: String = nonZeroParts.head.toString
 
   def renderDecimal: String = {
     val millis          = nonZeroParts.map(x => x.value.value * x.unit.multiplier).sum
