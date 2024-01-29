@@ -61,7 +61,7 @@ private class CallbackRegistryLive(
             for
               gap <- p.gap
               _ <- logger.debug(
-                s"callback received from ${callbackId.remote} for message ${callbackId.messageId} in ${gap.renderDetailed}"
+                s"callback received from ${callbackId.remote} for message ${callbackId.messageId} in ${gap.renderDecimal}"
               )
               _ <- p.promise.succeed(message)
             yield ()
@@ -100,7 +100,7 @@ private class CallbackRegistryLive(
             for
               gap <- p.gap
               _ <- logger.warn(
-                s"callback timed out for message ${callbackId.messageId} from ${callbackId.remote} after ${gap.renderDetailed}"
+                s"callback timed out for message ${callbackId.messageId} from ${callbackId.remote} after ${gap.renderDecimal}"
               )
               _ <- p.promise.fail(Timeout(callbackId.messageId, callbackId.remote, timeout))
             yield ()

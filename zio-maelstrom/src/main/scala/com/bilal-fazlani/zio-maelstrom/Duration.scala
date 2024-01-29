@@ -72,10 +72,7 @@ extension (duration: Duration)
       case head :: next => NonEmptyChunk(head, next*)
       case Nil          => NonEmptyChunk(TimeSegment.zero)
 
-  def renderDetailed: String =
-    nonZeroParts.map(_.toString).mkString(" ")
-
-  def renderDecimal: String = {
+  private[zioMaelstrom] def renderDecimal: String = {
     val millis          = nonZeroParts.map(x => x.value.value * x.unit.multiplier).sum
     val firstUnit       = nonZeroParts.head.unit
     val firstMultiplier = firstUnit.multiplier
