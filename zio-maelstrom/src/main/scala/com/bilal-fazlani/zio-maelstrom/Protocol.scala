@@ -91,7 +91,9 @@ object MessageId:
 
 // format: off  
  // errorCodes {
-sealed trait ErrorCode(val code: Int, val definite: Boolean)
+sealed trait ErrorCode(val code: Int, val definite: Boolean) {
+  override def toString: String = s"Error: ${this.getClass.getSimpleName.replace("$","")}, code: $code"
+}
 
 object ErrorCode:
   /**

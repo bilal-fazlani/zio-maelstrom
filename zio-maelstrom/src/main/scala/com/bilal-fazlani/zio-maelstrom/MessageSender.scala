@@ -68,7 +68,10 @@ private class MessageSenderLive(
             logger
               .error(s"decoding failed for response from ${to} for message id ${body.msg_id}".red)
           case e: ErrorMessage =>
-            logger.error(s"error response received from: ${to} for message id ${body.msg_id}")
+            logger
+              .error(
+                s"error response (${e.code}) received from ${to} for message id ${body.msg_id}"
+              )
         }
       } else {
         ZIO
