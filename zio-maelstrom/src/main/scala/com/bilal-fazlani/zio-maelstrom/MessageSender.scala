@@ -66,7 +66,7 @@ private class MessageSenderLive(
         error.fold(ZIO.fail, ZIO.fail).tapError {
           case DecodingFailure(e, _) =>
             logger
-              .error(s"decoding failed for response from ${to} for message id ${body.msg_id}".red)
+              .error(s"decoding failed for response from ${to} for message id ${body.msg_id}")
           case e: ErrorMessage =>
             logger
               .error(
