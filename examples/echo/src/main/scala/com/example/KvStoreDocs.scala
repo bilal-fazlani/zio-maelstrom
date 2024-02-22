@@ -3,7 +3,7 @@ package com.example.kvstore
 import com.bilalfazlani.zioMaelstrom.*
 import zio.*
 
-object SeqKvExample {
+object SeqKvExample extends MaelstromNode {
   val newMessageId = Random.nextInt.map(MessageId(_))
 
   val program: ZIO[MaelstromRuntime, AskError, Unit] = for

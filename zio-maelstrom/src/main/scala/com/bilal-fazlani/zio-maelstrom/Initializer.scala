@@ -12,23 +12,22 @@ private[zioMaelstrom] case class Inputs(responseStream: MessageStream, messageSt
 private[zioMaelstrom] case class Initialisation(context: Context, inputs: Inputs)
 
 private[zioMaelstrom] object Initialisation:
-  val run: ZLayer[Scope & Logger & InputChannel & OutputChannel, Nothing, Initialisation] = ZLayer
+  val run: ZLayer[Scope & InputChannel & OutputChannel, Nothing, Initialisation] = ZLayer
     .derive[InitializerLive]
     .flatMap(initializer => ZLayer(initializer.get.initialize))
 
-  def fake(context: Context): ZLayer[InputChannel & Logger & Scope, Nothing, Initialisation] =
+  def fake(context: Context): ZLayer[InputChannel & Scope, Nothing, Initialisation] =
     ZLayer
       .derive[TestInitializer]
       .flatMap(x => ZLayer(x.get.initialize(context)))
 
 private class InitializerLive(
-    logger: Logger,
     outputChannel: OutputChannel,
     inputChannel: InputChannel
 ):
   private val preInitMessages = for {
     initialTime <- Clock.currentDateTime
-    _           <- logger.debug("node started. awaiting init message...")
+    _           <- ZIO.logDebug("node started. awaiting init message...")
     schedule = Schedule.exponential(5.seconds, 2)
     printFiber <- (ZIO.sleep(5.seconds) *> logInitDelayWarning(initialTime).repeat(schedule)).fork
   } yield printFiber
@@ -40,9 +39,9 @@ private class InitializerLive(
         currentTime.toInstant.toEpochMilli - initialTime.toInstant.toEpochMilli
       )
       loggerf = gap match {
-        case gap if gap.toSeconds <= 10 => logger.info(_)
-        case gap if gap.toSeconds < 60  => logger.warn(_)
-        case _                          => logger.error(_)
+        case gap if gap.toSeconds <= 10 => ZIO.logInfo(_)
+        case gap if gap.toSeconds < 60  => ZIO.logWarning(_)
+        case _                          => ZIO.logError(_)
       }
       _ <- loggerf(s"init message not received in ${gap.renderDecimal}")
     } yield ()
@@ -83,22 +82,22 @@ private class InitializerLive(
     )
     for {
       _ <- outputChannel.transport(replyMessage)
-      _ <- logger.info("initialised")
+      _ <- ZIO.logInfo("initialised")
     } yield ()
 
   private def handleInitDecodingError(genericMessage: GenericMessage) =
-    logger.error(s"could not decode init message from ${genericMessage.raw}")
-      *> logger.warn("please check maelstrom documentation about initialisation message format")
-      *> logger.info(
+    ZIO.logError(s"could not decode init message from ${genericMessage.raw}")
+      *> ZIO.logWarning("please check maelstrom documentation about initialisation message format")
+      *> ZIO.logInfo(
         "https://github.com/jepsen-io/maelstrom/blob/main/doc/protocol.md#initialization"
       )
       *> genericMessage
         .makeError(ErrorCode.MalformedRequest, "init message is malformed")
         .fold(ZIO.unit)(outputChannel.transport(_))
 
-private case class TestInitializer(inputChannel: InputChannel, logger: Logger):
+private case class TestInitializer(inputChannel: InputChannel):
   def initialize(context: Context): ZIO[Scope, Nothing, Initialisation] =
     for
-      _      <- logger.warn(s"initialised with fake context: $context")
+      _      <- ZIO.logWarning(s"initialised with fake context: $context")
       inputs <- inputChannel.partitionInputs
     yield Initialisation(context, inputs)

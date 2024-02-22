@@ -25,7 +25,7 @@ private[zioMaelstrom] trait CallbackRegistry:
   def getState: ZIO[Any, Nothing, Map[CallbackId, TimedPromise]]
 
 private[zioMaelstrom] object CallbackRegistry:
-  val live: ZLayer[Logger, Nothing, CallbackRegistry] =
+  val live: ZLayer[Any, Nothing, CallbackRegistry] =
     ZLayer(ConcurrentMap.empty[CallbackId, TimedPromise]) >>> ZLayer.derive[CallbackRegistryLive]
 
 private case class CallbackId(messageId: MessageId, remote: NodeId) {
@@ -33,8 +33,7 @@ private case class CallbackId(messageId: MessageId, remote: NodeId) {
 }
 
 private class CallbackRegistryLive(
-    callbackRegistry: ConcurrentMap[CallbackId, TimedPromise],
-    logger: Logger
+    callbackRegistry: ConcurrentMap[CallbackId, TimedPromise]
 ) extends CallbackRegistry:
 
   def awaitCallback(
@@ -60,13 +59,13 @@ private class CallbackRegistryLive(
           case Some(p) =>
             for
               gap <- p.gap
-              _ <- logger.debug(
+              _ <- ZIO.logDebug(
                 s"callback received from ${callbackId.remote} for message ${callbackId.messageId} in ${gap.renderDecimal}"
               )
               _ <- p.promise.succeed(message)
             yield ()
           case None =>
-            logger.debug(
+            ZIO.logDebug(
               s"$callbackId not found in callback registry. This could be be because request was timed out or interrupted"
             )
         }
@@ -99,13 +98,13 @@ private class CallbackRegistryLive(
           case Some(p) =>
             for
               gap <- p.gap
-              _ <- logger.warn(
+              _ <- ZIO.logWarning(
                 s"callback timed out for message ${callbackId.messageId} from ${callbackId.remote} after ${gap.renderDecimal}"
               )
               _ <- p.promise.fail(Timeout(callbackId.messageId, callbackId.remote, timeout))
             yield ()
           case None =>
-            logger.warn(
+            ZIO.logWarning(
               s"$callbackId not found in callback registry. This could be due to a bug in the library"
             )
         }

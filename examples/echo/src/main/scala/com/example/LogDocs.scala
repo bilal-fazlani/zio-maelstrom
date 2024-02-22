@@ -3,15 +3,14 @@ package com.example
 import zio.*
 import com.bilalfazlani.zioMaelstrom.*
 
-object MainApplication extends ZIOAppDefault {
-  val program = for
-    _ <- logDebug("Starting node")
-    _ <- logInfo("Received message")
-    _ <- logWarn("Something is wrong")
-    _ <- logError("Something is really wrong")
-  yield ()
+object MainApplication extends MaelstromNode {
 
-  val run = program.provide(
-    MaelstromRuntime.live(_.logLevel(NodeLogLevel.Debug))
-  )
+  override val logLevel = LogLevel.Debug
+
+  def program = for
+    _ <- ZIO.logDebug("Starting node")
+    _ <- ZIO.logInfo("Received message")
+    _ <- ZIO.logWarning("Something is wrong")
+    _ <- ZIO.logError("Something is really wrong")
+  yield ()
 }

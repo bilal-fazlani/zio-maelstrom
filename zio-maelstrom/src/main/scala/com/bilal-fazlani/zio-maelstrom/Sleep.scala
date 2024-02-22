@@ -28,12 +28,12 @@ private[zioMaelstrom] object Sleep:
     durationStr <- strMatch.subgroups.headOption
   } yield durationStr
 
-  def conditionally(logger: Logger, duration: String): ZIO[Any, Nothing, Unit] =
+  def conditionally(duration: String): ZIO[Any, Nothing, Unit] =
     parseDuration(duration).fold(
       err => ZIO.die(Throwable(err.toString)),
       sleep =>
-        logger.info(s"input paused for ${sleep.duration.renderDecimal}") *> ZIO.sleep(
+        ZIO.logInfo(s"input paused for ${sleep.duration.renderDecimal}") *> ZIO.sleep(
           sleep.duration
         ) *>
-          logger.info(s"input resumed")
+          ZIO.logInfo(s"input resumed")
     )

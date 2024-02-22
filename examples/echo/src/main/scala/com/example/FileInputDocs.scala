@@ -4,7 +4,7 @@ import zio.*
 import com.bilalfazlani.zioMaelstrom.*
 import zio.json.*
 
-object Main extends ZIOAppDefault {
+object Main extends MaelstromNode {
 
   case class Ping(msg_id: MessageId) extends NeedsReply derives JsonDecoder
 
@@ -13,10 +13,7 @@ object Main extends ZIOAppDefault {
 
   val program = receive[Ping](ping => reply(Pong(ping.msg_id)))
 
-  val run = program.provide(
-    MaelstromRuntime.live(
-      _.inputFile("examples" / "echo" / "fileinput.txt")
-        .logLevel(NodeLogLevel.Debug)
-    )
-  )
+  override val logLevel: LogLevel = LogLevel.Debug
+
+  override val input = InputStream.file("examples" / "echo" / "fileinput.txt")
 }
