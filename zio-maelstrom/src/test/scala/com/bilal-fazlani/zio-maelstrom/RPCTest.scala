@@ -1,23 +1,14 @@
 package com.bilalfazlani.zioMaelstrom
 
-import zio.test.*
 import zio.*
+import zio.test.*
 import zio.json.*
-import testkit.TestMaelstromRuntime
-import testkit.TestMaelstromRuntime.*
+import testkit.*
 
-object RPCTest extends ZIOSpecDefault {
-  def isCI = sys.env.get("CI").contains("true")
-  override val bootstrap =
-    val logLevel = if isCI then LogLevel.Info else LogLevel.Debug
-    zio.test.testEnvironment ++ Runtime.removeDefaultLoggers ++ ZIOMaelstromLogger.install(
-      LogFormat.Colored,
-      logLevel
-    )
-
+object RPCTest extends MaelstromSpec {
   val settings                  = Settings()
   val context                   = Context(NodeId("n1"), Set(NodeId("n2")))
-  val testRuntime               = TestMaelstromRuntime.layer(settings, context)
+  val tRuntime                  = testRuntime(settings, context)
   def sleep(duration: Duration) = live(ZIO.sleep(duration))
 
   case class Ping(msg_id: MessageId, `type`: String = "ping") extends Sendable, NeedsReply
@@ -38,7 +29,7 @@ object RPCTest extends ZIOSpecDefault {
         assertTrue(state1.contains(CallbackId(MessageId(1), NodeId("n2")))) &&
         assertTrue(outMessage == Message(NodeId("n1"), NodeId("n2"), Ping(MessageId(1)))) &&
         assertTrue(state2.isEmpty))
-        .provide(testRuntime)
+        .provide(tRuntime)
     },
     test("timeout if no response is received") {
       (for {
@@ -54,7 +45,7 @@ object RPCTest extends ZIOSpecDefault {
         assertTrue(outMessage == Message(NodeId("n1"), NodeId("n2"), Ping(MessageId(1)))) &&
         assertTrue(callbackState1.contains(CallbackId(MessageId(1), NodeId("n2")))) &&
         assertTrue(callbackState2.isEmpty))
-        .provide(testRuntime)
+        .provide(tRuntime)
     },
     test("interruption should remove the callback") {
       (for {
@@ -67,7 +58,7 @@ object RPCTest extends ZIOSpecDefault {
         _              <- inputMessage(Pong(MessageId(1)), NodeId("n2"))
       } yield assertTrue(callbackState1.contains(CallbackId(MessageId(1), NodeId("n2")))) &&
         assertTrue(callbackState2.isEmpty))
-        .provide(testRuntime)
+        .provide(tRuntime)
     },
     test("interruption due to another zio failure should remove callback") {
       (for {
@@ -80,7 +71,7 @@ object RPCTest extends ZIOSpecDefault {
         _              <- inputMessage(Pong(MessageId(1)), NodeId("n2"))
       } yield assertTrue(callbackState1.contains(CallbackId(MessageId(1), NodeId("n2")))) &&
         assertTrue(callbackState2.isEmpty))
-        .provide(testRuntime)
+        .provide(tRuntime)
     },
     test("two parallel responses from same node should be awaited concurrently") {
       (for {
@@ -104,7 +95,7 @@ object RPCTest extends ZIOSpecDefault {
           state0.contains(CallbackId(MessageId(1), NodeId("n2"))) &&
             state0.contains(CallbackId(MessageId(2), NodeId("n2")))
         ))
-        .provide(testRuntime)
+        .provide(tRuntime)
     }
   ) @@ TestAspect.timeout(10.seconds) @@ TestAspect.sequential
 }
