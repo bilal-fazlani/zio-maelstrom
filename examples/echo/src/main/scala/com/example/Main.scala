@@ -2,7 +2,6 @@ package com.example.echo
 
 //imports {
 import zio.json.{JsonEncoder, JsonDecoder}
-import zio.{ZIOAppDefault, ZIO}
 import com.bilalfazlani.zioMaelstrom.*
 //}
 
@@ -16,10 +15,7 @@ case class EchoOk(echo: String, in_reply_to: MessageId, `type`: String = "echo_o
     derives JsonEncoder // (4)!
 //}
 
-object Main extends ZIOAppDefault {
-
-  val echoHandler: ZIO[MaelstromRuntime, Nothing, Unit] =
+object Main extends MaelstromNode {
+  val program =
     receive[Echo](msg => reply(EchoOk(echo = msg.echo, in_reply_to = msg.msg_id))) // (1)!
-
-  val run = echoHandler.provide(MaelstromRuntime.live)
 }

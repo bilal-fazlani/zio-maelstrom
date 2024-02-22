@@ -56,7 +56,6 @@ case class ErrorMessage(
 ) extends Sendable
     with Reply
     derives JsonCodec
-
 // }
 
 opaque type NodeId = String
@@ -92,7 +91,7 @@ object MessageId:
 // format: off  
  // errorCodes {
 sealed trait ErrorCode(val code: Int, val definite: Boolean) {
-  override def toString: String = s"Error: ${this.getClass.getSimpleName.replace("$","")}, code: $code"
+  override def toString: String = s"error: ${this.getClass.getSimpleName.replace("$","")}, code: $code"
 }
 
 object ErrorCode:

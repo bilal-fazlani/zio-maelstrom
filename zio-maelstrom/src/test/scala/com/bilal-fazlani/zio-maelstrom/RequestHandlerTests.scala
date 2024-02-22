@@ -3,14 +3,22 @@ package com.bilalfazlani.zioMaelstrom
 import zio.test.*
 import zio.*
 import zio.json.*
-import testkit.TestRuntime
-import testkit.TestRuntime.*
+import testkit.TestMaelstromRuntime
+import testkit.TestMaelstromRuntime.*
 
 object RequestHandlerTest extends ZIOSpecDefault {
-  def isCI        = sys.env.get("CI").contains("true")
-  val settings    = Settings(logLevel = if isCI then NodeLogLevel.Info else NodeLogLevel.Debug)
-  val context     = Context(NodeId("n1"), Set(NodeId("n2")))
-  val testRuntime = TestRuntime.layer(settings, context)
+  def isCI = sys.env.get("CI").contains("true")
+
+  override val bootstrap =
+    val logLevel = if isCI then LogLevel.Info else LogLevel.Debug
+    zio.test.testEnvironment ++ Runtime.removeDefaultLoggers ++ ZIOMaelstromLogger.install(
+      LogFormat.Colored,
+      logLevel
+    )
+
+  val settings                  = Settings()
+  val context                   = Context(NodeId("n1"), Set(NodeId("n2")))
+  val testRuntime               = TestMaelstromRuntime.layer(settings, context)
   def sleep(duration: Duration) = live(ZIO.sleep(duration))
 
   case class Ping(msg_id: MessageId) extends NeedsReply derives JsonCodec

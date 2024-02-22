@@ -4,19 +4,18 @@ package testkit
 import zio.*
 import zio.json.{JsonEncoder, EncoderOps}
 
-type TestRuntime = MaelstromRuntime & Queue[Message[Sendable]] & Queue[String] & CallbackRegistry
+type TestMaelstromRuntime = MaelstromRuntime & Queue[Message[Sendable]] & Queue[String] & CallbackRegistry
 
-object TestRuntime:
+object TestMaelstromRuntime:
   def layer(
       settings: Settings,
       context: Context
-  ): ZLayer[Any, Nothing, TestRuntime] =
-    ZLayer.make[TestRuntime](
+  ): ZLayer[Any, Nothing, TestMaelstromRuntime] =
+    ZLayer.make[TestMaelstromRuntime](
       // pure layers
       ZLayer.succeed(settings),
       Scope.default,
       MessageSender.live,
-      Logger.live,
       RequestHandler.live,
       ZLayer(Queue.unbounded[Message[Sendable]]),
       ZLayer(Queue.unbounded[String]),
@@ -44,9 +43,9 @@ object TestRuntime:
       _     <- queue.offer(Message(from, init.context.me, in).toJson)
     } yield ()
 
-  def getNextMessage: ZIO[TestRuntime, Nothing, Message[Sendable]] =
+  def getNextMessage: ZIO[TestMaelstromRuntime, Nothing, Message[Sendable]] =
     ZIO.serviceWithZIO[Queue[Message[Sendable]]](_.take)
 
   def getCallbackState
-      : ZIO[TestRuntime, Nothing, Map[CallbackId, Promise[AskError, GenericMessage]]] =
+      : ZIO[TestMaelstromRuntime, Nothing, Map[CallbackId, Promise[AskError, GenericMessage]]] =
     ZIO.serviceWithZIO[CallbackRegistry](_.getState.map(_.mapValues(_.promise).toMap))
