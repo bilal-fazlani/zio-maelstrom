@@ -7,6 +7,10 @@ enum NodeContext:
   case Static(me: NodeId, others: Set[NodeId])
 
 trait MaelstromNode extends ZIOAppDefault:
+  extension [R: Tag, E: Tag, A: Tag](zio: ZIO[R & MaelstromRuntime & Scope, E, A]) {
+    protected def provideRemaining[R2, E2](layer: ZLayer[R2, E2, R]) =
+      zio.provideSome[MaelstromRuntime & Scope & R2](layer)
+  }
 
   override final val bootstrap =
     Runtime.removeDefaultLoggers >>> ZIOMaelstromLogger.install(logFormat, logLevel)
@@ -19,16 +23,23 @@ trait MaelstromNode extends ZIOAppDefault:
     */
   def concurrency: Int = 1024
 
-  def logLevel: LogLevel   = LogLevel.Info
+  /** Default log level is Info. This means all debug level logs will not be logged. If you want
+    * logs lower than Info, override this value
+    */
+  def logLevel: LogLevel = LogLevel.Info
+
+  /** There two log formats - Colored and Plain. Default is Colored and uses Ansi colors. If you
+    * want Plain logs, override this value.
+    */
   def logFormat: LogFormat = LogFormat.Colored
 
-  def program: ZIO[Scope & MaelstromRuntime, ?, Unit]
+  def program: ZIO[Scope & MaelstromRuntime, ?, Unit] // todo: what should be error type?
 
   final def run =
     val settings = Settings(concurrency = concurrency)
 
-    val c = context match
+    val ctx = context match
       case NodeContext.Maelstrom          => None
       case NodeContext.Static(me, others) => Some(Context(me, others))
 
-    program.provideSome[Scope](MaelstromRuntime.live(settings, input, c))
+    program.provideSome[Scope](MaelstromRuntime.live(settings, input, ctx))

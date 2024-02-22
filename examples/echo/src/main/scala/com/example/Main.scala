@@ -3,6 +3,7 @@ package com.example.echo
 //imports {
 import zio.json.{JsonEncoder, JsonDecoder}
 import com.bilalfazlani.zioMaelstrom.*
+import zio.ZIO
 //}
 
 //messages {
@@ -15,7 +16,7 @@ case class EchoOk(echo: String, in_reply_to: MessageId, `type`: String = "echo_o
     derives JsonEncoder // (4)!
 //}
 
-object Main extends MaelstromNode {
-  val program =
-    receive[Echo](msg => reply(EchoOk(echo = msg.echo, in_reply_to = msg.msg_id))) // (1)!
+object Main extends MaelstromNode { // (1)!
+  val program: ZIO[MaelstromRuntime, Nothing, Unit] =
+    receive[Echo](msg => reply(EchoOk(echo = msg.echo, in_reply_to = msg.msg_id))) // (2)!
 }
