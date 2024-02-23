@@ -90,20 +90,20 @@ Echo challenge for example, has `echo/src/main/scala/gossipGlomers/Main.scala` a
     ```scala
     package gossipGlomers
 
-    import zio.ZIOAppDefault
+    import com.bilalfazlani.zioMaelstrom.*
 
-    object Main extends ZIOAppDefault {
+    object Main extends MaelstromNode:
 
-      def run = ???
-
-    }
+      val program = ???
     ```
 === "Solution"
     ```scala
     package gossipGlomers
 
-    import zio.json.{JsonEncoder, JsonDecoder}
-    import zio.{ZIOAppDefault, ZIO}
+    import com.bilalfazlani.zioMaelstrom.*
+
+    import zio.*
+    import zio.json.*
     import com.bilalfazlani.zioMaelstrom.*
 
     case class Echo(echo: String, msg_id: MessageId) extends NeedsReply derives JsonDecoder
@@ -112,12 +112,11 @@ Echo challenge for example, has `echo/src/main/scala/gossipGlomers/Main.scala` a
         extends Sendable, Reply
         derives JsonEncoder
 
-    object Main extends ZIOAppDefault {
-        val echoHandler: ZIO[MaelstromRuntime, Nothing, Unit] =
-            receive[Echo](msg => reply(EchoOk(echo = msg.echo, in_reply_to = msg.msg_id)))
+    object Main extends MaelstromNode:
 
-        val run = echoHandler.provide(MaelstromRuntime.live)
-    }
+      val program = receive[Echo] { 
+        case Echo(echo, msg_id) => reply(EchoOk(msg_id, echo))
+      }
     ```
 
 After writing the solution, we can run the solution using either using a JVM process or a native image
