@@ -15,7 +15,15 @@ trait MaelstromNode extends ZIOAppDefault:
   override final val bootstrap =
     Runtime.removeDefaultLoggers >>> ZIOMaelstromLogger.install(logFormat, logLevel)
 
-  def context: NodeContext                     = NodeContext.Maelstrom
+  /** Context is a combination if self NodeId and other NodeIds in the network. By default it is set
+    * by Maelstrom at at the start of simulation. For testing outside of Maelstrom, you can set it
+    * to a static value using `NodeContext.Static(me: NodeId, others: Set[NodeId])`
+    */
+  def context: NodeContext = NodeContext.Maelstrom
+
+  /** Input stream for receiving messages. Default is `InputStream.stdIn`. If you want to receive
+    * messages from a static file, override this value to `InputStream.file(Path)`
+    */
   def input: ZLayer[Any, Nothing, InputStream] = InputStream.stdIn
 
   /** Concurrency level for processing messages. Default is 1024. This means 1024 request messages
