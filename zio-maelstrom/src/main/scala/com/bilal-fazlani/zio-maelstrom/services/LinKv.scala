@@ -20,15 +20,6 @@ object LinKv:
   ): ZIO[LinKv, AskError, Unit] =
     ZIO.serviceWithZIO[LinKv](_.write(key, value, timeout))
 
-  def cas[Key: JsonEncoder, Value: JsonEncoder](
-      key: Key,
-      from: Value,
-      to: Value,
-      createIfNotExists: Boolean,
-      timeout: Duration
-  ): ZIO[LinKv, AskError, Unit] =
-    ZIO.serviceWithZIO[LinKv](_.cas(key, from, to, createIfNotExists, timeout))
-
   def cas[Key, Value](
       key: Key,
       timeout: Duration

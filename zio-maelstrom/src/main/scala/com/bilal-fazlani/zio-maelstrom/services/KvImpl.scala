@@ -27,14 +27,6 @@ private[zioMaelstrom] trait KvService:
       timeout: Duration
   ): ZIO[Any, AskError, Unit]
 
-  def cas[Key: JsonEncoder, Value: JsonEncoder](
-      key: Key,
-      from: Value,
-      to: Value,
-      createIfNotExists: Boolean,
-      timeout: Duration
-  ): ZIO[Any, AskError, Unit]
-
   def cas[Key: JsonEncoder, Value: JsonCodec](
       key: Key,
       newValue: Option[Value] => Value,
@@ -152,7 +144,7 @@ private[zioMaelstrom] class KvImpl(
             }
     } yield ()
 
-  override def cas[Key: JsonEncoder, Value: JsonEncoder](
+  private def cas[Key: JsonEncoder, Value: JsonEncoder](
       key: Key,
       from: Value,
       to: Value,

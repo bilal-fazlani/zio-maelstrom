@@ -20,15 +20,6 @@ object SeqKv:
   ): ZIO[SeqKv, AskError, Unit] =
     ZIO.serviceWithZIO[SeqKv](_.write(key, value, timeout))
 
-  def cas[Key: JsonEncoder, Value: JsonEncoder](
-      key: Key,
-      from: Value,
-      to: Value,
-      createIfNotExists: Boolean,
-      timeout: Duration
-  ): ZIO[SeqKv, AskError, Unit] =
-    ZIO.serviceWithZIO[SeqKv](_.cas(key, from, to, createIfNotExists, timeout))
-
   def cas[Key, Value](
       key: Key,
       timeout: Duration
