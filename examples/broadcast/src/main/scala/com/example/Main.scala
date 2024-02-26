@@ -81,6 +81,7 @@ object Main extends MaelstromNode {
       case msg @ Gossip(gossipMessages, _) => updateState(_.addGossip(gossipMessages)) // (8)!
     }
 
-  val program = handleMessages.provideRemaining(ZLayer(Ref.make(State()))) // (9)!
+  val program =
+    handleMessages.provideSome[MaelstromRuntime & Scope](ZLayer(Ref.make(State()))) // (9)!
 
 }

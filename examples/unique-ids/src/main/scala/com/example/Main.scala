@@ -21,5 +21,5 @@ object Main extends MaelstromNode {
       combinedId = s"${me}_${generated}" // (1)!
       _ <- reply(GenerateOk(id = combinedId, in_reply_to = request.msg_id))
     } yield ()
-  }.provideRemaining(ZLayer(Ref.make(0)))
+  }.provideSome[MaelstromRuntime](ZLayer(Ref.make(0)))
 }

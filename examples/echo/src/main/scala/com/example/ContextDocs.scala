@@ -7,6 +7,6 @@ object ContextDocs extends MaelstromNode {
 
   override val program: ZIO[MaelstromRuntime, Nothing, Unit] = ???
 
-  override val context =
-    NodeContext.Static(NodeId("node1"), Set(NodeId("node2"), NodeId("node3"), NodeId("node4")))
+  override val configure =
+    NodeConfig.withStaticContext(NodeId("node1"), NodeId("node2"), NodeId("node3"), NodeId("node4"))
 }

@@ -5,7 +5,7 @@ import com.bilalfazlani.zioMaelstrom.*
 
 object MainApplication extends MaelstromNode {
 
-  override val logLevel = LogLevel.Debug
+  override val configure = NodeConfig.withLogLevelDebug
 
   def program = for
     _ <- ZIO.logDebug("Starting node")

@@ -13,7 +13,6 @@ object Main extends MaelstromNode {
 
   val program = receive[Ping](ping => reply(Pong(ping.msg_id)))
 
-  override val logLevel: LogLevel = LogLevel.Debug
-
-  override val input = InputStream.file("examples" / "echo" / "fileinput.txt")
+  override val configure: NodeConfig =
+    NodeConfig.withFileInput("examples" / "echo" / "fileinput.txt").withLogLevelDebug
 }

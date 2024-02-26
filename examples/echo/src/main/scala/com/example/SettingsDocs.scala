@@ -14,11 +14,10 @@ object CustomSettingsDocs {
 
     val program = ZIO.logDebug("Starting node")
 
-    override val context =
-      NodeContext.Static(NodeId("node1"), Set(NodeId("node2"), NodeId("node3"), NodeId("node4")))
-
-    override val concurrency = 1               // default: 1024
-    override val logLevel    = LogLevel.Debug  // default: LogLevel.Info
-    override val logFormat   = LogFormat.Plain // default: LogFormat.Colored
+    override val configure = NodeConfig
+      .withStaticContext(NodeId("node1"), NodeId("node2"), NodeId("node3"), NodeId("node4"))
+      .withConcurrency(1)
+      .withLogLevelDebug
+      .withPlaintextLog
   }
 }
