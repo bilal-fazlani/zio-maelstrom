@@ -45,13 +45,12 @@ object LinKv:
       timeout: Duration
   ) = ZIO.serviceWithZIO[LinKv](_.writeIfNotExists(key, value, timeout))
 
-  private[zioMaelstrom] val live: ZLayer[MessageSender & MessageIdStore & Logger, Nothing, LinKv] =
+  private[zioMaelstrom] val live: ZLayer[MessageSender & MessageIdStore, Nothing, LinKv] =
     ZLayer(
       for
         sender         <- ZIO.service[MessageSender]
         messageIdStore <- ZIO.service[MessageIdStore]
-        logger         <- ZIO.service[Logger]
-        kvImpl = KvImpl(NodeId("lin-kv"), sender, messageIdStore, logger)
+        kvImpl = KvImpl(NodeId("lin-kv"), sender, messageIdStore)
       yield new LinKv:
         export kvImpl.*
     )
