@@ -102,22 +102,21 @@ Echo challenge for example, has `echo/src/main/scala/gossipGlomers/Main.scala` a
     ```scala
     package gossipGlomers
 
-    import zio.*
-    import zio.json.*
+    import zio.json.{JsonEncoder, JsonDecoder}
+    import zio.{ZIOAppDefault, ZIO}
     import com.bilalfazlani.zioMaelstrom.*
 
-    case class Echo(echo: String, msg_id: MessageId) extends NeedsReply derives JsonCodec
+    case class Echo(echo: String, msg_id: MessageId) extends NeedsReply derives JsonDecoder
 
-    case class EchoOk(in_reply_to: MessageId, echo: String, `type`: String = "echo_ok") extends Sendable, Reply
-        derives JsonCodec
+    case class EchoOk(echo: String, in_reply_to: MessageId, `type`: String = "echo_ok") 
+        extends Sendable, Reply
+        derives JsonEncoder
 
     object Main extends ZIOAppDefault {
+        val echoHandler: ZIO[MaelstromRuntime, Nothing, Unit] =
+            receive[Echo](msg => reply(EchoOk(echo = msg.echo, in_reply_to = msg.msg_id)))
 
-      def handler = receive[Echo] { 
-        case Echo(echo, msg_id) => reply(EchoOk(msg_id, echo))
-      }
-
-      def run = handler.provideSome[Scope](MaelstromRuntime.live)
+        val run = echoHandler.provide(MaelstromRuntime.live)
     }
     ```
 

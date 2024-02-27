@@ -12,12 +12,39 @@ case class KvFake(ref: Ref.Synchronized[Map[Any, Any]], messageIdStore: MessageI
   ): ZIO[Any, AskError, Value] =
     ref.get.map(_.get(key).get.asInstanceOf[Value])
 
+  override def readOption[Key: JsonEncoder, Value: JsonDecoder](
+      key: Key,
+      timeout: zio.Duration
+  ): ZIO[Any, AskError, Option[Value]] =
+    ref.get.map(_.get(key).map(_.asInstanceOf[Value]))
+
   override def write[Key: JsonEncoder, Value: JsonEncoder](
       key: Key,
       value: Value,
       timeout: Duration
   ): ZIO[Any, AskError, Unit] =
     ref.update(_ + (key -> value)).unit
+
+  override def writeIfNotExists[Key: JsonEncoder, Value: JsonEncoder](
+      key: Key,
+      value: Value,
+      timeout: zio.Duration
+  ): ZIO[Any, AskError, Unit] =
+    ref.updateZIO { map =>
+      map.get(key) match {
+        case Some(_) =>
+          messageIdStore.next.flatMap(messageId =>
+            ZIO.fail(
+              ErrorMessage(
+                messageId,
+                ErrorCode.PreconditionFailed,
+                s"Value for key $key already exists"
+              )
+            )
+          )
+        case None => ZIO.succeed(map + (key -> value))
+      }
+    }
 
   override def cas[Key: JsonEncoder, Value: JsonEncoder](
       key: Key,
@@ -45,6 +72,29 @@ case class KvFake(ref: Ref.Synchronized[Map[Any, Any]], messageIdStore: MessageI
             )
           )
       }
+    }
+
+  override def update[Key: JsonEncoder, Value: JsonCodec](
+      key: Key,
+      newValue: Option[Value] => Value,
+      timeout: zio.Duration
+  ): ZIO[Any, AskError, Value] =
+    ref.modify { map =>
+      val current = map.get(key).map(_.asInstanceOf[Value])
+      val newVal  = newValue(current)
+      (newVal, map + (key -> newVal))
+    }
+
+  override def updateZIO[Key: JsonEncoder, Value: JsonCodec, R, E](
+      key: Key,
+      newValue: Option[Value] => ZIO[R, E, Value],
+      timeout: zio.Duration
+  ): ZIO[R, AskError | E, Value] =
+    ref.modifyZIO { map =>
+      val current = map.get(key).map(_.asInstanceOf[Value])
+      for {
+        newVal  <- newValue(current)
+      } yield (newVal, map + (key -> newVal))
     }
 
 object KvFake:

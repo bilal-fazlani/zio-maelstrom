@@ -26,7 +26,7 @@ private[zioMaelstrom] case class KvWriteOk(in_reply_to: MessageId) extends Reply
 
 private[zioMaelstrom] case class CompareAndSwap[Key, Value](
     key: Key,
-    from: Value,
+    from: Option[Value],
     to: Value,
     create_if_not_exists: Boolean,
     msg_id: MessageId,
