@@ -10,11 +10,11 @@ sealed trait InputStream:
 object InputStream:
   val stdIn: ZLayer[Any, Nothing, InputStream] = ZLayer.succeed(StdIn)
 
-  def file(path: Path): ZLayer[Logger, Nothing, InputStream] =
+  def file(path: Path): ZLayer[Any, Nothing, InputStream] =
     ZLayer.succeed(path) >>> ZLayer.derive[File]
 
-  val queue: ZLayer[Queue[String] & Logger, Nothing, InputStream] =
-    val func = (queue: Queue[String], logger: Logger) => Stream(ZStream.fromQueue(queue), logger)
+  val queue: ZLayer[Queue[String], Nothing, InputStream] =
+    val func = (queue: Queue[String]) => Stream(ZStream.fromQueue(queue))
     ZLayer.fromFunction(func)
 
   case object StdIn extends InputStream:
@@ -24,11 +24,11 @@ object InputStream:
       .via(ZPipeline.splitLines)
       .orDie
 
-  case class File(path: Path, logger: Logger) extends InputStream:
+  case class File(path: Path) extends InputStream:
     def stream = ZStream
       .fromFile(path.toFile, 128)
       .via(ZPipeline.utfDecode)
       .via(ZPipeline.splitLines)
       .orDie
 
-  case class Stream(stream: ZStream[Any, Nothing, String], logger: Logger) extends InputStream
+  case class Stream(stream: ZStream[Any, Nothing, String]) extends InputStream

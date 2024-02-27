@@ -29,15 +29,16 @@ Here, we define the protocol of the node. It includes messages which the node ca
 !!! note
     Refer to [Maelstrom documentation](https://github.com/jepsen-io/maelstrom/blob/main/doc/protocol.md#message-bodies) for more information on the standard message fields like `msg_id`, `type`, `in_reply_to` etc
 
-This is the Node definition. It defines the behavior of the node and is a typical ZIO application. We use the `recieve` function to define a handler for incoming request messages
+A node is defined by extending the `MaelstromNode` trait and providing a `program` value. The `program` value is a ZIO effect that defines the behavior of the node. The `receive` function is used to define a handler for incoming request messages.
 
 <!--codeinclude-->
 [Node application](../../examples/echo/src/main/scala/com/example/Main.scala) block:Main
 <!--/codeinclude-->
 
-1. `reply` is a function that sends a reply to the sender of the message. It takes a `Sendable` & `Reply` message as an argument. You can only call reply on messages that extend `NeedsReply`
+1. Note that definition needs to be an `object` for it to be runnable
+2. `reply` is a function that sends a reply to the sender of the message. It takes a `Sendable` & `Reply` message as an argument. You can only call reply on messages that extend `NeedsReply`
 
-Using maelstrom DSL functions such as `receive` and `reply` requires `MaelstromRuntime` which can be provided as a `ZLayer` to the application as shown   above
+Using maelstrom DSL functions such as `receive` and `reply` requires `MaelstromRuntime` which is automatically provided my `MaelstromNode`.
 
 !!! note
     Source code for this example can be found on [:simple-github: Github](https://github.com/bilal-fazlani/zio-maelstrom/blob/main/examples/echo/src/main/scala/com/example/Main.scala)

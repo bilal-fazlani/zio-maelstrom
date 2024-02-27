@@ -7,24 +7,24 @@ private[zioMaelstrom] trait InputChannel:
   def partitionInputs: ZIO[Scope, Nothing, Inputs]
 
 private object InputChannel:
-  val live: ZLayer[Logger & InputStream, Nothing, InputChannel] =
+  val live: ZLayer[InputStream, Nothing, InputChannel] =
     ZLayer.derive[InputChannelLive]
 
 private case class InvalidInput(input: String, error: String)
 
-private class InputChannelLive(logger: Logger, inputStream: InputStream) extends InputChannel:
+private class InputChannelLive(inputStream: InputStream) extends InputChannel:
   val partitionInputs = inputStream.stream
-    .tap(str => logger.debug(s"read: $str"))
+    .tap(str => ZIO.logDebug(s"read: $str"))
     .collectZIO {
-      case str @ Sleep(duration) => Sleep.conditionally(logger, duration) *> ZIO.succeed(None)
+      case str @ Sleep(duration) => Sleep.conditionally(duration) *> ZIO.succeed(None)
       case str                   => ZIO.succeed(Some(str))
     }
     .collectSome
     .map(str => JsonDecoder[GenericMessage].decodeJson(str).left.map(e => InvalidInput(str, e)))
     .tap {
       case Left(InvalidInput(input, error)) =>
-        logger.error(s"could not decode input json message: `${input.trim}`")
-          *> logger.warn(s"${error}")
+        ZIO.logError(s"could not decode input json message: `${input.trim}`")
+          *> ZIO.logWarning(s"${error}")
       case Right(genericMessage) => ZIO.unit
     }
     .collectRight

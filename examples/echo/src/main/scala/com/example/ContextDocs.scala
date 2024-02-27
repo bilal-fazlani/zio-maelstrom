@@ -3,13 +3,10 @@ package com.example
 import zio.*
 import com.bilalfazlani.zioMaelstrom.*
 
-object ContextDocs extends ZIOAppDefault {
+object ContextDocs extends MaelstromNode {
 
-  val program: ZIO[MaelstromRuntime, Nothing, Unit] = ???
+  override val program: ZIO[MaelstromRuntime, Nothing, Unit] = ???
 
-  val run = program.provide(
-    MaelstromRuntime.live(
-      _.context(NodeId("node1"), Set(NodeId("node2"), NodeId("node3"), NodeId("node4")))
-    )
-  )
+  override val configure =
+    NodeConfig.withStaticContext(NodeId("node1"), NodeId("node2"), NodeId("node3"), NodeId("node4"))
 }

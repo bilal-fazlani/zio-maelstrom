@@ -1,16 +1,15 @@
 package com.bilalfazlani.zioMaelstrom
 
-import zio.test.*
 import zio.*
+import zio.test.*
 import zio.json.*
-import testkit.TestRuntime
-import testkit.TestRuntime.*
+import testkit.*
 
-object RequestHandlerTest extends ZIOSpecDefault {
-  def isCI        = sys.env.get("CI").contains("true")
-  val settings    = Settings(logLevel = if isCI then NodeLogLevel.Info else NodeLogLevel.Debug)
-  val context     = Context(NodeId("n1"), Set(NodeId("n2")))
-  val testRuntime = TestRuntime.layer(settings, context)
+object RequestHandlerTest extends MaelstromSpec {
+
+  val settings                  = Settings()
+  val context                   = Context(NodeId("n1"), Set(NodeId("n2")))
+  val tRuntime                  = testRuntime(settings, context)
   def sleep(duration: Duration) = live(ZIO.sleep(duration))
 
   case class Ping(msg_id: MessageId) extends NeedsReply derives JsonCodec
@@ -33,7 +32,7 @@ object RequestHandlerTest extends ZIOSpecDefault {
         pingOk <- getNextMessage
         _      <- fiber.interrupt
       } yield assertTrue(pingOk == Message(NodeId("n1"), NodeId("n2"), PingOk(MessageId(1)))))
-        .provide(testRuntime)
+        .provide(tRuntime)
     },
     test("receieve and ask should work concurrently") {
       (for {
@@ -54,7 +53,7 @@ object RequestHandlerTest extends ZIOSpecDefault {
       } yield assertTrue(
         finalOutMessage == Message(NodeId("n1"), NodeId("n2"), Number(MessageId(1), 5))
       ))
-        .provide(testRuntime)
+        .provide(tRuntime)
     }
   ) @@ TestAspect.timeout(10.seconds) @@ TestAspect.sequential
 }

@@ -3,20 +3,27 @@ package testkit
 
 import zio.*
 import zio.json.{JsonEncoder, EncoderOps}
+import zio.test.ZIOSpecDefault
 
-type TestRuntime = MaelstromRuntime & Queue[Message[Sendable]] & Queue[String] & CallbackRegistry
+trait MaelstromSpec extends ZIOSpecDefault {
+  private def isCI = sys.env.get("CI").contains("true")
 
-object TestRuntime:
-  def layer(
+  override val bootstrap =
+    val logLevel = if isCI then LogLevel.Info else LogLevel.Debug
+    zio.test.testEnvironment ++ Runtime.removeDefaultLoggers ++ ZIOMaelstromLogger.install(
+      LogFormat.Colored,
+      logLevel
+    )
+
+  def testRuntime(
       settings: Settings,
       context: Context
-  ): ZLayer[Any, Nothing, TestRuntime] =
-    ZLayer.make[TestRuntime](
+  ): ZLayer[Any, Nothing, MaelstromTestRuntime] =
+    ZLayer.make[MaelstromTestRuntime](
       // pure layers
       ZLayer.succeed(settings),
       Scope.default,
       MessageSender.live,
-      Logger.live,
       RequestHandler.live,
       ZLayer(Queue.unbounded[Message[Sendable]]),
       ZLayer(Queue.unbounded[String]),
@@ -44,9 +51,13 @@ object TestRuntime:
       _     <- queue.offer(Message(from, init.context.me, in).toJson)
     } yield ()
 
-  def getNextMessage: ZIO[TestRuntime, Nothing, Message[Sendable]] =
+  def getNextMessage: ZIO[MaelstromTestRuntime, Nothing, Message[Sendable]] =
     ZIO.serviceWithZIO[Queue[Message[Sendable]]](_.take)
 
   def getCallbackState
-      : ZIO[TestRuntime, Nothing, Map[CallbackId, Promise[AskError, GenericMessage]]] =
+      : ZIO[MaelstromTestRuntime, Nothing, Map[CallbackId, Promise[AskError, GenericMessage]]] =
     ZIO.serviceWithZIO[CallbackRegistry](_.getState.map(_.mapValues(_.promise).toMap))
+}
+
+type MaelstromTestRuntime = MaelstromRuntime & Queue[Message[Sendable]] & Queue[String] &
+  CallbackRegistry

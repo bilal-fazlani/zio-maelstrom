@@ -8,7 +8,7 @@ case class Ping(msg_id: MessageId, `type`: String = "ping") extends Sendable, Ne
     derives JsonEncoder
 case class Pong(in_reply_to: MessageId) extends Reply derives JsonDecoder
 
-object PingPong extends ZIOAppDefault:
+object PingPong extends MaelstromNode:
 
   val timeout = (for {
     _ <- NodeId("c4")
@@ -20,13 +20,9 @@ object PingPong extends ZIOAppDefault:
         exit(ExitCode.failure)
     }
 
-  val interruption = for {
+  val program = for {
     _ <- NodeId("c4")
       .ask[Pong](Ping(MessageId(6)), 5.seconds)
       .disconnect raceFirst (ZIO.fail("boom").delay(1.second).disconnect)
     _ <- logInfo(s"PONG RECEIVED")
   } yield ()
-
-  val run = interruption.provide(
-    MaelstromRuntime.live
-  ) *> exit(ExitCode.success)

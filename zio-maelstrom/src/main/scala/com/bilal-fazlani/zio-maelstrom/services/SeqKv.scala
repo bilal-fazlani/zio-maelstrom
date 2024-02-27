@@ -45,13 +45,12 @@ object SeqKv:
       timeout: Duration
   ) = ZIO.serviceWithZIO[SeqKv](_.writeIfNotExists(key, value, timeout))
 
-  private[zioMaelstrom] val live: ZLayer[MessageSender & MessageIdStore & Logger, Nothing, SeqKv] =
+  private[zioMaelstrom] val live: ZLayer[MessageSender & MessageIdStore, Nothing, SeqKv] =
     ZLayer(
       for
         sender         <- ZIO.service[MessageSender]
         messageIdStore <- ZIO.service[MessageIdStore]
-        logger         <- ZIO.service[Logger]
-        kvImpl = KvImpl(NodeId("seq-kv"), sender, messageIdStore, logger)
+        kvImpl = KvImpl(NodeId("seq-kv"), sender, messageIdStore)
       yield new SeqKv:
         export kvImpl.*
     )

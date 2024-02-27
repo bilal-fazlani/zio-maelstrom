@@ -35,8 +35,12 @@ case class DivideOk(result: Int, in_reply_to: MessageId, `type`: String = "divid
 
 // format: on
 
-object Calculator extends ZIOAppDefault:
-  val run = receive[CalculatorMessage] {
+object Calculator extends MaelstromNode:
+
+  override val configure: NodeConfig =
+    NodeConfig.withConcurrency(1).withFileInput("examples" / "echo" / "calculator.txt")
+
+  val program = receive[CalculatorMessage] {
     case add: Add           => reply(AddOk(add.a + add.b, add.msg_id))
     case subtract: Subtract => reply(SubtractOk(subtract.a - subtract.b, subtract.msg_id))
     case multiply: Multiply => reply(MultiplyOk(multiply.a * multiply.b, multiply.msg_id))
@@ -44,6 +48,4 @@ object Calculator extends ZIOAppDefault:
       if divide.b == 0 then
         reply(ErrorMessage(divide.msg_id, ErrorCode.Custom(55), "divide by zero"))
       else reply(DivideOk(divide.a / divide.b, divide.msg_id))
-  }.provide(
-    MaelstromRuntime.live(_.inputFile("examples" / "echo" / "calculator.txt").concurrency(1))
-  )
+  }
