@@ -114,7 +114,7 @@ Echo challenge for example, has `echo/src/main/scala/gossipGlomers/Main.scala` a
 
     object Main extends ZIOAppDefault {
         val echoHandler: ZIO[MaelstromRuntime, Nothing, Unit] =
-            receive[Echo](msg => reply(EchoOk(echo = msg.echo, in_reply_to = msg.msg_id))) // (1)!
+            receive[Echo](msg => reply(EchoOk(echo = msg.echo, in_reply_to = msg.msg_id)))
 
         val run = echoHandler.provide(MaelstromRuntime.live)
     }
