@@ -210,19 +210,87 @@ These are their node ids:
 
 You can read more these services on the [maelstrom docs](https://github.com/jepsen-io/maelstrom/blob/main/doc/services.md)
 
-ZIO-Maelstrom provides `LinkKv`, `LwwKv`, `SeqKv` & `LinTso` clients to interact with these services. 
+ZIO-Maelstrom provides `LinkKv`, `LwwKv`, `SeqKv` & `LinTso` clients to interact with these services. `SeqKv`, `LwwKv` & `LinKv` are all key value stores. They have the same api but different consistency guarantees.
 
-<!--codeinclude-->
-[Key value store](../../examples/echo/src/main/scala/com/example/KvStoreDocs.scala) inside_block:SeqKvExample
-<!--/codeinclude--> 
+### Native KV APIs
 
-`SeqKv`, `LwwKv` & `LinKv` are all key value stores. They have the same api but different consistency guarantees.
+_Native apis are provided by the maelstrom services_
 
-!!! note
-    `read`, `write` and `cas` apis are all built on top of [`ask`](#3-ask) api. So they can return an `AskError` which you may need to handle. According to [maelstrom documentation](https://github.com/jepsen-io/maelstrom/blob/main/doc/workloads.md#rpc-cas), they can return `KeyDoesNotExist` or `PreconditionFailed` error codes.
+`read`
+
+:   Takes a key and returns the value of the key. If the value does not exist, it returns `KeyDoesNotExist` error code.
+
+    <!--codeinclude-->
+    [](../../examples/echo/src/main/scala/com/example/KvStoreDocs.scala) inside_block:read
+    <!--/codeinclude--> 
+
+`write`
+
+:   Takes a key and a value and writes the value against the key. If a value already exists against the key, it is overwritten.
+
+    <!--codeinclude-->
+    [](../../examples/echo/src/main/scala/com/example/KvStoreDocs.scala) inside_block:write
+    <!--/codeinclude--> 
+
+`cas`
+
+:   CAS stands for `compare-and-swap`. It takes a key, a value and an expected value. It writes the value against the key only if the expected value matches the current value of the key. If the value is different, then it returns `PreconditionFailed` error code. If the key does not exist, it returns `KeyDoesNotExist` error code. If you set `createIfNotExists` to true, it will create the key if it does not exist.
+
+    <!--codeinclude-->
+    [](../../examples/echo/src/main/scala/com/example/KvStoreDocs.scala) inside_block:cas
+    <!--/codeinclude--> 
+
+    Above example will write `3` to `counter` only if the current value of `counter` is `1`. If the current value is different, it will return `PreconditionFailed` error code.
+
+### High level KV APIs
+
+_High level apis are built on top of native apis by combining multiple native apis and/or adding additional logic_
+
+`readOption`
+   
+:   Takes a key and returns an `Option` of the value of the key. If the value does not exist, it returns `None`. Does not return `KeyDoesNotExist` error code.
+
+    <!--codeinclude-->
+    [](../../examples/echo/src/main/scala/com/example/KvStoreDocs.scala) inside_block:ReadOption
+    <!--/codeinclude--> 
+
+`writeIfNotExists`
+
+:   Takes a key and a value and writes the value against the key only if the key does not exist. If the key already exists, it returns `PreconditionFailed` error code.
+
+    <!--codeinclude-->
+    [](../../examples/echo/src/main/scala/com/example/KvStoreDocs.scala) inside_block:WriteIfNotExists
+    <!--/codeinclude-->
+
+`update`
+
+:   This is a high level api built on top of other apis. It takes a key, a function that takes the current value and returns a new value. It reads the current value of the key, applies the function and writes the new value against the key. If the value has changed in the meantime, it applies the function again and keeps trying until the value does not change. This is useful for implementing atomic operations like incrementing a value.
+
+    <!--codeinclude-->
+    [](../../examples/echo/src/main/scala/com/example/KvStoreDocs.scala) inside_block:update
+    <!--/codeinclude-->
+
+    The timeout value does not apply to entire operation but to each individual read, cas and write operation. So the total time taken by the operation can be more than the timeout value. Retries are only done when the value has changed in the meantime. And other error is returned immediately. This also applies to `updateZIO` api.
+
+`updateZIO`
+
+:   This is a high level api built on top of other apis. It takes a key, a function that takes the current value and returns a `ZIO` that returns a new value. It reads the current value of the key, applies the `ZIO` and writes the new value against the key. If the value has changed in the meantime, it applies the function again and keeps trying until the value does not change. This is very similar to `update` but the function can be a `ZIO` which can do some async operations. When retries happen, the `ZIO` is retried as well, so side effects should be avoided in this function.
+
+    <!--codeinclude-->
+    [](../../examples/echo/src/main/scala/com/example/KvStoreDocs.scala) inside_block:UpdateZIO
+    <!--/codeinclude--> 
+
+!!! warning "Important"
+    - Because all these apis are built on top of `ask` api, they can return `AskError` which you may need to handle.  According to [maelstrom documentation](https://github.com/jepsen-io/maelstrom/blob/main/doc/workloads.md#rpc-cas), they can return `KeyDoesNotExist` or `PreconditionFailed` error codes.
+
+    - In case of network partition or delay, all of the above apis can return `Timeout` error code.
+
+    - When incorrect types are used to decode the response, they can return `DecodingFailure` error code.
 
 !!! tip
     key and value of the key value store can be any type that has a `zio.json.JsonCodec` instance
+
+### TSO APIs
 
 [`LinTso`](https://github.com/jepsen-io/maelstrom/blob/main/doc/services.md#lin-tso) is a linearizable timestamp oracle. It has the following api
 
