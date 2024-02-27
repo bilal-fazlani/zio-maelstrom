@@ -35,19 +35,19 @@ private[zioMaelstrom] trait KvService:
       timeout: Duration
   ): ZIO[Any, AskError, Unit]
 
-  def cas[Key: JsonEncoder, Value: JsonCodec](
+  def update[Key: JsonEncoder, Value: JsonCodec](
       key: Key,
       newValue: Option[Value] => Value,
       timeout: Duration
-  ): ZIO[Any, AskError, Unit]
+  ): ZIO[Any, AskError, Value]
 
   // overall time taken by this method can be more than timeout
   // because this method retries infinitely if precondition keeps failing
-  def casZIO[Key: JsonEncoder, Value: JsonCodec, R, E](
+  def updateZIO[Key: JsonEncoder, Value: JsonCodec, R, E](
       key: Key,
       newValue: Option[Value] => ZIO[R, E, Value],
       timeout: Duration
-  ): ZIO[R, AskError | E, Unit]
+  ): ZIO[R, AskError | E, Value]
 
 private[zioMaelstrom] class KvImpl(
     private val remote: NodeId,
@@ -100,15 +100,15 @@ private[zioMaelstrom] class KvImpl(
         .unit
     }
 
-  private def casError(key: Any) = logger.debug(
+  private def updateError(key: Any) = logger.debug(
     s"an attempt to replace value for key $key failed due to a race condition. will attempt again with the new value"
   )
 
-  override def cas[Key: JsonEncoder, Value: JsonCodec](
+  override def update[Key: JsonEncoder, Value: JsonCodec](
       key: Key,
       newValue: Option[Value] => Value,
       timeout: Duration
-  ): ZIO[Any, AskError, Unit] =
+  ): ZIO[Any, AskError, Value] =
     for {
       current <- readOption[Key, Value](key, timeout)
       newVal = newValue(current)
@@ -116,23 +116,23 @@ private[zioMaelstrom] class KvImpl(
         case None =>
           writeIfNotExists(key, newVal, timeout)
             .catchSome { case ErrorMessage(_, ErrorCode.KeyAlreadyExists, _, _) =>
-              casError(key) *> cas(key, newValue, timeout)
+              updateError(key) *> update(key, newValue, timeout)
             }
         case Some(value) =>
           cas(key, value, newVal, false, timeout)
             .catchSome {
               case ErrorMessage(_, ErrorCode.PreconditionFailed, _, _) =>
-                casError(key) *> cas(key, newValue, timeout)
+                updateError(key) *> update(key, newValue, timeout)
               case ErrorMessage(_, ErrorCode.KeyDoesNotExist, _, _) =>
-                casError(key) *> cas(key, newValue, timeout)
+                updateError(key) *> update(key, newValue, timeout)
             }
-    } yield ()
+    } yield newVal
 
-  override def casZIO[Key: JsonEncoder, Value: JsonCodec, R, E](
+  override def updateZIO[Key: JsonEncoder, Value: JsonCodec, R, E](
       key: Key,
       newValue: Option[Value] => ZIO[R, E, Value],
       timeout: Duration
-  ): ZIO[R, AskError | E, Unit] =
+  ): ZIO[R, AskError | E, Value] =
     for {
       current <- readOption[Key, Value](key, timeout)
       newVal  <- newValue(current)
@@ -140,17 +140,17 @@ private[zioMaelstrom] class KvImpl(
         case None =>
           writeIfNotExists(key, newVal, timeout)
             .catchSome { case ErrorMessage(_, ErrorCode.KeyAlreadyExists, _, _) =>
-              casError(key) *> casZIO(key, newValue, timeout)
+              updateError(key) *> updateZIO(key, newValue, timeout)
             }
         case Some(value) =>
           cas(key, value, newVal, false, timeout)
             .catchSome {
               case ErrorMessage(_, ErrorCode.PreconditionFailed, _, _) =>
-                casError(key) *> casZIO(key, newValue, timeout)
+                updateError(key) *> updateZIO(key, newValue, timeout)
               case ErrorMessage(_, ErrorCode.KeyDoesNotExist, _, _) =>
-                casError(key) *> casZIO(key, newValue, timeout)
+                updateError(key) *> updateZIO(key, newValue, timeout)
             }
-    } yield ()
+    } yield newVal
 
   override def cas[Key: JsonEncoder, Value: JsonEncoder](
       key: Key,
@@ -177,14 +177,14 @@ class PartiallyAppliedKvRead[Kv <: KvService: Tag, Value] {
     ZIO.serviceWithZIO[Kv](_.read[Key, Value](key, timeout))
 }
 
-case class PartiallyAppliedCas[Kv <: KvService: Tag, Key, Value](key: Key, timeout: Duration):
+case class PartiallyAppliedUpdate[Kv <: KvService: Tag, Key, Value](key: Key, timeout: Duration):
   def apply(
       newValue: Option[Value] => Value
-  )(using JsonEncoder[Key], JsonCodec[Value]): ZIO[Kv, AskError, Unit] =
-    ZIO.serviceWithZIO[Kv](_.cas(key, newValue, timeout))
+  )(using JsonEncoder[Key], JsonCodec[Value]): ZIO[Kv, AskError, Value] =
+    ZIO.serviceWithZIO[Kv](_.update(key, newValue, timeout))
 
-case class PartiallyAppliedCasZIO[Kv <: KvService: Tag, Key, Value](key: Key, timeout: Duration):
+case class PartiallyAppliedUpdateZIO[Kv <: KvService: Tag, Key, Value](key: Key, timeout: Duration):
   def apply[R, E](
       newValue: Option[Value] => ZIO[R, E, Value]
-  )(using JsonEncoder[Key], JsonCodec[Value]): ZIO[Kv & R, AskError | E, Unit] =
-    ZIO.serviceWithZIO[Kv](_.casZIO(key, newValue, timeout))
+  )(using JsonEncoder[Key], JsonCodec[Value]): ZIO[Kv & R, AskError | E, Value] =
+    ZIO.serviceWithZIO[Kv](_.updateZIO(key, newValue, timeout))

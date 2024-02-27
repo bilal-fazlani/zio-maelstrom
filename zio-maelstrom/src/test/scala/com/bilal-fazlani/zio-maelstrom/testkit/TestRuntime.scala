@@ -26,7 +26,7 @@ object TestRuntime:
       CallbackRegistry.live,
       MessageIdStore.live,
 
-      // Services
+      // Fake Services
       KvFake.linKv,
       KvFake.seqKv,
       KvFake.lwwKv,

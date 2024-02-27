@@ -74,23 +74,28 @@ case class KvFake(ref: Ref.Synchronized[Map[Any, Any]], messageIdStore: MessageI
       }
     }
 
-  override def cas[Key: JsonEncoder, Value: JsonCodec](
+  override def update[Key: JsonEncoder, Value: JsonCodec](
       key: Key,
       newValue: Option[Value] => Value,
       timeout: zio.Duration
-  ): ZIO[Any, AskError, Unit] =
-    ref.update { map =>
+  ): ZIO[Any, AskError, Value] =
+    ref.modify { map =>
       val current = map.get(key).map(_.asInstanceOf[Value])
       val newVal  = newValue(current)
-      map + (key -> newVal)
+      (newVal, map + (key -> newVal))
     }
 
-  override def casZIO[Key: JsonEncoder, Value: JsonCodec, R, E](key: Key, newValue: Option[Value] => ZIO[R, E, Value], timeout: zio.Duration): ZIO[R, AskError | E, Unit] = 
-    ref.updateZIO { map =>
+  override def updateZIO[Key: JsonEncoder, Value: JsonCodec, R, E](
+      key: Key,
+      newValue: Option[Value] => ZIO[R, E, Value],
+      timeout: zio.Duration
+  ): ZIO[R, AskError | E, Value] =
+    ref.modifyZIO { map =>
       val current = map.get(key).map(_.asInstanceOf[Value])
-      newValue(current).map(newVal => map + (key -> newVal))
+      for {
+        newVal  <- newValue(current)
+      } yield (newVal, map + (key -> newVal))
     }
-
 
 object KvFake:
 

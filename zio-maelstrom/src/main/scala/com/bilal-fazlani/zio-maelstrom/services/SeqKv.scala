@@ -29,15 +29,15 @@ object SeqKv:
   ): ZIO[SeqKv, AskError, Unit] =
     ZIO.serviceWithZIO[SeqKv](_.cas(key, from, to, createIfNotExists, timeout))
 
-  def cas[Key, Value](
+  def update[Key, Value](
       key: Key,
       timeout: Duration
-  ) = PartiallyAppliedCas[SeqKv, Key, Value](key, timeout)
+  ) = PartiallyAppliedUpdate[SeqKv, Key, Value](key, timeout)
 
-  def casZIO[Key, Value](
+  def updateZIO[Key, Value](
       key: Key,
       timeout: Duration
-  ) = PartiallyAppliedCasZIO[SeqKv, Key, Value](key, timeout)
+  ) = PartiallyAppliedUpdateZIO[SeqKv, Key, Value](key, timeout)
 
   def writeIfNotExists[Key: JsonEncoder, Value: JsonEncoder](
       key: Key,
