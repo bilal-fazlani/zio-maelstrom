@@ -41,7 +41,7 @@ trait MaelstromNode extends ZIOAppDefault:
     Runtime.removeDefaultLoggers >>>
       ZIOMaelstromLogger.install(configure.logFormat, configure.logLevel)
 
-  def program: ZIO[Scope & MaelstromRuntime, ?, Unit] // todo: what should be error type?
+  def program: ZIO[Scope & MaelstromRuntime, Any, Any]
 
   final def run =
     val settings = Settings(concurrency = configure.concurrency)
