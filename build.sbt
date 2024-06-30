@@ -3,10 +3,10 @@ import scala.sys.process._
 
 val scala3Version = "3.4.2"
 
-ThisBuild / scalaVersion           := scala3Version
-ThisBuild / organization           := "com.bilal-fazlani"
-ThisBuild / organizationName       := "Bilal Fazlani"
-ThisBuild / sonatypeCredentialHost := Sonatype.sonatype01
+ThisBuild / scalaVersion     := scala3Version
+ThisBuild / organization     := "com.bilal-fazlani"
+ThisBuild / organizationName := "Bilal Fazlani"
+ThisBuild / versionScheme    := Some("semver-spec")
 
 ThisBuild / scmInfo := Some(
   ScmInfo(
@@ -92,7 +92,6 @@ lazy val zioMaelstrom = project
     name := "zio-maelstrom",
     logo := "",
     scalacOptions += "-Wunused:all",
-    sonatypeCredentialHost := Sonatype.sonatype01,
     libraryDependencies ++=
       Seq(
         Libs.zio,
