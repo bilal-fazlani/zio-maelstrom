@@ -1,7 +1,7 @@
 import sbtwelcome._
 import scala.sys.process._
 
-val scala3Version = "3.3.1"
+val scala3Version = "3.4.2"
 
 ThisBuild / scalaVersion     := scala3Version
 ThisBuild / organization     := "com.bilal-fazlani"
@@ -82,7 +82,7 @@ bootstrap := {
 
 lazy val root = project
   .in(file("."))
-  .settings(name := "zio-maelstrom-root", publish / skip := true, scalacOptions += "-Wunused:all")
+  .settings(name := "zio-maelstrom-root", publish / skip := true)
   .aggregate(zioMaelstrom, echo, uniqueIds, broadcast)
 
 lazy val zioMaelstrom = project
