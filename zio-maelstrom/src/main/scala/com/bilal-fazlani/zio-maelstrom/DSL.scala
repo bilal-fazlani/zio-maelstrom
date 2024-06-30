@@ -5,11 +5,11 @@ import zio.json.*
 import zio.*
 
 extension (s: String) infix def /(string: String): Path = Path.of(s, string)
-extension (p: Path) infix def /(string: String): Path   = p resolve string
+extension (p: Path) infix def /(string: String): Path   = p.resolve(string)
 
 extension (nodeId: NodeId)
-  def ask[Res <: Reply]                         = new AskPartiallyApplied[Res](nodeId)
-  def send[A <: Sendable: JsonEncoder](body: A) = MessageSender.send(body, nodeId)
+  infix def ask[Res <: Reply]                         = new AskPartiallyApplied[Res](nodeId)
+  infix def send[A <: Sendable: JsonEncoder](body: A) = MessageSender.send(body, nodeId)
 
 def getMyNodeId     = ZIO.service[Initialisation].map(_.context.me)
 def getOtherNodeIds = ZIO.service[Initialisation].map(_.context.others)
