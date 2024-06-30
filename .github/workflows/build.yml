@@ -28,9 +28,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: coursier/cache-action@v6
-        name: Cache Coursier
+        name: Cache
       - uses: coursier/setup-action@v1
-        name: Setup Coursier
+        name: Setup Coursier, Java & SBT
         with:
           jvm: graalvm-community:21.0.2
           apps: sbt

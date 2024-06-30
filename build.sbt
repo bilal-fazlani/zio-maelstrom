@@ -91,6 +91,7 @@ lazy val zioMaelstrom = project
     name := "zio-maelstrom",
     logo := "",
     scalacOptions += "-Wunused:all",
+    sonatypeCredentialHost := Sonatype.sonatype01,
     libraryDependencies ++=
       Seq(
         Libs.zio,
