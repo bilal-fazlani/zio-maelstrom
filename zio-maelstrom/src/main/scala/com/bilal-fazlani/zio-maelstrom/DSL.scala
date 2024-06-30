@@ -14,10 +14,10 @@ extension (nodeId: NodeId)
 def getMyNodeId     = ZIO.service[Initialisation].map(_.context.me)
 def getOtherNodeIds = ZIO.service[Initialisation].map(_.context.others)
 
-def logDebug(message: => String) = Logger.debug(message)
-def logInfo(message: => String)  = Logger.info(message)
-def logWarn(message: => String)  = Logger.warn(message)
-def logError(message: => String) = Logger.error(message)
+def logDebug(message: => String) = ZIO.logDebug(message)
+def logInfo(message: => String)  = ZIO.logInfo(message)
+def logWarn(message: => String)  = ZIO.logWarning(message)
+def logError(message: => String) = ZIO.logError(message)
 
 def receive[I]: ReceivePartiallyApplied[I] = new ReceivePartiallyApplied[I]
 

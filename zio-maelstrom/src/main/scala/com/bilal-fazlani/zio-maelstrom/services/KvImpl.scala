@@ -52,8 +52,7 @@ private[zioMaelstrom] trait KvService:
 private[zioMaelstrom] class KvImpl(
     private val remote: NodeId,
     private val sender: MessageSender,
-    private val messageIdStore: MessageIdStore,
-    private val logger: Logger
+    private val messageIdStore: MessageIdStore
 ) extends KvService {
 
   override def read[Key: JsonEncoder, Value: JsonDecoder](
@@ -100,7 +99,7 @@ private[zioMaelstrom] class KvImpl(
         .unit
     }
 
-  private def updateError(key: Any) = logger.debug(
+  private def updateError(key: Any) = ZIO.logDebug(
     s"an attempt to replace value for key $key failed due to a race condition. will attempt again with the new value"
   )
 

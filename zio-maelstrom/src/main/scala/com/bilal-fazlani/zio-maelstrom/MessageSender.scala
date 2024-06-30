@@ -24,7 +24,7 @@ trait MessageSender:
 
 private[zioMaelstrom] object MessageSender:
   val live
-      : ZLayer[Initialisation & OutputChannel & CallbackRegistry & Logger, Nothing, MessageSender] =
+      : ZLayer[Initialisation & OutputChannel & CallbackRegistry, Nothing, MessageSender] =
     ZLayer
       .derive[MessageSenderLive]
 
@@ -41,7 +41,6 @@ private class MessageSenderLive(
     init: Initialisation,
     stdout: OutputChannel,
     callbackRegistry: CallbackRegistry,
-    logger: Logger
 ) extends MessageSender:
   def send[A <: Sendable: JsonEncoder](body: A, to: NodeId) =
     val message: Message[A] =
@@ -54,7 +53,7 @@ private class MessageSenderLive(
       timeout: Duration
   ): IO[AskError, Res] = for {
     _              <- send(body, to)
-    _              <- logger.debug(s"waiting for reply from ${to} for message id ${body.msg_id}...")
+    _              <- ZIO.logDebug(s"waiting for reply from ${to} for message id ${body.msg_id}...")
     genericMessage <- ZIO.scoped(callbackRegistry.awaitCallback(body.msg_id, to, timeout))
     decoded <-
       if genericMessage.isError then {
@@ -65,17 +64,18 @@ private class MessageSenderLive(
           .map(e => DecodingFailure(e, genericMessage))
         error.fold(ZIO.fail, ZIO.fail).tapError {
           case DecodingFailure(e, _) =>
-            logger
-              .error(s"decoding failed for response from ${to} for message id ${body.msg_id}".red)
+            ZIO.logError(s"decoding failed for response from ${to} for message id ${body.msg_id}")
           case e: ErrorMessage =>
-            logger.error(s"error response received from: ${to} for message id ${body.msg_id}")
+            ZIO.logError(
+                s"error response (${e.code}) received from ${to} for message id ${body.msg_id}"
+              )
         }
       } else {
         ZIO
           .fromEither(JsonDecoder[Message[Res]].fromJsonAST(genericMessage.raw))
           .mapError(e => DecodingFailure(e, genericMessage))
           .tapError(e =>
-            logger.error(s"decoding failed for response from ${to} for message id ${body.msg_id}")
+            ZIO.logError(s"decoding failed for response from ${to} for message id ${body.msg_id}")
           )
       }
   } yield decoded.body

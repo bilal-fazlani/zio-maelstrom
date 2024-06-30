@@ -4,25 +4,19 @@ import com.bilalfazlani.zioMaelstrom.*
 import zio.*
 
 object DefaultSettingsDocs {
-  object MainApp extends ZIOAppDefault {
-
-    val nodeProgram: ZIO[MaelstromRuntime, Nothing, Unit] = ???
-
-    val run = nodeProgram.provide(MaelstromRuntime.live)
+  object MainApp extends MaelstromNode {
+    val program = ???
   }
 }
 
 object CustomSettingsDocs {
-  object MainApp extends ZIOAppDefault {
+  object MainApp extends MaelstromNode {
 
-    val nodeProgram: ZIO[MaelstromRuntime, Nothing, Unit] = ???
+    override val configure = NodeConfig
+      .withConcurrency(100)
+      .withLogLevelDebug
+      .withPlaintextLog
 
-    val run = nodeProgram.provide(
-      MaelstromRuntime.live(
-        _.logLevel(NodeLogLevel.Debug)
-          .logFormat(LogFormat.Plain)
-          .concurrency(1)
-      )
-    )
+    val program = ZIO.logDebug("Starting node...")
   }
 }

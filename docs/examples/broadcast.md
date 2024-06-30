@@ -72,6 +72,7 @@ reply_messages
 6.  Reply OK to the sender
 7.  Start gossiping after arrival of `topology` message
 8.  Add gossip received by other nodes to node's state
+9.  Using the `provideSome` method to provide all the layers except `MaelstromRuntime` & `Scope`
 
 !!! tip
     This is a naive implementation of gossip protocol. We are sending all the numbers in a node's state to all its neighbors. This will not scale well. Find a better way to do this.
