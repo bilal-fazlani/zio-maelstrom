@@ -3,9 +3,10 @@ import scala.sys.process._
 
 val scala3Version = "3.4.2"
 
-ThisBuild / scalaVersion     := scala3Version
-ThisBuild / organization     := "com.bilal-fazlani"
-ThisBuild / organizationName := "Bilal Fazlani"
+ThisBuild / scalaVersion           := scala3Version
+ThisBuild / organization           := "com.bilal-fazlani"
+ThisBuild / organizationName       := "Bilal Fazlani"
+ThisBuild / sonatypeCredentialHost := Sonatype.sonatype01
 
 ThisBuild / scmInfo := Some(
   ScmInfo(
