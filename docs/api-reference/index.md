@@ -302,53 +302,45 @@ _High level apis are built on top of native apis by combining multiple native ap
 
 Below are the settings that can be configured for a node
 
-1. **NodeLogLevel**
+1. **Log Level**
+    
+    The default log level is `LogLevel.Info`. 
+    If you want more detailed logs, you can set it to `LogLevel.Debug`. 
+    If you want to disable logs, you can set it to `LogLevel.None`
 
-    ??? note "View all log levels"
-        <!--codeinclude-->
-        [NodeLogLevel](../../zio-maelstrom/src/main/scala/com/bilal-fazlani/zio-maelstrom/Settings.scala) inside_block:log_levels
-        <!--/codeinclude-->
-
-    The default log level is `NodeLogLevel.Info`. If you want more detailed logs, you can set it to `NodeLogLevel.Debug`. If you want to disable logs, you can set it to `NodeLogLevel.Off`
-
-2. **LogFormat**
+2. **Log Format**
 
     Log format can be either Plain or Colored. Default is colored.
 
 3. **Concurrency**
 
-    This is the concurrency level for processing messages. Default is 1024. This means 1024 request messages(receive api) + 1024 response messages (ask api) = 2048 messages can be processed in parallel.
+    This is the concurrency level for processing messages. Default is 1024. 
+    This means 1024 request messages(receive api) + 1024 response messages (ask api) = 2048 messages can be processed in parallel.
 
 <!--codeinclude-->
-[Default](../../examples/echo/src/main/scala/com/example/SettingsDocs.scala) inside_block:DefaultSettingsDocs
+[Default example](../../examples/echo/src/main/scala/com/example/SettingsDocs.scala) inside_block:DefaultSettingsDocs
 <!--/codeinclude-->
 
 <!--codeinclude-->
-[Custom](../../examples/echo/src/main/scala/com/example/SettingsDocs.scala) inside_block:CustomSettingsDocs
+[Customization example](../../examples/echo/src/main/scala/com/example/SettingsDocs.scala) inside_block:CustomSettingsDocs
 <!--/codeinclude-->
 
 ## Logging
 
-You can log at different levels using below APIs:
-
-```scala
-def logDebug(message: => String)
-def logInfo(message: => String)
-def logWarn(message: => String)
-def logError(message: => String)
-```
-
-All these APIs log to STDERR because STDOUT is used for sending messages. You can configure the log level using `NodeLogLevel` setting. By default LogFormat is colored. You can change it to plain using `LogFormat` setting.
+You can log at different levels using ZIO's logging APIs - `ZIO.logDebug`, `ZIO.logInfo`, etc.
+All these APIs log to STDERR because STDOUT is used for sending messages.
+You can configure the log level using [settings](#settings) API.
+By default, log statements are colored. You can change it to plain using [settings](#settings) API
 
 <!--codeinclude-->
-[Logging](../../examples/echo/src/main/scala/com/example/LogDocs.scala) inside_block:MainApplication
+[Logging](../../examples/echo/src/main/scala/com/example/LogDocs.scala) block:MainApplication
 <!--/codeinclude-->
 
 Above program, when initialized, will output the following:
 
 ![log-output](logs.png)
 
-## Testing
+## Testing in isolation
 
 **Using static input files:**
 

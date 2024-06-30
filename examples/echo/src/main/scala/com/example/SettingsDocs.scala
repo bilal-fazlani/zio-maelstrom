@@ -12,12 +12,11 @@ object DefaultSettingsDocs {
 object CustomSettingsDocs {
   object MainApp extends MaelstromNode {
 
-    val program = ZIO.logDebug("Starting node")
-
     override val configure = NodeConfig
-      .withStaticContext(NodeId("node1"), NodeId("node2"), NodeId("node3"), NodeId("node4"))
-      .withConcurrency(1)
+      .withConcurrency(100)
       .withLogLevelDebug
       .withPlaintextLog
+
+    val program = ZIO.logDebug("Starting node...")
   }
 }

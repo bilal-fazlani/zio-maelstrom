@@ -35,7 +35,7 @@ Unlike [echo](echo.md), this node has some state which we have modeled using `Re
 I have used `ZLayer` to inject the state and also to make sure the same `Ref` is used across the codebase in case we want to make the code more modular.
 
 !!! tip
-    Note the use of `.provideRemaining` to provide `Ref[Int]` layer to the program. This method is use to provide all the layers except `MaelstromRuntime` & `Scope` which are provided by the framework.
+    Note the use of `.provideSome` to provide `Ref[Int]` layer to the program. This method provides all the layers except `MaelstromRuntime`.
 
 !!! note
     Source code for this example can be found on [:simple-github: Github](https://github.com/bilal-fazlani/zio-maelstrom/blob/main/examples/unique-ids/src/main/scala/com/example/Main.scala)

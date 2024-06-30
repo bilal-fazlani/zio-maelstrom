@@ -10,25 +10,44 @@ case class NodeConfig private (
     logLevel: LogLevel = LogLevel.Info,
     logFormat: LogFormat = LogFormat.Colored
 ) {
+  //customize log level
   def withLogLevelDebug                 = copy(logLevel = LogLevel.Debug)
   def withLogLevelInfo                  = copy(logLevel = LogLevel.Info)
   def withLogLevelWarn                  = copy(logLevel = LogLevel.Warning)
   def withLogLevelError                 = copy(logLevel = LogLevel.Error)
+  def withLogLevel(level: LogLevel)     = copy(logLevel = level)
+  
+  //customize log format
   def withPlaintextLog                  = copy(logFormat = LogFormat.Plain)
+  def withColoredLog                    = copy(logFormat = LogFormat.Colored)
+  
+  //customize concurrency
   def withConcurrency(concurrency: Int) = copy(concurrency = concurrency)
-  def withFileInput(path: Path)         = copy(input = InputStream.file(path))
+  
+  //customize mocking
   def withStaticContext(me: NodeId, others: NodeId*) =
     copy(context = Some(Context(me, Set.from(others))))
+  def withFileInput(path: Path) = copy(input = InputStream.file(path))
+  def withStdInInput = copy(input = InputStream.stdIn)  
 }
 
 object NodeConfig:
+  //default configuration
   val default                           = NodeConfig()
+  
+  //customize log level
   def withLogLevelDebug                 = default.withLogLevelDebug
-  def withLogLevelInfo                  = default.withLogLevelInfo
   def withLogLevelWarn                  = default.withLogLevelWarn
   def withLogLevelError                 = default.withLogLevelError
+  def withLogLevel(level: LogLevel)     = default.withLogLevel(level)
+  
+  //customize log format
   def withPlaintextLog                  = default.withPlaintextLog
+  
+  //customize concurrency
   def withConcurrency(concurrency: Int) = default.withConcurrency(concurrency)
+  
+  //customize mocking
   def withFileInput(path: Path)         = default.withFileInput(path)
   def withStaticContext(me: NodeId, others: NodeId*) =
     default.withStaticContext(me, others*)
