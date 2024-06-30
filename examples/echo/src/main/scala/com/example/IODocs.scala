@@ -14,9 +14,9 @@ object IODocs:
     val messageHandler: ZIO[MaelstromRuntime, Nothing, Unit] = 
       receive[Gossip] { 
         case msg: Gossip => 
-          logDebug(s"received $msg from $src") //(1)!
-          *> logDebug(s"my node id is $me") //(2)!
-          *> logDebug(s"other node ids are $others") //(3)!
+          ZIO.logDebug(s"received $msg from $src") //(1)!
+          *> ZIO.logDebug(s"my node id is $me") //(2)!
+          *> ZIO.logDebug(s"other node ids are $others") //(3)!
           *> ZIO.unit
       }
   }
