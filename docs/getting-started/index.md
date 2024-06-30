@@ -32,7 +32,7 @@ ZIO-Maelstrom is a high level Scala driver for Maelstrom which abstracts away th
 Since Maelstrom is Closure program, you will need JVM installed on your machine. This templates makes use of graalvm native image to create OS native executable files for improved node performance. I have used [sdkman](https://sdkman.io) to install java.
 
 ```bash
-sdk install java 21.0.2-graal
+sdk install java 22.0.1-graal
 ```
 
 ### 2. SBT
