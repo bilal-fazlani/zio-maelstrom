@@ -56,7 +56,7 @@ trait MaelstromSpec extends ZIOSpecDefault {
 
   def getCallbackState
       : ZIO[MaelstromTestRuntime, Nothing, Map[CallbackId, Promise[AskError, GenericMessage]]] =
-    ZIO.serviceWithZIO[CallbackRegistry](_.getState.map(_.mapValues(_.promise).toMap))
+    ZIO.serviceWithZIO[CallbackRegistry](_.getState.map(_.view.mapValues(_.promise).toMap))
 }
 
 type MaelstromTestRuntime = MaelstromRuntime & Queue[Message[Sendable]] & Queue[String] &

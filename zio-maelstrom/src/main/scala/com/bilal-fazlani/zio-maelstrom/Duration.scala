@@ -54,11 +54,11 @@ extension (duration: Duration)
     val hours   = minutes / 60
     val days    = hours / 24
 
-    val remainingMillis  = TimeValue(millis % 1000)
-    val remainingSeconds = TimeValue(seconds % 60)
-    val remainingMinutes = TimeValue(minutes % 60)
-    val remainingHours   = TimeValue(hours % 24)
-    val remainingDays    = TimeValue(days)
+    val remainingMillis  = TimeValue(millis.toDouble % 1000)
+    val remainingSeconds = TimeValue(seconds.toDouble % 60)
+    val remainingMinutes = TimeValue(minutes.toDouble % 60)
+    val remainingHours   = TimeValue(hours.toDouble % 24)
+    val remainingDays    = TimeValue(days.toDouble)
     val parts = List(
       TimeSegment(remainingDays, TimeUnit.Day),
       TimeSegment(remainingHours, TimeUnit.Hour),
