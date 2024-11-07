@@ -1,8 +1,8 @@
 package com.example.calculator
 
+import com.bilalfazlani.zioMaelstrom.*
 import zio.json.*
 import zio.*
-import com.bilalfazlani.zioMaelstrom.*
 
 // format: off
 

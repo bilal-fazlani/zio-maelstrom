@@ -2,8 +2,8 @@ package com.example.echo
 
 //imports {
 import zio.json.{JsonEncoder, JsonDecoder}
-import com.bilalfazlani.zioMaelstrom.*
 import zio.ZIO
+import com.bilalfazlani.zioMaelstrom.*
 //}
 
 //messages {

@@ -1,8 +1,8 @@
 package com.example
 
 import zio.*
-import com.bilalfazlani.zioMaelstrom.*
 import zio.json.*
+import com.bilalfazlani.zioMaelstrom.*
 
 object Main extends MaelstromNode {
 

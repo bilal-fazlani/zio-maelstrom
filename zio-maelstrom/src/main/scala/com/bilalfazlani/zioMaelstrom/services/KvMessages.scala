@@ -1,5 +1,6 @@
-package com.bilalfazlani.zioMaelstrom
+package com.bilalfazlani.zioMaelstrom.services
 
+import com.bilalfazlani.zioMaelstrom.{MessageId, NeedsReply, Reply, Sendable}
 import zio.*
 import zio.json.*
 

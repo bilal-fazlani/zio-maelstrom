@@ -1,6 +1,7 @@
 package com.bilalfazlani.zioMaelstrom
 package testkit
 
+import com.bilalfazlani.zioMaelstrom.services.LinTso
 import zio.*
 
 case class LinTsoFake(ref: Ref[Int]) extends LinTso:

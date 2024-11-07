@@ -1,5 +1,6 @@
 package com.bilalfazlani.zioMaelstrom
 
+import com.bilalfazlani.zioMaelstrom.services.{LinKv, LinTso, LwwKv, SeqKv}
 import zio.{Scope, ZLayer}
 
 type Services = LinKv & SeqKv & LwwKv & LinTso

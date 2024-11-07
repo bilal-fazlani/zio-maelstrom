@@ -1,8 +1,8 @@
 package com.example
 
-import com.bilalfazlani.zioMaelstrom.*
 import zio.json.JsonCodec
 import zio.*
+import com.bilalfazlani.zioMaelstrom.*
 
 object IODocs:
 

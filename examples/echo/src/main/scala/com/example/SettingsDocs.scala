@@ -1,7 +1,7 @@
 package com.example
 
-import com.bilalfazlani.zioMaelstrom.*
 import zio.*
+import com.bilalfazlani.zioMaelstrom.*
 
 object DefaultSettingsDocs {
   object MainApp extends MaelstromNode {
