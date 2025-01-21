@@ -13,11 +13,10 @@ object IODocs:
 
     val messageHandler: ZIO[MaelstromRuntime, Nothing, Unit] = 
       receive[Gossip] { 
-        case msg: Gossip => 
+        case msg: Gossip =>
           ZIO.logDebug(s"received $msg from $src") //(1)!
           *> ZIO.logDebug(s"my node id is $me") //(2)!
           *> ZIO.logDebug(s"other node ids are $others") //(3)!
-          *> ZIO.unit
       }
   }
 
@@ -54,7 +53,7 @@ object IODocs:
     case class GossipOk(in_reply_to: MessageId, myNumbers: Seq[Int], `type`: String = "gossip_ok")
       extends Reply derives JsonCodec  
 
-    val gosspiResult: ZIO[MaelstromRuntime, AskError, GossipOk] = 
+    val gossipResult: ZIO[MaelstromRuntime, AskError, GossipOk] =
       MessageId.next.flatMap( msgId => //(1)!
         NodeId("n2").ask[GossipOk](Gossip(msgId, Seq(1,2)), 5.seconds)
       )
