@@ -5,7 +5,7 @@ import zio.test.*
 import zio.json.*
 import testkit.*
 
-object RequestHandlerTest extends MaelstromSpec {
+object RequestHandlerTests extends MaelstromSpec {
 
   val settings                  = Settings()
   val context                   = Context(NodeId("n1"), Set(NodeId("n2")))

@@ -28,7 +28,8 @@ case class NodeConfig private (
   def withStaticContext(me: NodeId, others: NodeId*) =
     copy(context = Some(Context(me, Set.from(others))))
   def withFileInput(path: Path) = copy(input = InputStream.file(path))
-  def withStdInInput = copy(input = InputStream.stdIn)  
+  def withStdInInput = copy(input = InputStream.stdIn)
+  def withInlineInput(input: String) = copy(input = InputStream.inline(input))
 }
 
 object NodeConfig:
