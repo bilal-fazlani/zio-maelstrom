@@ -77,7 +77,7 @@ private class CallbackRegistryLive(
       promise: TimedPromise,
       messageTimeout: Duration
   ): URIO[Scope, Unit] =
-    val callbackId = CallbackId(messageId, remote.nodeId)
+    val callbackId = CallbackId(messageId, remote)
     for
       _ <- ZIO.addFinalizerExit(exit => discardCallback(exit, callbackId)).unit
       _ <- callbackRegistry.put(callbackId, promise).unit

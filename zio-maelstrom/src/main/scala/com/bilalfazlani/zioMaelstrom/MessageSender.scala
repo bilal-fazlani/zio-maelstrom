@@ -23,8 +23,7 @@ trait MessageSender:
   ): IO[AskError, Res]
 
 private[zioMaelstrom] object MessageSender:
-  val live
-      : ZLayer[Initialisation & OutputChannel & CallbackRegistry, Nothing, MessageSender] =
+  val live: ZLayer[Initialisation & OutputChannel & CallbackRegistry, Nothing, MessageSender] =
     ZLayer
       .derive[MessageSenderLive]
 
@@ -40,11 +39,11 @@ private[zioMaelstrom] object MessageSender:
 private class MessageSenderLive(
     init: Initialisation,
     stdout: OutputChannel,
-    callbackRegistry: CallbackRegistry,
+    callbackRegistry: CallbackRegistry
 ) extends MessageSender:
   def send[A <: Sendable: JsonEncoder](body: A, to: NodeId) =
     val message: Message[A] =
-      Message[A](source = init.context.me, destination = to.nodeId, body = body)
+      Message[A](source = init.context.me, destination = to, body = body)
     stdout.transport(message)
 
   def ask[Req <: Sendable & NeedsReply: JsonEncoder, Res <: Reply: JsonDecoder](
@@ -67,8 +66,8 @@ private class MessageSenderLive(
             ZIO.logError(s"decoding failed for response from ${to} for message id ${body.msg_id}")
           case e: ErrorMessage =>
             ZIO.logError(
-                s"error response (${e.code}) received from ${to} for message id ${body.msg_id}"
-              )
+              s"error response (${e.code}) received from ${to} for message id ${body.msg_id}"
+            )
         }
       } else {
         ZIO
