@@ -1,57 +1,76 @@
 package com.bilalfazlani.zioMaelstrom
 
+import com.bilalfazlani.zioMaelstrom.InputStream.InlineMessage
 import zio.*
+import zio.json.JsonEncoder
+
 import java.nio.file.Path
 
+enum InputContext:
+  case Static(context: Context, input: ZLayer[Any, Nothing, InputStream])
+  case Real
+
 case class NodeConfig private (
-    context: Option[Context] = None,
-    input: ZLayer[Any, Nothing, InputStream] = InputStream.stdIn,
+    inputContext: InputContext = InputContext.Real,
     concurrency: Int = 1024,
     logLevel: LogLevel = LogLevel.Info,
     logFormat: LogFormat = LogFormat.Colored
 ) {
-  //customize log level
-  def withLogLevelDebug                 = copy(logLevel = LogLevel.Debug)
-  def withLogLevelInfo                  = copy(logLevel = LogLevel.Info)
-  def withLogLevelWarn                  = copy(logLevel = LogLevel.Warning)
-  def withLogLevelError                 = copy(logLevel = LogLevel.Error)
-  def withLogLevel(level: LogLevel)     = copy(logLevel = level)
-  
-  //customize log format
-  def withPlaintextLog                  = copy(logFormat = LogFormat.Plain)
-  def withColoredLog                    = copy(logFormat = LogFormat.Colored)
-  
-  //customize concurrency
+  // customize log level
+  def withLogLevelDebug             = copy(logLevel = LogLevel.Debug)
+  def withLogLevelInfo              = copy(logLevel = LogLevel.Info)
+  def withLogLevelWarn              = copy(logLevel = LogLevel.Warning)
+  def withLogLevelError             = copy(logLevel = LogLevel.Error)
+  def withLogLevel(level: LogLevel) = copy(logLevel = level)
+
+  // customize log format
+  def withPlaintextLog = copy(logFormat = LogFormat.Plain)
+  def withColoredLog   = copy(logFormat = LogFormat.Colored)
+
+  // customize concurrency
   def withConcurrency(concurrency: Int) = copy(concurrency = concurrency)
-  
-  //customize mocking
-  def withStaticContext(me: NodeId, others: NodeId*) =
-    copy(context = Some(Context(me, Set.from(others))))
-  def withFileInput(path: Path) = copy(input = InputStream.file(path))
-  def withStdInInput = copy(input = InputStream.stdIn)
-  def withInlineInput(input: String) = copy(input = InputStream.inline(input))
+
+  // customize mocking
+  def withStaticInput[A: JsonEncoder: Tag](
+      me: NodeId,
+      others: Set[NodeId],
+      messages: InlineMessage[A]*
+  ) =
+    val context = Context(me, others)
+    copy(inputContext = InputContext.Static(context, InputStream.inline(messages, context)))
+
+  def withStaticInput(me: NodeId, others: Set[NodeId], path: Path) =
+    val context     = Context(me, others)
+    val inputStream = InputStream.file(path)
+    copy(inputContext = InputContext.Static(context, inputStream))
 }
 
 object NodeConfig:
-  //default configuration
-  val default                           = NodeConfig()
-  
-  //customize log level
-  def withLogLevelDebug                 = default.withLogLevelDebug
-  def withLogLevelWarn                  = default.withLogLevelWarn
-  def withLogLevelError                 = default.withLogLevelError
-  def withLogLevel(level: LogLevel)     = default.withLogLevel(level)
-  
-  //customize log format
-  def withPlaintextLog                  = default.withPlaintextLog
-  
-  //customize concurrency
+  // default configuration
+  val default = NodeConfig()
+
+  // customize log level
+  def withLogLevelDebug             = default.withLogLevelDebug
+  def withLogLevelWarn              = default.withLogLevelWarn
+  def withLogLevelError             = default.withLogLevelError
+  def withLogLevel(level: LogLevel) = default.withLogLevel(level)
+
+  // customize log format
+  def withPlaintextLog = default.withPlaintextLog
+
+  // customize concurrency
   def withConcurrency(concurrency: Int) = default.withConcurrency(concurrency)
-  
-  //customize mocking
-  def withFileInput(path: Path)         = default.withFileInput(path)
-  def withStaticContext(me: NodeId, others: NodeId*) =
-    default.withStaticContext(me, others*)
+
+  // customize mocking
+  def withStaticInput[A: JsonEncoder: Tag](
+      me: NodeId,
+      others: Set[NodeId],
+      messages: InlineMessage[A]*
+  ) =
+    default.withStaticInput(me, others, messages*)
+
+  def withStaticInput(me: NodeId, others: Set[NodeId], path: Path) =
+    default.withStaticInput(me, others, path)
 
 trait MaelstromNode extends ZIOAppDefault:
 
@@ -65,4 +84,7 @@ trait MaelstromNode extends ZIOAppDefault:
 
   final def run =
     val settings = Settings(concurrency = configure.concurrency)
-    program.provideSome[Scope](MaelstromRuntime.live(settings, configure.input, configure.context))
+    configure.inputContext match
+      case InputContext.Static(context, input) =>
+        program.provideSome[Scope](MaelstromRuntime.static(settings, input, context))
+      case InputContext.Real => program.provideSome[Scope](MaelstromRuntime.live(settings))
