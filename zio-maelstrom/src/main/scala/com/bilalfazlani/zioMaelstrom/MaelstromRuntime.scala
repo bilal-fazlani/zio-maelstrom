@@ -1,7 +1,11 @@
 package com.bilalfazlani.zioMaelstrom
 
-import com.bilalfazlani.zioMaelstrom.services.{LinKv, LinTso, LwwKv, SeqKv}
-import zio.{Scope, ZLayer}
+import com.bilalfazlani.zioMaelstrom.services.LinKv
+import com.bilalfazlani.zioMaelstrom.services.LinTso
+import com.bilalfazlani.zioMaelstrom.services.LwwKv
+import com.bilalfazlani.zioMaelstrom.services.SeqKv
+import zio.Scope
+import zio.ZLayer
 
 type Services = LinKv & SeqKv & LwwKv & LinTso
 
@@ -13,11 +17,42 @@ type MaelstromRuntime = Initialisation & RequestHandler & MessageSender & Messag
 object MaelstromRuntime:
   // doc_incluide {
   private[zioMaelstrom] def live(
+      settings: Settings
+  ): ZLayer[Any, Nothing, MaelstromRuntime] = {
+
+    ZLayer.make[MaelstromRuntime](
+      // pure layers
+      Scope.default,
+      ZLayer.succeed(settings),
+      MessageSender.live,
+      RequestHandler.live,
+      InputChannel.live,
+      InputStream.stdIn,
+      OutputChannel.stdOut,
+      CallbackRegistry.live,
+      MessageIdStore.live,
+
+      // Services
+      LinKv.live,
+      SeqKv.live,
+      LwwKv.live,
+      LinTso.live,
+
+      // effectful layers
+      Initialisation.run,
+      ResponseHandler.start
+    )
+  }
+  // }
+
+  val live: ZLayer[Any, Nothing, MaelstromRuntime] = live(Settings())
+
+  private[zioMaelstrom] def static(
       settings: Settings,
       inputStream: ZLayer[Any, Nothing, InputStream],
-      initContext: Option[Context]
+      context: Context
   ): ZLayer[Any, Nothing, MaelstromRuntime] = {
-    val contextLayer = initContext.fold(Initialisation.run)(Initialisation.fake)
+
     ZLayer.make[MaelstromRuntime](
       // pure layers
       Scope.default,
@@ -37,10 +72,7 @@ object MaelstromRuntime:
       LinTso.live,
 
       // effectful layers
-      contextLayer,
+      Initialisation.fake(context),
       ResponseHandler.start
     )
   }
-  // }
-
-  val live: ZLayer[Any, Nothing, MaelstromRuntime] = live(Settings(), InputStream.stdIn, None)

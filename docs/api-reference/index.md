@@ -142,7 +142,7 @@ You can send a message to any `NodeId` using `NodeId.send()` API. It takes a `Se
 The `ask` api can return either a successful response or an `AskError`
 
 <!--codeinclude-->
-[AskError](../../zio-maelstrom/src/main/scala/com/bilal-fazlani/zio-maelstrom/MessageSender.scala) inside_block:ask_error
+[AskError](../../zio-maelstrom/src/main/scala/com/bilalfazlani/zioMaelstrom/MessageSender.scala) inside_block:ask_error
 <!--/codeinclude-->
 
 Ask error can be one of the following: 
@@ -175,14 +175,14 @@ From within `receive` function, you can call `reply` api to send a reply message
 zio-maelstrom has a built in data type for error messages called `ErrorMessage`
 
 <!--codeinclude-->
-[ErrorMessage](../../zio-maelstrom/src/main/scala/com/bilal-fazlani/zio-maelstrom/Protocol.scala) inside_block:errorMessage
+[ErrorMessage](../../zio-maelstrom/src/main/scala/com/bilalfazlani/zioMaelstrom/Protocol.scala) inside_block:errorMessage
 <!--/codeinclude-->
 
 It supports all the [standard maelstrom error codes](https://github.com/jepsen-io/maelstrom/blob/main/doc/protocol.md#errors) as well as ability to send custom error codes
 
 ??? note "View all error codes"
     <!--codeinclude-->
-    [Error codes](../../zio-maelstrom/src/main/scala/com/bilal-fazlani/zio-maelstrom/Protocol.scala) inside_block:errorCodes
+    [Error codes](../../zio-maelstrom/src/main/scala/com/bilalfazlani/zioMaelstrom/Protocol.scala) inside_block:errorCodes
     <!--/codeinclude-->
 
 You can send an error message to any node id as a reply to another message. Here's an example
@@ -340,15 +340,35 @@ Above program, when initialized, will output the following:
 
 ![log-output](logs.png)
 
-## Testing in isolation
+## Testing
+
+**Using static inline messages:**
+
+When developing a solution, you sometimes want to test it without maelstrom. While you can use `stdIn` to enter the input, you can also hardcode the input messages in the program itself.
+
+<!--codeinclude-->
+[Inline Input Messages](../../examples/echo/src/main/scala/com/example/InlineInput.scala) block:InlineInput
+<!--/codeinclude-->
+
+1. When using inline input, you need JsonEncoder and JsonDecoder instances for input messages
+2. Node's own id
+3. Other nodes in the cluster
+4. Messages to be sent to the node. These are varargs and you can send any number of messages
+
+!!! tip
+    When debugging an issue, use static input, set log level to debug and set concurrency to 1. This might help you isolate the issue.
 
 **Using static input files:**
 
-When developing a solution, you sometimes want to test it without maelstrom. And manually entering the same inputs every time can be time consuming. You can configure the runtime to read the input from a file.
+You can configure the runtime to read the input from a file.
 
 <!--codeinclude-->
 [With Files](../../examples/echo/src/main/scala/com/example/FileInputDocs.scala) block:Main
 <!--/codeinclude-->
+
+1. Node's own id
+2. Other nodes in the cluster
+3. Path to the file containing the input messages
 
 <!--codeinclude-->
 [fileinput.txt](../../examples/echo/fileinput.txt)
@@ -357,24 +377,3 @@ When developing a solution, you sometimes want to test it without maelstrom. And
 This will run the entire program with the input from the file. With file input you also get to simulate delay in inputs using sleep statements as shown above.
 
 ![file-input](fileinput.png)
-
-!!! tip
-    When debugging an issue, you can use file inputs, set log level to debug and set concurrency to 1. This might help you isolate the issue.
-
-**Using a fake context:**
-
-Context is combination of node's id and the list of other nodes in the cluster. Context is received in the init message (sent by maelstrom server) at the start of the node.
-
-When testing a node without maelstrom, if you are using a static input file, you have to manually create the context by including an init message in the file as shown above. When using stdIn you have manually enter the same message in terminal.
-
-You can hardcode a "Fake" context in your program and use it for testing. This will allow you to test your program without maelstrom. Here's an example:
-
-<!--codeinclude-->
-[Fake Context](../../examples/echo/src/main/scala/com/example/ContextDocs.scala) inside_block:ContextDocs
-<!--/codeinclude-->
-
-This program will not wait for any input for initialization. Output:
-
-```
-initialised with fake context: Context(node1,Set(node2, node3, node4))
-```

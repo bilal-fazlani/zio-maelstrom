@@ -1,8 +1,8 @@
 package com.example
 
+import com.bilalfazlani.zioMaelstrom.*
 import zio.*
 import zio.json.*
-import com.bilalfazlani.zioMaelstrom.*
 
 object Main extends MaelstromNode {
 
@@ -14,5 +14,11 @@ object Main extends MaelstromNode {
   val program = receive[Ping](ping => reply(Pong(ping.msg_id)))
 
   override val configure: NodeConfig =
-    NodeConfig.withFileInput("examples" / "echo" / "fileinput.txt").withLogLevelDebug
+    NodeConfig
+      .withStaticInput(
+        NodeId("A"),                          // (1)!
+        Set(NodeId("B"), NodeId("C")),        // (2)!
+        "examples" / "echo" / "fileinput.txt" // (3)!
+      )
+      .withLogLevelDebug
 }

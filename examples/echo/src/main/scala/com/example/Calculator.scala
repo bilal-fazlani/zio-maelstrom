@@ -38,7 +38,9 @@ case class DivideOk(result: Int, in_reply_to: MessageId, `type`: String = "divid
 object Calculator extends MaelstromNode:
 
   override val configure: NodeConfig =
-    NodeConfig.withConcurrency(1).withFileInput("examples" / "echo" / "calculator.txt")
+    NodeConfig
+      .withConcurrency(1)
+      .withStaticInput(NodeId("B"), Set(), "examples" / "echo" / "calculator.txt")
 
   val program = receive[CalculatorMessage] {
     case add: Add           => reply(AddOk(add.a + add.b, add.msg_id))
