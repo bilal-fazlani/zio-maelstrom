@@ -1,1 +1,3 @@
+{"src": "c1", "dest": "n1", "body": { "type" : "ping", "msg_id": 1 }}
+sleep 2s
 {"src": "c1", "dest": "n1", "body": { "type" : "ping", "msg_id": 2 }}
