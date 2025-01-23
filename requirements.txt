@@ -3,7 +3,7 @@ mkdocs-awesome-pages-plugin == 2.9.2
 git+https://github.com/bilal-fazlani/mkdocs-codeinclude-plugin.git@0.2.2#egg=mkdocs-codeinclude-plugin
 mkdocs-autolinks-plugin == 0.7.1
 #social card plugin
-pillow == 10.2.0
+pillow == 10.3.0
 CairoSVG == 2.7.1
 #for compatibility with the system python
-urllib3 == 1.26.18
+urllib3 == 1.26.19
