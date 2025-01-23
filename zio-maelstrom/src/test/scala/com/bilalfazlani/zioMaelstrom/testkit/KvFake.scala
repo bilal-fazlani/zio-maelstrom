@@ -11,7 +11,7 @@ case class KvFake(ref: Ref.Synchronized[Map[Any, Any]], messageIdStore: MessageI
       key: Key,
       timeout: Duration
   ): ZIO[Any, AskError, Value] =
-    ref.get.map(_.get(key).get.asInstanceOf[Value])
+    ref.get.map(_(key).asInstanceOf[Value])
 
   override def readOption[Key: JsonEncoder, Value: JsonDecoder](
       key: Key,

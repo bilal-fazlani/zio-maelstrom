@@ -32,16 +32,16 @@ object ErrorDocs:
     val askResponse: ZIO[MaelstromRuntime, AskError, Unit] = for
       msgId  <- MessageId.next
       answer <- NodeId("g4").ask[Answer](Query(1, msgId), 5.seconds)
-      _      <- logInfo(s"answer: $answer")
+      _      <- ZIO.logInfo(s"answer: $answer")
     yield ()
 
     askResponse
       .catchAll {
-        case t: Timeout         => logError(s"timeout: ${t.timeout}")
-        case d: DecodingFailure => logError(s"decoding failure: ${d.error}")
+        case t: Timeout         => ZIO.logError(s"timeout: ${t.timeout}")
+        case d: DecodingFailure => ZIO.logError(s"decoding failure: ${d.error}")
         case e: ErrorMessage =>
           val code: ErrorCode = e.code
           val text: String    = e.text
-          logError(s"error code: $code, error text: $text")
+          ZIO.logError(s"error code: $code, error text: $text")
       }
   }

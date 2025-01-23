@@ -39,7 +39,7 @@ This is more evident if we look at the definition of type `MaelstromRuntime` and
 <!--/codeinclude-->
 
 <!--codeinclude-->
-[Layer construction](../../zio-maelstrom/src/main/scala/com/bilalfazlani/zioMaelstrom/MaelstromRuntime.scala) inside_block:doc_incluide
+[Layer construction](../../zio-maelstrom/src/main/scala/com/bilalfazlani/zioMaelstrom/MaelstromRuntime.scala) inside_block:doc_include
 <!--/codeinclude-->
 
 Using effects to create layers makes these effects run before user's effect. In this case initialization and starting of response handler is done as part of layer creation

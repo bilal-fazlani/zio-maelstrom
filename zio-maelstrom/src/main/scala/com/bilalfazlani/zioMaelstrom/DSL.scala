@@ -4,20 +4,16 @@ import java.nio.file.Path
 import zio.json.*
 import zio.*
 
-extension (s: String) infix def /(string: String): Path = Path.of(s, string)
-extension (p: Path) infix def /(string: String): Path   = p.resolve(string)
+import scala.annotation.targetName
+
+extension (s: String) @targetName("compose")
+infix def /(string: String): Path = Path.of(s, string)
+extension (p: Path) @targetName("compose")
+infix def /(string: String): Path   = p.resolve(string)
 
 extension (nodeId: NodeId)
-  infix def ask[Res <: Reply]                         = new AskPartiallyApplied[Res](nodeId)
+  infix def ask[Res <: Reply]                         = AskPartiallyApplied[Res](nodeId)
   infix def send[A <: Sendable: JsonEncoder](body: A) = MessageSender.send(body, nodeId)
-
-def getMyNodeId     = ZIO.service[Initialisation].map(_.context.me)
-def getOtherNodeIds = ZIO.service[Initialisation].map(_.context.others)
-
-def logDebug(message: => String) = ZIO.logDebug(message)
-def logInfo(message: => String)  = ZIO.logInfo(message)
-def logWarn(message: => String)  = ZIO.logWarning(message)
-def logError(message: => String) = ZIO.logError(message)
 
 def receive[I]: ReceivePartiallyApplied[I] = new ReceivePartiallyApplied[I]
 

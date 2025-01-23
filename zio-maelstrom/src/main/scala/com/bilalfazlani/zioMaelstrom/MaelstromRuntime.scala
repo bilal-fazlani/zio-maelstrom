@@ -1,11 +1,7 @@
 package com.bilalfazlani.zioMaelstrom
 
-import com.bilalfazlani.zioMaelstrom.services.LinKv
-import com.bilalfazlani.zioMaelstrom.services.LinTso
-import com.bilalfazlani.zioMaelstrom.services.LwwKv
-import com.bilalfazlani.zioMaelstrom.services.SeqKv
-import zio.Scope
-import zio.ZLayer
+import com.bilalfazlani.zioMaelstrom.services.{LinKv, LinTso, LwwKv, SeqKv}
+import zio.{Scope, ZIO, ZLayer}
 
 type Services = LinKv & SeqKv & LwwKv & LinTso
 
@@ -15,7 +11,11 @@ type MaelstromRuntime = Initialisation & RequestHandler & MessageSender & Messag
 // }
 
 object MaelstromRuntime:
-  // doc_incluide {
+
+  def me     = ZIO.serviceWith[Initialisation](_.context.me)
+  def others = ZIO.serviceWith[Initialisation](_.context.others)
+
+  // doc_include {
   private[zioMaelstrom] def live(
       settings: Settings
   ): ZLayer[Any, Nothing, MaelstromRuntime] = {
@@ -38,7 +38,7 @@ object MaelstromRuntime:
       LwwKv.live,
       LinTso.live,
 
-      // effectful layers
+      // effect-ful layers
       Initialisation.run,
       ResponseHandler.start
     )
@@ -71,7 +71,7 @@ object MaelstromRuntime:
       LwwKv.live,
       LinTso.live,
 
-      // effectful layers
+      // effect-ful layers
       Initialisation.fake(context),
       ResponseHandler.start
     )

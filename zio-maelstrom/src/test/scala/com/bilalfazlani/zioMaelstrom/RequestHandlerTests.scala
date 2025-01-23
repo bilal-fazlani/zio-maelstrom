@@ -34,7 +34,7 @@ object RequestHandlerTests extends MaelstromSpec {
       } yield assertTrue(pingOk == Message(NodeId("n1"), NodeId("n2"), PingOk(MessageId(1)))))
         .provide(tRuntime)
     },
-    test("receieve and ask should work concurrently") {
+    test("receive and ask should work concurrently") {
       (for {
         fiber <- receive[GetNumber] { case msg @ GetNumber(msg_id, from, _) =>
           from
