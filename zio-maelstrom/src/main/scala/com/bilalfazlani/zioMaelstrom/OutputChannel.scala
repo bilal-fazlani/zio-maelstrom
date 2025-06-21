@@ -12,9 +12,9 @@ private[zioMaelstrom] object OutputChannel:
     ZLayer.fromFunction(TestOutputChannel.apply)
 
 private object OutputChannelLive extends OutputChannel:
-  def transport[A: JsonEncoder](message: Message[A]): UIO[Unit] = Console
-    .printLine(message.toJson)
-    .orDie
+  def transport[A: JsonEncoder](message: Message[A]): UIO[Unit] =
+    val json = message.toJson
+    ZIO.logDebug(s"write: $json") *> Console.printLine(json).orDie
 
 private case class TestOutputChannel(
     messages: Queue[Message[Any]]
