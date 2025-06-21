@@ -13,20 +13,11 @@ private[zioMaelstrom] case class Message[+Body](
 ) derives JsonDecoder,
       JsonEncoder
 
-trait Sendable:
-  val `type`: String
-
-trait NeedsReply:
-  val msg_id: MessageId
-
-trait Reply:
-  val in_reply_to: MessageId
-
 private[zioMaelstrom] case class MaelstromInit(
     msg_id: MessageId,
     node_id: NodeId,
     node_ids: Set[NodeId]
-) extends NeedsReply derives JsonDecoder
+) derives JsonDecoder
 
 private[zioMaelstrom] object MaelstromInit {
   private def parseInit(msg: GenericMessage): Either[String, Message[MaelstromInit]] =
@@ -43,8 +34,7 @@ private[zioMaelstrom] object MaelstromInit {
 }
 
 private[zioMaelstrom] case class MaelstromInitOk(in_reply_to: MessageId, `type`: String = "init_ok")
-    extends Sendable
-    with Reply derives JsonEncoder
+    derives JsonEncoder
 
 // errorMessage {
 case class ErrorMessage(
@@ -52,8 +42,7 @@ case class ErrorMessage(
     code: ErrorCode,
     text: String,
     `type`: String = "error"
-) extends Sendable
-    with Reply derives JsonCodec
+) derives JsonCodec
 // }
 
 opaque type NodeId = String

@@ -8,5 +8,5 @@ case class Echo(echo: String) derives JsonEncoder
 
 object Main extends MaelstromNode {
   val program: ZIO[MaelstromRuntime, Nothing, Unit] =
-    ZIO.serviceWithZIO[MessageSender](_.sendV2(Echo("Hello"), NodeId("123")))
+    ZIO.serviceWithZIO[MessageSender](_.send(Echo("Hello"), NodeId("123")))
 }

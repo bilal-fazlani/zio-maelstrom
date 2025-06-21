@@ -9,12 +9,13 @@ import zio.stream.ZPipeline
 import zio.stream.ZStream
 
 import java.nio.file.Path
+import com.bilalfazlani.zioMaelstrom.models.Body
 
 case class InputStream(stream: ZStream[Any, Nothing, String])
 
 object InputStream:
 
-  case class InlineMessage[Body](src: NodeId, message: Body)
+  case class InlineMessage[A](src: NodeId, message: Body[A])
 
   val stdIn: ZLayer[Any, Nothing, InputStream] =
     def stream = ZStream
@@ -41,7 +42,7 @@ object InputStream:
       context: Context
   ): ZLayer[Any, Nothing, InputStream] =
     def encode(m: InlineMessage[A]) =
-      val message = Message[A](m.src, context.me, m.message)
+      val message = Message[Body[A]](m.src, context.me, m.message)
       message.toJson
     val stream = InputStream(
       ZStream

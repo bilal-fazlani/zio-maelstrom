@@ -3,7 +3,10 @@ package com.bilalfazlani.zioMaelstrom
 import zio.*
 import zio.json.*
 
-type Handler[R, I] = (MessageSource, Context) ?=> I => ZIO[MaelstromRuntime & R, Nothing, Unit]
+type Handler[R, I] = RPCHandler[R, I, Unit]
+
+type RPCHandler[R, I, O] =
+  (MessageSource, Option[MessageId], Context) ?=> I => ZIO[MaelstromRuntime & R, Nothing, O]
 
 trait RequestHandler:
   def handle[R, I: JsonDecoder](handler: Handler[R, I]): ZIO[R & MaelstromRuntime, Nothing, Unit]
@@ -43,6 +46,7 @@ private class RequestHandlerLive(
               .flatMap { message =>
                 given MessageSource = MessageSource(message.source)
                 given Context       = initialisation.context
+                given Option[MessageId] = genericMessage.messageId
                 handler apply message.body
               }
               .catchAll(handleInvalidInput)

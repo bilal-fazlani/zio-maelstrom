@@ -15,20 +15,14 @@ case class Timeout(messageId: MessageId, remote: NodeId, timeout: Duration) {
 case class DecodingFailure(error: String, message: GenericMessage)
 
 trait MessageSender:
-  def send[A <: Sendable: JsonEncoder](body: A, to: NodeId): UIO[Unit]
-  def sendV2[A: {MsgName, JsonEncoder}](payload: A, to: NodeId): UIO[Unit]
+  def send[A: {MsgName, JsonEncoder}](payload: A, to: NodeId): UIO[Unit]
 
   private[zioMaelstrom] def sendRaw[A: {MsgName, JsonEncoder}](
       body: Body[A],
       to: NodeId
   ): UIO[Unit]
 
-  def ask[Req <: Sendable & NeedsReply: JsonEncoder, Res <: Reply: JsonDecoder](
-      body: Req,
-      to: NodeId,
-      timeout: Duration
-  ): IO[AskError, Res]
-  def askV2[Req: {JsonEncoder, MsgName}, Res: JsonDecoder](
+  def ask[Req: {JsonEncoder, MsgName}, Res: JsonDecoder](
       body: Req,
       to: NodeId,
       timeout: Duration
@@ -43,11 +37,8 @@ private[zioMaelstrom] object MessageSender:
     ZLayer
       .derive[MessageSenderLive]
 
-  def send[A <: Sendable: JsonEncoder](body: A, to: NodeId): URIO[MessageSender, Unit] = ZIO
-    .serviceWithZIO[MessageSender](_.send(body, to))
-
-  def sendV2[A: {MsgName, JsonEncoder}](payload: A, to: NodeId): URIO[MessageSender, Unit] = ZIO
-    .serviceWithZIO[MessageSender](_.sendV2(payload, to))
+  def send[A: {MsgName, JsonEncoder}](payload: A, to: NodeId): URIO[MessageSender, Unit] = ZIO
+    .serviceWithZIO[MessageSender](_.send(payload, to))
 
   private[zioMaelstrom] def sendRaw[A: {MsgName, JsonEncoder}](
       body: Body[A],
@@ -55,18 +46,12 @@ private[zioMaelstrom] object MessageSender:
   ): URIO[MessageSender, Unit] = ZIO
     .serviceWithZIO[MessageSender](_.sendRaw(body, to))
 
-  def ask[Req <: Sendable & NeedsReply: JsonEncoder, Res <: Reply: JsonDecoder](
-      body: Req,
-      to: NodeId,
-      timeout: Duration
-  ): ZIO[MessageSender, AskError, Res] = ZIO.serviceWithZIO[MessageSender](_.ask(body, to, timeout))
-
-  def askV2[Req: {JsonEncoder, MsgName}, Res: JsonDecoder](
+  def ask[Req: {JsonEncoder, MsgName}, Res: JsonDecoder](
       body: Req,
       to: NodeId,
       timeout: Duration
   ): ZIO[MessageSender, AskError, Res] =
-    ZIO.serviceWithZIO[MessageSender](_.askV2(body, to, timeout))
+    ZIO.serviceWithZIO[MessageSender](_.ask(body, to, timeout))
 
 private class MessageSenderLive(
     init: Initialisation,
@@ -74,12 +59,8 @@ private class MessageSenderLive(
     callbackRegistry: CallbackRegistry,
     messageIdStore: MessageIdStore
 ) extends MessageSender:
-  def send[A <: Sendable: JsonEncoder](body: A, to: NodeId) =
-    val message: Message[A] =
-      Message[A](source = init.context.me, destination = to, body = body)
-    stdout.transport(message)
 
-  def sendV2[A: {MsgName, JsonEncoder}](payload: A, to: NodeId) =
+  def send[A: {MsgName, JsonEncoder}](payload: A, to: NodeId) =
     val body: Body[A] = Body(MsgName[A], payload, msg_id = None, in_reply_to = None)
     sendRaw(body, to)
 
@@ -101,7 +82,7 @@ private class MessageSenderLive(
     _ <- sendRaw(body, to)
   } yield body.msg_id.get
 
-  def askV2[Req: {JsonEncoder, MsgName}, Res: JsonDecoder](
+  def ask[Req: {JsonEncoder, MsgName}, Res: JsonDecoder](
       body: Req,
       to: NodeId,
       timeout: Duration
@@ -130,39 +111,6 @@ private class MessageSenderLive(
           .mapError(e => DecodingFailure(e, genericMessage))
           .tapError(e =>
             ZIO.logError(s"decoding failed for response from ${to} for message id ${msg_id}")
-          )
-      }
-  } yield decoded.body
-
-  def ask[Req <: Sendable & NeedsReply: JsonEncoder, Res <: Reply: JsonDecoder](
-      body: Req,
-      to: NodeId,
-      timeout: Duration
-  ): IO[AskError, Res] = for {
-    _              <- send(body, to)
-    _              <- ZIO.logDebug(s"waiting for reply from ${to} for message id ${body.msg_id}...")
-    genericMessage <- ZIO.scoped(callbackRegistry.awaitCallback(body.msg_id, to, timeout))
-    decoded <-
-      if genericMessage.isError then {
-        val error = JsonDecoder[Message[ErrorMessage]]
-          .fromJsonAST(genericMessage.raw)
-          .map(_.body)
-          .left
-          .map(e => DecodingFailure(e, genericMessage))
-        error.fold(ZIO.fail, ZIO.fail).tapError {
-          case DecodingFailure(e, _) =>
-            ZIO.logError(s"decoding failed for response from ${to} for message id ${body.msg_id}")
-          case e: ErrorMessage =>
-            ZIO.logError(
-              s"error response (${e.code}) received from ${to} for message id ${body.msg_id}"
-            )
-        }
-      } else {
-        ZIO
-          .fromEither(JsonDecoder[Message[Res]].fromJsonAST(genericMessage.raw))
-          .mapError(e => DecodingFailure(e, genericMessage))
-          .tapError(e =>
-            ZIO.logError(s"decoding failed for response from ${to} for message id ${body.msg_id}")
           )
       }
   } yield decoded.body

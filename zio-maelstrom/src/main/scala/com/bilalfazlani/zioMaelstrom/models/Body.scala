@@ -16,27 +16,28 @@ private[zioMaelstrom] case class Body[A](
 object Body:
 
   given [A: JsonEncoder]: JsonEncoder[Body[A]] =
-  (a: Body[A], indent: Option[Int], out: Write) => {
-    out.write(s"{\"type\":\"${a.`type`}\"")
-    if (a.msg_id.isDefined) {
-      out.write(",\"msg_id\":")
-      JsonEncoder[MessageId].unsafeEncode(a.msg_id.get, indent, out)
-    }
-    if (a.in_reply_to.isDefined) {
-      out.write(",\"in_reply_to\":")
-      JsonEncoder[MessageId].unsafeEncode(a.in_reply_to.get, indent, out)
-    }
-    out.write(s",")
-    JsonEncoder[A].toJsonAST(a.payload) match {
-      case Left(value) => throw new RuntimeException(s"Failed to encode payload: $value")
-      case Right(json) => json match {
-        case Json.Obj(fields) => fields.zipWithIndex.foreach{case ((k,v), i) =>
-          out.write(s"\"$k\":")
-          JsonEncoder[Json].unsafeEncode(v,indent, out)
-          if (i < fields.size - 1) out.write(",")
-        }
-        case x: Json => JsonEncoder[Json].unsafeEncode(x,indent, out)
+    (a: Body[A], indent: Option[Int], out: Write) => {
+      out.write(s"{\"type\":\"${a.`type`}\"")
+      if (a.msg_id.isDefined) {
+        out.write(",\"msg_id\":")
+        JsonEncoder[MessageId].unsafeEncode(a.msg_id.get, indent, out)
       }
+      if (a.in_reply_to.isDefined) {
+        out.write(",\"in_reply_to\":")
+        JsonEncoder[MessageId].unsafeEncode(a.in_reply_to.get, indent, out)
+      }
+      JsonEncoder[A].toJsonAST(a.payload) match {
+        case Left(value) => throw new RuntimeException(s"Failed to encode payload: $value")
+        case Right(json) =>
+          json match {
+            case Json.Obj(fields) =>
+              fields.zipWithIndex.foreach { case ((k, v), i) =>
+                if (i <= fields.size - 1) out.write(",")
+                out.write(s"\"$k\":")
+                JsonEncoder[Json].unsafeEncode(v, indent, out)
+              }
+            case x: Json => JsonEncoder[Json].unsafeEncode(x, indent, out)
+          }
+      }
+      out.write("}")
     }
-    out.write("}")
-  }

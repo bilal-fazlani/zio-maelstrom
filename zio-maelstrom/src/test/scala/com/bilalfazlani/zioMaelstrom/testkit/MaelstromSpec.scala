@@ -2,9 +2,10 @@ package com.bilalfazlani.zioMaelstrom
 package testkit
 
 import zio.*
-import zio.json.{JsonEncoder, EncoderOps}
+import zio.json.{EncoderOps, JsonEncoder}
 import zio.test.ZIOSpecDefault
 import models.Body
+import com.bilalfazlani.zioMaelstrom.models.MsgName
 
 trait MaelstromSpec extends ZIOSpecDefault {
   private def isCI = sys.env.get("CI").contains("true")
@@ -32,7 +33,7 @@ trait MaelstromSpec extends ZIOSpecDefault {
       InputStream.queue,   // FAKE
       InputChannel.live,
       CallbackRegistry.live,
-      MessageIdStore.live,
+      MessageIdStore.stub, // FAKE
 
       // Fake Services
       KvFake.linKv,
@@ -45,17 +46,41 @@ trait MaelstromSpec extends ZIOSpecDefault {
       ResponseHandler.start
     )
 
-  def inputMessage[A: JsonEncoder](in: A, from: NodeId) =
+  def inputSend[A: {JsonEncoder, MsgName}](in: A, from: NodeId) =
+    for {
+      queue <- ZIO.service[Queue[String]]
+      init <- ZIO.service[Initialisation]
+      body = Body(MsgName[A], in, None, None)
+      _ <- queue.offer(Message(from, init.context.me, body).toJson)
+    } yield ()
+
+  def inputSend[A: {JsonEncoder, MsgName}](body: Body[A], from: NodeId) =
     for {
       queue <- ZIO.service[Queue[String]]
       init  <- ZIO.service[Initialisation]
-      _     <- queue.offer(Message(from, init.context.me, in).toJson)
+      _ <- queue.offer(Message(from, init.context.me, body).toJson)
     } yield ()
 
-  def getNextMessage: ZIO[MaelstromTestRuntime, Nothing, Message[Any]] =
-    ZIO.serviceWithZIO[Queue[Message[Any]]](_.take)
+  def inputAsk[A: {JsonEncoder, MsgName}](in: A, from: NodeId, messageId: MessageId) =
+    for {
+      queue <- ZIO.service[Queue[String]]
+      init  <- ZIO.service[Initialisation]
+      body = Body(MsgName[A], in, Some(messageId), None)
+      _ <- queue.offer(Message(from, init.context.me, body).toJson)
+    } yield ()
 
-  def getNextMessageV2[A: JsonEncoder]: ZIO[MaelstromTestRuntime, Nothing, Message[Body[A]]] =
+  def inputReply[A: {JsonEncoder, MsgName}](in: A, from: NodeId, inReplyTo: MessageId) =
+    for {
+      queue <- ZIO.service[Queue[String]]
+      init  <- ZIO.service[Initialisation]
+      body = Body(MsgName[A], in, None, Some(inReplyTo))
+      _ <- queue.offer(Message(from, init.context.me, body).toJson)
+    } yield ()
+
+  def setNextMessageId(next: MessageId) =
+    ZIO.serviceWithZIO[MessageIdStore](_.asInstanceOf[MessageIdStoreStub].setNext(next))
+
+  def getNextMessage[A]: ZIO[MaelstromTestRuntime, Nothing, Message[Body[A]]] =
     ZIO.serviceWithZIO[Queue[Message[Any]]](_.take).map(_.asInstanceOf[Message[Body[A]]])
 
   def getCallbackState

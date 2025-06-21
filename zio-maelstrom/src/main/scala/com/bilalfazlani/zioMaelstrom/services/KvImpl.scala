@@ -1,6 +1,13 @@
 package com.bilalfazlani.zioMaelstrom.services
 
-import com.bilalfazlani.zioMaelstrom.{AskError, ErrorCode, ErrorMessage, MessageIdStore, MessageSender, NodeId}
+import com.bilalfazlani.zioMaelstrom.{
+  AskError,
+  ErrorCode,
+  ErrorMessage,
+  MessageIdStore,
+  MessageSender,
+  NodeId
+}
 import zio.*
 import zio.json.*
 
@@ -60,11 +67,9 @@ private[zioMaelstrom] class KvImpl(
       key: Key,
       timeout: Duration
   ): ZIO[Any, AskError, Value] =
-    messageIdStore.next.flatMap { messageId =>
-      sender
-        .ask[KvRead[Key], KvReadOk[Value]](KvRead(key, messageId), remote, timeout)
-        .map(_.value)
-    }
+    sender
+      .ask[Read[Key], ReadOk[Value]](Read(key), remote, timeout)
+      .map(_.value)
 
   override def readOption[Key: JsonEncoder, Value: JsonDecoder](
       key: Key,
@@ -79,26 +84,22 @@ private[zioMaelstrom] class KvImpl(
       value: Value,
       timeout: Duration
   ): ZIO[Any, AskError, Unit] =
-    messageIdStore.next.flatMap { messageId =>
-      sender
-        .ask[KvWrite[Key, Value], KvWriteOk](KvWrite(key, value, messageId), remote, timeout)
-        .unit
-    }
+    sender
+      .ask[Write[Key, Value], WriteOk](Write(key, value), remote, timeout)
+      .unit
 
   override def writeIfNotExists[Key: JsonEncoder, Value: JsonEncoder](
       key: Key,
       value: Value,
       timeout: Duration
   ): ZIO[Any, AskError, Unit] =
-    messageIdStore.next.flatMap { messageId =>
-      sender
-        .ask[CompareAndSwap[Key, Value], CompareAndSwapOk](
-          CompareAndSwap(key, None, value, true, messageId),
-          remote,
-          timeout
-        )
-        .unit
-    }
+    sender
+      .ask[Cas[Key, Value], CasOk](
+        Cas(key, None, value, true),
+        remote,
+        timeout
+      )
+      .unit
 
   private def updateError(key: Any) = ZIO.logDebug(
     s"an attempt to replace value for key $key failed due to a race condition. will attempt again with the new value"
@@ -159,15 +160,13 @@ private[zioMaelstrom] class KvImpl(
       createIfNotExists: Boolean,
       timeout: Duration
   ): ZIO[Any, AskError, Unit] =
-    messageIdStore.next.flatMap { messageId =>
-      sender
-        .ask[CompareAndSwap[Key, Value], CompareAndSwapOk](
-          CompareAndSwap(key, Some(from), to, createIfNotExists, messageId),
-          remote,
-          timeout
-        )
-        .unit
-    }
+    sender
+      .ask[Cas[Key, Value], CasOk](
+        Cas(key, Some(from), to, createIfNotExists),
+        remote,
+        timeout
+      )
+      .unit
 }
 
 class PartiallyAppliedKvRead[Kv <: KvService: Tag, Value] {

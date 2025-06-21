@@ -6,32 +6,29 @@ import com.bilalfazlani.zioMaelstrom.*
 
 object ErrorDocs:
   object ReplyStandardError {
-    case class InMessage(msg_id: MessageId) extends NeedsReply derives JsonCodec
+    case class InMessage() derives JsonCodec
 
     val handler = receive[InMessage] { case msg: InMessage =>
-      reply(ErrorMessage(msg.msg_id, ErrorCode.PreconditionFailed, "some text message")) // (1)!
+      reply(ErrorMessage(summon[Option[MessageId]].get, ErrorCode.PreconditionFailed, "some text message")) // (1)!
     }
   }
 
   object ReplyCustomError {
-    case class InMessage(msg_id: MessageId) extends NeedsReply derives JsonCodec
+    case class InMessage() derives JsonCodec
 
     val handler = receive[InMessage] { case msg: InMessage =>
-      reply(ErrorMessage(msg.msg_id, ErrorCode.Custom(1005), "some text message"))
+      reply(ErrorMessage(summon[Option[MessageId]].get, ErrorCode.Custom(1005), "some text message"))
     }
   }
 
   object GetErrorMessage {
 
-    case class Query(id: Int, msg_id: MessageId, `type`: String = "query")
-        extends NeedsReply,
-          Sendable derives JsonCodec
+    case class Query(id: Int) derives JsonCodec
 
-    case class Answer(in_reply_to: MessageId, text: String) extends Reply derives JsonCodec
+    case class Answer(text: String) derives JsonCodec
 
     val askResponse: ZIO[MaelstromRuntime, AskError, Unit] = for
-      msgId  <- MessageId.next
-      answer <- NodeId("g4").ask[Answer](Query(1, msgId), 5.seconds)
+      answer <- NodeId("g4").ask[Answer](Query(1), 5.seconds)
       _      <- ZIO.logInfo(s"answer: $answer")
     yield ()
 

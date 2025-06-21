@@ -1,7 +1,7 @@
 package com.bilalfazlani.zioMaelstrom.models
 
+import scala.compiletime.erasedValue
 import scala.deriving.Mirror
-import scala.compiletime.{constValue, erasedValue}
 
 // opaque alias – at runtime it is just a String
 opaque type MsgName[T] = String

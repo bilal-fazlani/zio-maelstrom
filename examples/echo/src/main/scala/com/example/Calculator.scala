@@ -8,29 +8,25 @@ import zio.*
 
 // in_messages {
 @jsonDiscriminator("type")
-sealed trait CalculatorMessage extends NeedsReply derives JsonDecoder
+sealed trait CalculatorMessage derives JsonDecoder
 
-@jsonHint("add") case class Add(a: Int, b: Int, msg_id: MessageId) extends CalculatorMessage
+@jsonHint("add") case class Add(a: Int, b: Int) extends CalculatorMessage
 
-@jsonHint("subtract") case class Subtract(a: Int, b: Int, msg_id: MessageId) extends CalculatorMessage
+@jsonHint("subtract") case class Subtract(a: Int, b: Int) extends CalculatorMessage
 
-@jsonHint("multiply") case class Multiply(a: Int, b: Int, msg_id: MessageId) extends CalculatorMessage
+@jsonHint("multiply") case class Multiply(a: Int, b: Int) extends CalculatorMessage
 
-@jsonHint("divide") case class Divide(a: Int, b: Int, msg_id: MessageId) extends CalculatorMessage
+@jsonHint("divide") case class Divide(a: Int, b: Int) extends CalculatorMessage
 //}
 
 // out_messages {
-case class AddOk(result: Int, in_reply_to: MessageId, `type`: String = "add_ok") 
-  extends Sendable, Reply derives JsonEncoder
+case class AddOk(result: Int) derives JsonEncoder
 
-case class SubtractOk(result: Int, in_reply_to: MessageId, `type`: String = "subtract_ok") 
-  extends Sendable, Reply derives JsonEncoder
+case class SubtractOk(result: Int) derives JsonEncoder
 
-case class MultiplyOk(result: Int, in_reply_to: MessageId, `type`: String = "multiply_ok") 
-  extends Sendable, Reply derives JsonEncoder
+case class MultiplyOk(result: Int) derives JsonEncoder
 
-case class DivideOk(result: Int, in_reply_to: MessageId, `type`: String = "divide_ok") 
-  extends Sendable, Reply derives JsonEncoder
+case class DivideOk(result: Int) derives JsonEncoder
 //}
 
 // format: on
@@ -43,11 +39,11 @@ object Calculator extends MaelstromNode:
       .withStaticInput(NodeId("B"), Set(), "examples" / "echo" / "calculator.txt")
 
   val program = receive[CalculatorMessage] {
-    case add: Add           => reply(AddOk(add.a + add.b, add.msg_id))
-    case subtract: Subtract => reply(SubtractOk(subtract.a - subtract.b, subtract.msg_id))
-    case multiply: Multiply => reply(MultiplyOk(multiply.a * multiply.b, multiply.msg_id))
+    case add: Add           => reply(AddOk(add.a + add.b))
+    case subtract: Subtract => reply(SubtractOk(subtract.a - subtract.b))
+    case multiply: Multiply => reply(MultiplyOk(multiply.a * multiply.b))
     case divide: Divide =>
       if divide.b == 0 then
-        reply(ErrorMessage(divide.msg_id, ErrorCode.Custom(55), "divide by zero"))
-      else reply(DivideOk(divide.a / divide.b, divide.msg_id))
+        reply(ErrorMessage(summon[Option[MessageId]].get, ErrorCode.Custom(55), "divide by zero"))
+      else reply(DivideOk(divide.a / divide.b))
   }
