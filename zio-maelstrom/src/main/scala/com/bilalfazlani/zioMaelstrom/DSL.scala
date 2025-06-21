@@ -5,15 +5,19 @@ import zio.json.*
 import zio.*
 
 import scala.annotation.targetName
+import com.bilalfazlani.zioMaelstrom.models.{MsgName, Body}
 
-extension (s: String) @targetName("compose")
-infix def /(string: String): Path = Path.of(s, string)
-extension (p: Path) @targetName("compose")
-infix def /(string: String): Path   = p.resolve(string)
+extension (s: String)
+  @targetName("compose")
+  infix def /(string: String): Path = Path.of(s, string)
+extension (p: Path)
+  @targetName("compose")
+  infix def /(string: String): Path = p.resolve(string)
 
 extension (nodeId: NodeId)
-  infix def ask[Res <: Reply]                         = AskPartiallyApplied[Res](nodeId)
-  infix def send[A <: Sendable: JsonEncoder](body: A) = MessageSender.send(body, nodeId)
+  infix def ask[Res <: Reply]                           = AskPartiallyApplied[Res](nodeId)
+  infix def send[A <: Sendable: JsonEncoder](body: A)   = MessageSender.send(body, nodeId)
+  infix def sendV2[A: MsgName: JsonEncoder](payload: A) = MessageSender.sendV2(payload, nodeId)
 
 def receive[I]: ReceivePartiallyApplied[I] = new ReceivePartiallyApplied[I]
 

@@ -2,6 +2,7 @@ package com.bilalfazlani.zioMaelstrom
 
 import zio.*
 import zio.json.{JsonEncoder, JsonDecoder}
+import com.bilalfazlani.zioMaelstrom.models.{MsgName, Body}
 
 // ask_error {
 type AskError = ErrorMessage | DecodingFailure | Timeout
@@ -15,7 +16,7 @@ case class DecodingFailure(error: String, message: GenericMessage)
 
 trait MessageSender:
   def send[A <: Sendable: JsonEncoder](body: A, to: NodeId): UIO[Unit]
-
+  def sendV2[A: MsgName: JsonEncoder](payload: A, to: NodeId): UIO[Unit]
   def ask[Req <: Sendable & NeedsReply: JsonEncoder, Res <: Reply: JsonDecoder](
       body: Req,
       to: NodeId,
@@ -29,6 +30,9 @@ private[zioMaelstrom] object MessageSender:
 
   def send[A <: Sendable: JsonEncoder](body: A, to: NodeId): URIO[MessageSender, Unit] = ZIO
     .serviceWithZIO[MessageSender](_.send(body, to))
+
+  def sendV2[A: MsgName: JsonEncoder](payload: A, to: NodeId): URIO[MessageSender, Unit] = ZIO
+    .serviceWithZIO[MessageSender](_.sendV2(payload, to))
 
   def ask[Req <: Sendable & NeedsReply: JsonEncoder, Res <: Reply: JsonDecoder](
       body: Req,
@@ -44,6 +48,12 @@ private class MessageSenderLive(
   def send[A <: Sendable: JsonEncoder](body: A, to: NodeId) =
     val message: Message[A] =
       Message[A](source = init.context.me, destination = to, body = body)
+    stdout.transport(message)
+
+  def sendV2[A: MsgName: JsonEncoder](payload: A, to: NodeId) =
+    val body: Body[A] = Body(MsgName[A], payload, msg_id = None, in_reply_to = None)
+    val message: Message[Body[A]] =
+      Message[Body[A]](source = init.context.me, destination = to, body = body)
     stdout.transport(message)
 
   def ask[Req <: Sendable & NeedsReply: JsonEncoder, Res <: Reply: JsonDecoder](
