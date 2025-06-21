@@ -15,9 +15,10 @@ extension (p: Path)
   infix def /(string: String): Path = p.resolve(string)
 
 extension (nodeId: NodeId)
-  infix def ask[Res <: Reply]                           = AskPartiallyApplied[Res](nodeId)
-  infix def send[A <: Sendable: JsonEncoder](body: A)   = MessageSender.send(body, nodeId)
-  infix def sendV2[A: MsgName: JsonEncoder](payload: A) = MessageSender.sendV2(payload, nodeId)
+  infix def ask[Res <: Reply]                             = AskPartiallyApplied[Res](nodeId)
+  infix def send[A <: Sendable: JsonEncoder](body: A)     = MessageSender.send(body, nodeId)
+  infix def sendV2[A: {MsgName, JsonEncoder}](payload: A) = MessageSender.sendV2(payload, nodeId)
+  infix def askV2[Res]                                    = AskPartiallyAppliedV2[Res](nodeId)
 
 def receive[I]: ReceivePartiallyApplied[I] = new ReceivePartiallyApplied[I]
 
@@ -27,6 +28,18 @@ def others(using Context): Set[NodeId] = summon[Context].others
 def src(using MessageSource): NodeId   = summon[MessageSource].nodeId
 def reply[B <: Sendable & Reply: JsonEncoder](out: B)(using MessageSource) =
   MessageSender.send(out, src)
+def replyV2[B: {JsonEncoder, MsgName}](out: B)(using MessageSource, Option[MessageId]) = {
+  summon[Option[MessageId]] match {
+    case Some(messageId) =>
+      MessageSender.sendRaw(Body(MsgName[B], out, None, Some(messageId)), src)
+    case None =>
+      ZIO.logWarning(
+        "there is no messageId present in the context, " +
+          s"cannot reply to node $src with message type ${MsgName[B]}"
+      )
+  }
+
+}
 //RECEIVE CONTEXTFUL - END
 
 private[zioMaelstrom] final class AskPartiallyApplied[Res <: Reply](private val remote: NodeId)
@@ -34,6 +47,14 @@ private[zioMaelstrom] final class AskPartiallyApplied[Res <: Reply](private val 
   def apply[Req <: Sendable & NeedsReply: JsonEncoder](body: Req, timeout: Duration)(using
       JsonDecoder[Res]
   ): ZIO[MessageSender, AskError, Res] = MessageSender.ask[Req, Res](body, remote, timeout)
+}
+
+private[zioMaelstrom] final class AskPartiallyAppliedV2[Res](private val remote: NodeId)
+    extends AnyVal {
+  def apply[Req: {JsonEncoder, MsgName}](body: Req, timeout: Duration)(using
+      JsonDecoder[Res]
+  ): ZIO[MessageSender, AskError, Res] =
+    MessageSender.askV2[Req, Res](body, remote, timeout)
 }
 
 private[zioMaelstrom] final class ReceivePartiallyApplied[I](private val dummy: Boolean = false)
