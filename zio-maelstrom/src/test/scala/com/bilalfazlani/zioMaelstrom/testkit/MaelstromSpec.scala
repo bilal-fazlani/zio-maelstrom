@@ -43,7 +43,7 @@ trait MaelstromSpec extends ZIOSpecDefault {
 
       // effectful layers
       Initialisation.fake(context), // FAKE
-      ResponseHandler.start,
+      ResponseHandler.start
     )
 
   def testRuntime(
@@ -90,7 +90,7 @@ trait MaelstromSpec extends ZIOSpecDefault {
       _ <- queue.offer(Message(from, init.context.me, body).toJson)
     } yield ()
 
-  def inputSend[A: {JsonEncoder, MsgName}](body: Body[A], from: NodeId) =
+  def inputSend[A: JsonEncoder](body: Body[A], from: NodeId) =
     for {
       queue <- ZIO.service[Queue[String]]
       init  <- ZIO.service[Initialisation]

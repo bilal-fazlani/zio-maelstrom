@@ -24,7 +24,11 @@ private[zioMaelstrom] object MaelstromInit {
     if msg.isOfType("init") then
       msg.body.toRight("init body is missing").flatMap { body =>
         JsonDecoder[MaelstromInit].fromJsonAST(body).map { init =>
-          Message(source = msg.src, destination = msg.dest, body = Body("init", init, msg.messageId, msg.inReplyTo))
+          Message(
+            source = msg.src,
+            destination = msg.dest,
+            body = Body("init", init, msg.messageId, msg.inReplyTo)
+          )
         }
       }
     else Left("message is not of type 'init'")
@@ -38,7 +42,7 @@ private[zioMaelstrom] case class MaelstromInitOk() derives JsonEncoder
 // errorMessage {
 case class ErrorMessage(
     code: ErrorCode,
-    text: String,
+    text: String
 ) derives JsonCodec
 // }
 

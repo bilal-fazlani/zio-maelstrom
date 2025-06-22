@@ -5,8 +5,7 @@ import com.bilalfazlani.zioMaelstrom.services.*
 import zio.*
 import zio.json.*
 
-case class KvFake(ref: Ref.Synchronized[Map[Any, Any]], messageIdStore: MessageIdStore)
-    extends KvService:
+case class KvFake(ref: Ref.Synchronized[Map[Any, Any]]) extends KvService:
   override def read[Key: JsonEncoder, Value: JsonDecoder](
       key: Key,
       timeout: Duration
@@ -97,7 +96,6 @@ object KvFake:
   val linKv: ZLayer[Any, Nothing, LinKv] = ZLayer.make[LinKv](
     ZLayer.fromFunction(KvFake.apply),
     mapLayer,
-    MessageIdStore.live,
     ZLayer.fromFunction((fake: KvFake) =>
       new LinKv {
         export fake.*
@@ -108,7 +106,6 @@ object KvFake:
   val seqKv: ZLayer[Any, Nothing, SeqKv] = ZLayer.make[SeqKv](
     ZLayer.fromFunction(KvFake.apply),
     mapLayer,
-    MessageIdStore.live,
     ZLayer.fromFunction((fake: KvFake) =>
       new SeqKv {
         export fake.*
@@ -119,7 +116,6 @@ object KvFake:
   val lwwKv: ZLayer[Any, Nothing, LwwKv] = ZLayer.make[LwwKv](
     ZLayer.fromFunction(KvFake.apply),
     mapLayer,
-    MessageIdStore.live,
     ZLayer.fromFunction((fake: KvFake) =>
       new LwwKv {
         export fake.*

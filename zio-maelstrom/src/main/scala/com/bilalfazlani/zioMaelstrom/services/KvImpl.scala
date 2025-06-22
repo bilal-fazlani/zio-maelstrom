@@ -59,8 +59,7 @@ private[zioMaelstrom] trait KvService:
 
 private[zioMaelstrom] class KvImpl(
     private val remote: NodeId,
-    private val sender: MessageSender,
-    private val messageIdStore: MessageIdStore
+    private val sender: MessageSender
 ) extends KvService {
 
   override def read[Key: JsonEncoder, Value: JsonDecoder](
