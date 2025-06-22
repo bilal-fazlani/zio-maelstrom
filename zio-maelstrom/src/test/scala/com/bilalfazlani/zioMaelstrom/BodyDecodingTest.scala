@@ -4,7 +4,7 @@ import zio.*
 import zio.test.*
 import zio.json.*
 import zio.json.ast.Json
-import com.bilalfazlani.zioMaelstrom.models.{Body, MsgName}
+import com.bilalfazlani.zioMaelstrom.models.Body
 
 object BodyDecodingTest extends ZIOSpecDefault {
 

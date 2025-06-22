@@ -43,8 +43,44 @@ trait MaelstromSpec extends ZIOSpecDefault {
 
       // effectful layers
       Initialisation.fake(context), // FAKE
-      ResponseHandler.start
+      ResponseHandler.start,
     )
+
+  def testRuntime(
+        settings: Settings,
+        inputStream: ZLayer[Any, Nothing, InputStream],
+        inputQueue: ZLayer[Any, Nothing, Queue[String]]
+    ): ZLayer[Any, Nothing, MaelstromTestRuntime] =
+      ZLayer.make[MaelstromTestRuntime](
+        // pure layers
+        ZLayer.succeed(settings),
+        Scope.default,
+        MessageSender.live,
+        RequestHandler.live,
+        ZLayer(Queue.unbounded[Message[Any]]),
+        inputQueue,
+        OutputChannel.queue, // FAKE
+        inputStream,   // FAKE
+        InputChannel.live,
+        CallbackRegistry.live,
+        MessageIdStore.stub, // FAKE
+
+        // Fake Services
+        KvFake.linKv,
+        KvFake.seqKv,
+        KvFake.lwwKv,
+        LinTsoFake.make,
+
+        // effectful layers
+        Initialisation.run,
+        ResponseHandler.start
+      )
+
+  def inputRawJson(json: String) =
+    for {
+      queue <- ZIO.service[Queue[String]]
+      _ <- queue.offer(json)
+    } yield ()
 
   def inputSend[A: {JsonEncoder, MsgName}](in: A, from: NodeId) =
     for {

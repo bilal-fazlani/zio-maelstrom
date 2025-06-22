@@ -84,11 +84,11 @@ private[zioMaelstrom] object GenericMessage {
   )
 }
 
-private[zioMaelstrom] trait GenericDecoder[A: JsonDecoder]:
+private[zioMaelstrom] trait GenericDecoder[A]:
   def decode(msg: GenericMessage): Either[String, Message[A]]
 
 private[zioMaelstrom] object GenericDecoder:
-  def apply[A: JsonDecoder](using decoder: GenericDecoder[A]): GenericDecoder[A] = decoder
+  def apply[A](using decoder: GenericDecoder[A]): GenericDecoder[A] = decoder
   given [A: JsonDecoder]: GenericDecoder[A] = new GenericDecoder[A]:
     def decode(msg: GenericMessage): Either[String, Message[A]] =
       for {

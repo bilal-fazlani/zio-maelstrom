@@ -15,7 +15,6 @@ private[zioMaelstrom] case class Message[+A](
       JsonEncoder
 
 private[zioMaelstrom] case class MaelstromInit(
-    msg_id: MessageId,
     node_id: NodeId,
     node_ids: Set[NodeId]
 ) derives JsonDecoder

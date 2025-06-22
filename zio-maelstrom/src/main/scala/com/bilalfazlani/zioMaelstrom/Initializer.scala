@@ -22,7 +22,7 @@ private[zioMaelstrom] object Initialisation:
       .derive[TestInitializer]
       .flatMap(x => ZLayer(x.get.initialize(context)))
 
-private class InitializerLive(
+private[zioMaelstrom] class InitializerLive(
     outputChannel: OutputChannel,
     inputChannel: InputChannel
 ):
@@ -66,8 +66,12 @@ private class InitializerLive(
             // because this was promised to be a init message, but was not,
             // we will have to shut down the node
             case Left(error) =>
-              handleInitDecodingError(genericMessage) *>
-                ZIO.die(new Exception("init message decoding failed"))
+              handleInitDecodingError(genericMessage, error) *>
+                ZIO.die(
+                  new Exception(
+                    s"could not decode init message from ${genericMessage.raw}. Error: $error"
+                  )
+                )
         case (None, _) =>
           // if we don't have a some yet, it means we didn't get any init message
           // since we can't proceed without init message, its safe to fail the program
@@ -91,8 +95,8 @@ private class InitializerLive(
       _ <- ZIO.logInfo("initialised")
     } yield ()
 
-  private def handleInitDecodingError(genericMessage: GenericMessage) =
-    ZIO.logError(s"could not decode init message from ${genericMessage.raw}")
+  private def handleInitDecodingError(genericMessage: GenericMessage, err: String) =
+    ZIO.logError(s"could not decode init message from ${genericMessage.raw}. Error: $err")
       *> ZIO.logWarning("please check maelstrom documentation about initialisation message format")
       *> ZIO.logInfo(
         "https://github.com/jepsen-io/maelstrom/blob/main/doc/protocol.md#initialization"
