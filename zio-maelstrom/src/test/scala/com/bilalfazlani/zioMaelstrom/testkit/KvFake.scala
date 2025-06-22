@@ -34,13 +34,10 @@ case class KvFake(ref: Ref.Synchronized[Map[Any, Any]], messageIdStore: MessageI
     ref.updateZIO { map =>
       map.get(key) match {
         case Some(_) =>
-          messageIdStore.next.flatMap(messageId =>
-            ZIO.fail(
-              ErrorMessage(
-                messageId,
-                ErrorCode.PreconditionFailed,
-                s"Value for key $key already exists"
-              )
+          ZIO.fail(
+            ErrorMessage(
+              ErrorCode.PreconditionFailed,
+              s"Value for key $key already exists"
             )
           )
         case None => ZIO.succeed(map + (key -> value))
@@ -59,17 +56,12 @@ case class KvFake(ref: Ref.Synchronized[Map[Any, Any]], messageIdStore: MessageI
         case Some(`from`)              => ZIO.succeed(map + (key -> to))
         case None if createIfNotExists => ZIO.succeed(map + (key -> to))
         case None =>
-          messageIdStore.next.flatMap(messageId =>
-            ZIO.fail(ErrorMessage(messageId, ErrorCode.KeyDoesNotExist, s"Key $key does not exist"))
-          )
+          ZIO.fail(ErrorMessage(ErrorCode.KeyDoesNotExist, s"Key $key does not exist"))
         case Some(other) =>
-          messageIdStore.next.flatMap(messageId =>
-            ZIO.fail(
-              ErrorMessage(
-                messageId,
-                ErrorCode.PreconditionFailed,
-                s"Expected $from but found $other"
-              )
+          ZIO.fail(
+            ErrorMessage(
+              ErrorCode.PreconditionFailed,
+              s"Expected $from but found $other"
             )
           )
       }
@@ -94,7 +86,7 @@ case class KvFake(ref: Ref.Synchronized[Map[Any, Any]], messageIdStore: MessageI
     ref.modifyZIO { map =>
       val current = map.get(key).map(_.asInstanceOf[Value])
       for {
-        newVal  <- newValue(current)
+        newVal <- newValue(current)
       } yield (newVal, map + (key -> newVal))
     }
 

@@ -3,13 +3,14 @@ package com.bilalfazlani.zioMaelstrom
 import zio.json.*
 import scala.annotation.targetName
 import zio.*
+import com.bilalfazlani.zioMaelstrom.models.Body
 
-private[zioMaelstrom] case class Message[+Body](
+private[zioMaelstrom] case class Message[+A](
     @jsonField("src")
     source: NodeId,
     @jsonField("dest")
     destination: NodeId,
-    body: Body
+    body: Body[A]
 ) derives JsonDecoder,
       JsonEncoder
 
@@ -24,7 +25,7 @@ private[zioMaelstrom] object MaelstromInit {
     if msg.isOfType("init") then
       msg.body.toRight("init body is missing").flatMap { body =>
         JsonDecoder[MaelstromInit].fromJsonAST(body).map { init =>
-          Message(source = msg.src, destination = msg.dest, body = init)
+          Message(source = msg.src, destination = msg.dest, body = Body("init", init, msg.messageId, msg.inReplyTo))
         }
       }
     else Left("message is not of type 'init'")
@@ -33,15 +34,12 @@ private[zioMaelstrom] object MaelstromInit {
     .getOrElse(throw new Exception("message is not of type 'init'"))
 }
 
-private[zioMaelstrom] case class MaelstromInitOk(in_reply_to: MessageId, `type`: String = "init_ok")
-    derives JsonEncoder
+private[zioMaelstrom] case class MaelstromInitOk() derives JsonEncoder
 
 // errorMessage {
 case class ErrorMessage(
-    in_reply_to: MessageId,
     code: ErrorCode,
     text: String,
-    `type`: String = "error"
 ) derives JsonCodec
 // }
 

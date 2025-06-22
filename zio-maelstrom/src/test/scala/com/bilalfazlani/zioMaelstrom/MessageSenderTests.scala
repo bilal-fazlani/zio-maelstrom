@@ -20,7 +20,7 @@ object MessageSenderTests extends MaelstromSpec {
       case class MyMessage(text: String, number: Int) derives JsonEncoder
       for {
         _ <- ZIO.serviceWithZIO[MessageSender](_.send(MyMessage("Hello World", 2), NodeId("n2")))
-        outMessage: Message[Body[MyMessage]] <- getNextMessage[MyMessage]
+        outMessage: Message[MyMessage] <- getNextMessage[MyMessage]
         outJson                              <- ZIO.from(outMessage.toJsonAST)
         expectedJson = Json(
           "src"  -> Json.Str("n1"),
@@ -37,7 +37,7 @@ object MessageSenderTests extends MaelstromSpec {
       case class MyMessage(text: String) derives JsonEncoder
       for {
         _ <- ZIO.serviceWithZIO[MessageSender](_.send(MyMessage("Hello World"), NodeId("n2")))
-        outMessage: Message[Body[MyMessage]] <- getNextMessage[MyMessage]
+        outMessage: Message[MyMessage] <- getNextMessage[MyMessage]
         outJson                              <- ZIO.from(outMessage.toJsonAST)
         expectedJson = Json(
           "src"  -> Json.Str("n1"),
@@ -53,7 +53,7 @@ object MessageSenderTests extends MaelstromSpec {
       case class MyMessage() derives JsonEncoder
       for {
         _ <- ZIO.serviceWithZIO[MessageSender](_.send(MyMessage(), NodeId("n2")))
-        outMessage: Message[Body[MyMessage]] <- getNextMessage[MyMessage]
+        outMessage: Message[MyMessage] <- getNextMessage[MyMessage]
         outJson                              <- ZIO.from(outMessage.toJsonAST)
         expectedJson = Json(
           "src"  -> Json.Str("n1"),
@@ -70,7 +70,7 @@ object MessageSenderTests extends MaelstromSpec {
         _ <- ZIO.serviceWithZIO[MessageSender](
           _.sendRaw(Body(MsgName[MyMessage], MyMessage(), None, Some(MessageId(123))), NodeId("n2"))
         )
-        outMessage: Message[Body[MyMessage]] <- getNextMessage[MyMessage]
+        outMessage: Message[MyMessage] <- getNextMessage[MyMessage]
         outJson                              <- ZIO.from(outMessage.toJsonAST)
         expectedJson = Json(
           "src"  -> Json.Str("n1"),

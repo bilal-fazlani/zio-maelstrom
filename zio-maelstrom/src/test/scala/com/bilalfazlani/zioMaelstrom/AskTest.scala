@@ -23,7 +23,7 @@ object AskTest extends MaelstromSpec {
         pongFiber <- ZIO
           .serviceWithZIO[MessageSender](_.ask[Ping, Pong](Ping("Hello"), NodeId("n2"), 1.second))
           .fork
-        pingMessage: Message[Body[Ping]] <- getNextMessage[Ping]
+        pingMessage: Message[Ping] <- getNextMessage[Ping]
         _       <- inputReply(Pong("World"), NodeId("n2"), MessageId(1))
         pong    <- pongFiber.join.debug("pong")
         pingJson <- ZIO.from(pingMessage.toJsonAST).debug("pingJson")

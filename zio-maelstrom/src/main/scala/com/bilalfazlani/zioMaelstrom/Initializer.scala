@@ -4,6 +4,7 @@ import zio.*
 import zio.stream.{ZStream, ZSink}
 import zio.json.JsonDecoder
 import java.time.OffsetDateTime
+import com.bilalfazlani.zioMaelstrom.models.Body
 
 private[zioMaelstrom] type MessageStream = ZStream[Any, Nothing, GenericMessage]
 
@@ -78,7 +79,12 @@ private class InitializerLive(
     val replyMessage: Message[MaelstromInitOk] = Message[MaelstromInitOk](
       message.destination,
       message.source,
-      MaelstromInitOk(message.body.msg_id)
+      Body(
+        "init_ok",
+        MaelstromInitOk(),
+        None,
+        message.body.msg_id
+      )
     )
     for {
       _ <- outputChannel.transport(replyMessage)

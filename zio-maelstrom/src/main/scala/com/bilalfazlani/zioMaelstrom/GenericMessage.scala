@@ -2,6 +2,7 @@ package com.bilalfazlani.zioMaelstrom
 
 import zio.json.ast.Json
 import zio.json.JsonDecoder
+import com.bilalfazlani.zioMaelstrom.models.Body
 
 private[zioMaelstrom] case class GenericDetails(
     messageType: Option[String],
@@ -52,10 +53,11 @@ private[zioMaelstrom] case class GenericMessage(
       Message[ErrorMessage](
         source = dest,
         destination = src,
-        body = ErrorMessage(
-          in_reply_to = msgid,
-          code = code,
-          text = text
+        body = Body(
+          "error",
+          ErrorMessage(code, text),
+          None,
+          Some(msgid)
         )
       )
     }
@@ -95,7 +97,7 @@ private[zioMaelstrom] object GenericDecoder:
           Message(
             source = msg.src,
             destination = msg.dest,
-            body = a
+            body = Body(msg.messageType.get, a, msg.messageId, msg.inReplyTo)
           )
         }
       } yield message

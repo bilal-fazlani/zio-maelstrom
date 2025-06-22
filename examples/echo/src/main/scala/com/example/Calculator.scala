@@ -44,6 +44,6 @@ object Calculator extends MaelstromNode:
     case multiply: Multiply => reply(MultiplyOk(multiply.a * multiply.b))
     case divide: Divide =>
       if divide.b == 0 then
-        reply(ErrorMessage(summon[Option[MessageId]].get, ErrorCode.Custom(55), "divide by zero"))
+        reply(ErrorMessage(ErrorCode.Custom(55), "divide by zero"))
       else reply(DivideOk(divide.a / divide.b))
   }

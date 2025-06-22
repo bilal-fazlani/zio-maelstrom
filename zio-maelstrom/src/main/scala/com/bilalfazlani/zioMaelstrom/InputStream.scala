@@ -42,7 +42,7 @@ object InputStream:
       context: Context
   ): ZLayer[Any, Nothing, InputStream] =
     def encode(m: InlineMessage[A]) =
-      val message = Message[Body[A]](m.src, context.me, m.message)
+      val message = Message[A](m.src, context.me, m.message)
       message.toJson
     val stream = InputStream(
       ZStream

@@ -1,12 +1,12 @@
 package com.bilalfazlani.zioMaelstrom.models
 
 import com.bilalfazlani.zioMaelstrom.MessageId
-import zio.json.JsonEncoder
+import zio.json.{JsonDecoder, JsonEncoder}
 import zio.json.ast.Json
 import zio.json.internal.Write
 
 // never exposed to end‑users
-private[zioMaelstrom] case class Body[A](
+private[zioMaelstrom] case class Body[+A](
     `type`: String, // filled from MsgName[A]
     payload: A,     // the user's case class
     msg_id: Option[MessageId],
@@ -14,6 +14,29 @@ private[zioMaelstrom] case class Body[A](
 )
 
 object Body:
+
+  given [A: JsonDecoder]: JsonDecoder[Body[A]] =
+    JsonDecoder[Json.Obj].mapOrFail { jsonObj =>
+      val fields = jsonObj.fields.toMap
+
+      // Extract Body-specific fields
+      val typeField = fields
+        .get("type")
+        .flatMap(_.as[String].toOption)
+        .toRight("Missing or invalid 'type' field")
+
+      val msgId     = fields.get("msg_id").map(_.as[MessageId].toOption).flatten
+      val inReplyTo = fields.get("in_reply_to").map(_.as[MessageId].toOption).flatten
+
+      // Remove Body-specific fields to get payload fields
+      val payloadFields = fields - "type" - "msg_id" - "in_reply_to"
+      val payloadJson   = Json.Obj(zio.Chunk.fromIterable(payloadFields))
+
+      for {
+        tpe     <- typeField
+        payload <- payloadJson.as[A].left.map(s => s"Failed to decode payload: $s")
+      } yield Body(tpe, payload, msgId, inReplyTo)
+    }
 
   given [A: JsonEncoder]: JsonEncoder[Body[A]] =
     (a: Body[A], indent: Option[Int], out: Write) => {

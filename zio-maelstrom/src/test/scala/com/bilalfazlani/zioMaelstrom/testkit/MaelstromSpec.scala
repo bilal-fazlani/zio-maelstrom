@@ -80,8 +80,8 @@ trait MaelstromSpec extends ZIOSpecDefault {
   def setNextMessageId(next: MessageId) =
     ZIO.serviceWithZIO[MessageIdStore](_.asInstanceOf[MessageIdStoreStub].setNext(next))
 
-  def getNextMessage[A]: ZIO[MaelstromTestRuntime, Nothing, Message[Body[A]]] =
-    ZIO.serviceWithZIO[Queue[Message[Any]]](_.take).map(_.asInstanceOf[Message[Body[A]]])
+  def getNextMessage[A]: ZIO[MaelstromTestRuntime, Nothing, Message[A]] =
+    ZIO.serviceWithZIO[Queue[Message[Any]]](_.take).map(_.asInstanceOf[Message[A]])
 
   def getCallbackState
       : ZIO[MaelstromTestRuntime, Nothing, Map[CallbackId, Promise[AskError, GenericMessage]]] =

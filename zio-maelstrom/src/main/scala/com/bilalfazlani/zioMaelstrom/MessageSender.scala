@@ -17,6 +17,8 @@ case class DecodingFailure(error: String, message: GenericMessage)
 trait MessageSender:
   def send[A: {MsgName, JsonEncoder}](payload: A, to: NodeId): UIO[Unit]
 
+  def reply[A: {MsgName, JsonEncoder}](payload: A, to: NodeId, messageId: MessageId): UIO[Unit]
+
   private[zioMaelstrom] def sendRaw[A: {MsgName, JsonEncoder}](
       body: Body[A],
       to: NodeId
@@ -39,6 +41,13 @@ private[zioMaelstrom] object MessageSender:
 
   def send[A: {MsgName, JsonEncoder}](payload: A, to: NodeId): URIO[MessageSender, Unit] = ZIO
     .serviceWithZIO[MessageSender](_.send(payload, to))
+
+  def reply[A: {MsgName, JsonEncoder}](
+      payload: A,
+      to: NodeId,
+      messageId: MessageId
+  ): URIO[MessageSender, Unit] = ZIO
+    .serviceWithZIO[MessageSender](_.reply(payload, to, messageId))
 
   private[zioMaelstrom] def sendRaw[A: {MsgName, JsonEncoder}](
       body: Body[A],
@@ -64,12 +73,17 @@ private class MessageSenderLive(
     val body: Body[A] = Body(MsgName[A], payload, msg_id = None, in_reply_to = None)
     sendRaw(body, to)
 
+  def reply[A: {MsgName, JsonEncoder}](payload: A, to: NodeId, messageId: MessageId): UIO[Unit] = {
+    val body: Body[A] = Body(MsgName[A], payload, msg_id = None, in_reply_to = Some(messageId))
+    sendRaw(body, to)
+  }
+
   private[zioMaelstrom] def sendRaw[A: {MsgName, JsonEncoder}](
       body: Body[A],
       to: NodeId
   ): UIO[Unit] = {
-    val message: Message[Body[A]] =
-      Message[Body[A]](source = init.context.me, destination = to, body = body)
+    val message: Message[A] =
+      Message[A](source = init.context.me, destination = to, body = body)
     stdout.transport(message)
   }
 
@@ -94,7 +108,7 @@ private class MessageSenderLive(
       if genericMessage.isError then {
         val error = JsonDecoder[Message[ErrorMessage]]
           .fromJsonAST(genericMessage.raw)
-          .map(_.body)
+          .map(_.body.payload)
           .left
           .map(e => DecodingFailure(e, genericMessage))
         error.fold(ZIO.fail, ZIO.fail).tapError {
@@ -113,4 +127,4 @@ private class MessageSenderLive(
             ZIO.logError(s"decoding failed for response from ${to} for message id ${msg_id}")
           )
       }
-  } yield decoded.body
+  } yield decoded.body.payload

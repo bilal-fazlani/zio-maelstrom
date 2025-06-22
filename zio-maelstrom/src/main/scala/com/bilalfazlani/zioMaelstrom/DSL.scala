@@ -27,7 +27,7 @@ def src(using MessageSource): NodeId   = summon[MessageSource].nodeId
 def reply[B: {JsonEncoder, MsgName}](out: B)(using MessageSource, Option[MessageId]) = {
   summon[Option[MessageId]] match {
     case Some(messageId) =>
-      MessageSender.sendRaw(Body(MsgName[B], out, None, Some(messageId)), src)
+      MessageSender.reply(out, src, messageId)
     case None =>
       ZIO.logWarning(
         "there is no messageId present in the context, " +

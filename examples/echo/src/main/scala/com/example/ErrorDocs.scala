@@ -9,7 +9,7 @@ object ErrorDocs:
     case class InMessage() derives JsonCodec
 
     val handler = receive[InMessage] { case msg: InMessage =>
-      reply(ErrorMessage(summon[Option[MessageId]].get, ErrorCode.PreconditionFailed, "some text message")) // (1)!
+      reply(ErrorMessage(ErrorCode.PreconditionFailed, "some text message")) // (1)!
     }
   }
 
@@ -17,7 +17,7 @@ object ErrorDocs:
     case class InMessage() derives JsonCodec
 
     val handler = receive[InMessage] { case msg: InMessage =>
-      reply(ErrorMessage(summon[Option[MessageId]].get, ErrorCode.Custom(1005), "some text message"))
+      reply(ErrorMessage(ErrorCode.Custom(1005), "some text message"))
     }
   }
 
