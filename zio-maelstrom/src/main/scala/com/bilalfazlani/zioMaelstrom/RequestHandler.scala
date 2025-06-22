@@ -44,8 +44,8 @@ private class RequestHandlerLive(
               .fromEither(GenericDecoder[I].decode(genericMessage))
               .mapError(e => InvalidInput(genericMessage, e))
               .flatMap { message =>
-                given MessageSource = MessageSource(message.source)
-                given Context       = initialisation.context
+                given MessageSource     = MessageSource(message.source)
+                given Context           = initialisation.context
                 given Option[MessageId] = genericMessage.messageId
                 handler apply message.body.payload
               }
@@ -55,8 +55,8 @@ private class RequestHandlerLive(
     } yield ()
 
   private def handleInvalidInput(invalidInput: InvalidInput): ZIO[Any, Nothing, Unit] =
-    val maybeResponse: Option[ErrorMessage] = invalidInput.input.messageId.map { msgId =>
-      ErrorMessage(
+    val maybeResponse: Option[Error] = invalidInput.input.messageId.map { msgId =>
+      Error(
         code = ErrorCode.MalformedRequest,
         text = s"invalid input: $invalidInput"
       )
@@ -65,7 +65,9 @@ private class RequestHandlerLive(
       _ <- ZIO.logError(s"invalid input: $invalidInput")
       _ <- maybeResponse match {
         case Some(errorMessageBody) =>
-          messageSender.reply(errorMessageBody, invalidInput.input.src, invalidInput.input.messageId.get).ignore
+          messageSender
+            .reply(errorMessageBody, invalidInput.input.src, invalidInput.input.messageId.get)
+            .ignore
         case None => ZIO.unit // if there was no msg id in msg, we can't send a reply
       }
     } yield ()

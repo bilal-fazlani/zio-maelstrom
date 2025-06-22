@@ -40,7 +40,7 @@ private[zioMaelstrom] object MaelstromInit {
 private[zioMaelstrom] case class MaelstromInitOk() derives JsonEncoder
 
 // errorMessage {
-case class ErrorMessage(
+case class Error(
     code: ErrorCode,
     text: String
 ) derives JsonCodec

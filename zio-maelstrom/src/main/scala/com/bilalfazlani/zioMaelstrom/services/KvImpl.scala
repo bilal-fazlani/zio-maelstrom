@@ -3,7 +3,7 @@ package com.bilalfazlani.zioMaelstrom.services
 import com.bilalfazlani.zioMaelstrom.{
   AskError,
   ErrorCode,
-  ErrorMessage,
+  Error,
   MessageIdStore,
   MessageSender,
   NodeId
@@ -75,7 +75,7 @@ private[zioMaelstrom] class KvImpl(
       timeout: Duration
   ): ZIO[Any, AskError, Option[Value]] =
     read[Key, Value](key, timeout).map(Some(_)).catchSome {
-      case ErrorMessage(ErrorCode.KeyDoesNotExist, _) => ZIO.succeed(None)
+      case Error(ErrorCode.KeyDoesNotExist, _) => ZIO.succeed(None)
     }
 
   override def write[Key: JsonEncoder, Value: JsonEncoder](
@@ -115,15 +115,15 @@ private[zioMaelstrom] class KvImpl(
       _ <- current match
         case None =>
           writeIfNotExists(key, newVal, timeout)
-            .catchSome { case ErrorMessage(ErrorCode.KeyAlreadyExists, _) =>
+            .catchSome { case Error(ErrorCode.KeyAlreadyExists, _) =>
               updateError(key) *> update(key, newValue, timeout)
             }
         case Some(value) =>
           cas(key, value, newVal, false, timeout)
             .catchSome {
-              case ErrorMessage(ErrorCode.PreconditionFailed, _) =>
+              case Error(ErrorCode.PreconditionFailed, _) =>
                 updateError(key) *> update(key, newValue, timeout)
-              case ErrorMessage(ErrorCode.KeyDoesNotExist, _) =>
+              case Error(ErrorCode.KeyDoesNotExist, _) =>
                 updateError(key) *> update(key, newValue, timeout)
             }
     } yield newVal
@@ -139,15 +139,15 @@ private[zioMaelstrom] class KvImpl(
       _ <- current match
         case None =>
           writeIfNotExists(key, newVal, timeout)
-            .catchSome { case ErrorMessage(ErrorCode.KeyAlreadyExists, _) =>
+            .catchSome { case Error(ErrorCode.KeyAlreadyExists, _) =>
               updateError(key) *> updateZIO(key, newValue, timeout)
             }
         case Some(value) =>
           cas(key, value, newVal, false, timeout)
             .catchSome {
-              case ErrorMessage(ErrorCode.PreconditionFailed, _) =>
+              case Error(ErrorCode.PreconditionFailed, _) =>
                 updateError(key) *> updateZIO(key, newValue, timeout)
-              case ErrorMessage(ErrorCode.KeyDoesNotExist, _) =>
+              case Error(ErrorCode.KeyDoesNotExist, _) =>
                 updateError(key) *> updateZIO(key, newValue, timeout)
             }
     } yield newVal

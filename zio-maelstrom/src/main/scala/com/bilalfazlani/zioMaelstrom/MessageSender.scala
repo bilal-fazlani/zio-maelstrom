@@ -2,10 +2,10 @@ package com.bilalfazlani.zioMaelstrom
 
 import zio.*
 import zio.json.{JsonEncoder, JsonDecoder}
-import com.bilalfazlani.zioMaelstrom.models.{MsgName, Body}
+import com.bilalfazlani.zioMaelstrom.models.{Body, MsgName}
 
 // ask_error {
-type AskError = ErrorMessage | DecodingFailure | Timeout
+type AskError = Error | DecodingFailure | Timeout
 // }
 
 case class Timeout(messageId: MessageId, remote: NodeId, timeout: Duration) {
@@ -106,7 +106,7 @@ private class MessageSenderLive(
     genericMessage <- ZIO.scoped(callbackRegistry.awaitCallback(msg_id, to, timeout))
     decoded <-
       if genericMessage.isError then {
-        val error = JsonDecoder[Message[ErrorMessage]]
+        val error = JsonDecoder[Message[Error]]
           .fromJsonAST(genericMessage.raw)
           .map(_.body.payload)
           .left
@@ -114,7 +114,7 @@ private class MessageSenderLive(
         error.fold(ZIO.fail, ZIO.fail).tapError {
           case DecodingFailure(e, _) =>
             ZIO.logError(s"decoding failed for response from ${to} for message id ${msg_id}")
-          case e: ErrorMessage =>
+          case e: Error =>
             ZIO.logError(
               s"error response (${e.code}) received from ${to} for message id ${msg_id}"
             )

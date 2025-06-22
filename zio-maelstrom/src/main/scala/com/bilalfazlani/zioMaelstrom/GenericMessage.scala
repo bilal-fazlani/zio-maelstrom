@@ -48,14 +48,14 @@ private[zioMaelstrom] case class GenericMessage(
 
   def isError = isOfType("error")
 
-  def makeError(code: ErrorCode, text: String): Option[Message[ErrorMessage]] =
+  def makeError(code: ErrorCode, text: String): Option[Message[Error]] =
     messageId.map { msgid =>
-      Message[ErrorMessage](
+      Message[Error](
         source = dest,
         destination = src,
         body = Body(
           "error",
-          ErrorMessage(code, text),
+          Error(code, text),
           None,
           Some(msgid)
         )

@@ -34,7 +34,7 @@ case class KvFake(ref: Ref.Synchronized[Map[Any, Any]]) extends KvService:
       map.get(key) match {
         case Some(_) =>
           ZIO.fail(
-            ErrorMessage(
+            Error(
               ErrorCode.PreconditionFailed,
               s"Value for key $key already exists"
             )
@@ -55,10 +55,10 @@ case class KvFake(ref: Ref.Synchronized[Map[Any, Any]]) extends KvService:
         case Some(`from`)              => ZIO.succeed(map + (key -> to))
         case None if createIfNotExists => ZIO.succeed(map + (key -> to))
         case None =>
-          ZIO.fail(ErrorMessage(ErrorCode.KeyDoesNotExist, s"Key $key does not exist"))
+          ZIO.fail(Error(ErrorCode.KeyDoesNotExist, s"Key $key does not exist"))
         case Some(other) =>
           ZIO.fail(
-            ErrorMessage(
+            Error(
               ErrorCode.PreconditionFailed,
               s"Expected $from but found $other"
             )
