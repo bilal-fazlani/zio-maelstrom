@@ -87,7 +87,7 @@ object AskTest extends MaelstromSpec {
       case class Ping() derives JsonCodec
       case class Pong() derives JsonCodec
       for {
-        fiber <- receive[Ping] { ping =>
+        fiber <- receive[Ping] { _ =>
           reply(Pong())
         }.timeout(500.millis).fork
         _                          <- inputAsk(Ping(), NodeId("n2"), MessageId(1))
