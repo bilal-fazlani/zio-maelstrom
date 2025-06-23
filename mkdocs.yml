@@ -5,6 +5,12 @@ repo_name: "bilal-fazlani/zio-maelstrom"
 repo_url: "https://github.com/bilal-fazlani/zio-maelstrom"
 strict: false #!ENV [CI, false]
 
+watch:
+  - docs
+  - social-preview
+  - examples
+  - mkdocs.yml
+
 theme:
   name: "material"
   favicon: imgs/logo.svg

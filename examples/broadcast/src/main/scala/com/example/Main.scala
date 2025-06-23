@@ -7,11 +7,11 @@ import com.bilalfazlani.zioMaelstrom.*
 // }
 
 // input_messages {
-@jsonDiscriminator("type")                 // (1)!
+@jsonDiscriminator("type") // (1)!
 sealed trait InMessage derives JsonDecoder // (2)!
 
 @jsonHint("topology")
-case class Topology(topology: Map[NodeId, List[NodeId]]) extends InMessage // (3)!
+case class Topology(topology: Map[NodeId, List[NodeId]]) extends InMessage
 
 @jsonHint("broadcast")
 case class Broadcast(message: Int) extends InMessage
@@ -20,14 +20,12 @@ case class Broadcast(message: Int) extends InMessage
 case class Read() extends InMessage
 
 @jsonHint("gossip")
-case class Gossip(iHaveSeen: Set[Int]) extends InMessage derives JsonEncoder // (4)!
+case class Gossip(iHaveSeen: Set[Int]) extends InMessage derives JsonEncoder // (3)!
 //}
 
 // reply_messages {
-case class BroadcastOk() derives JsonEncoder // (1)!
-
-case class ReadOk(messages: Set[Int]) derives JsonEncoder // (2)!
-
+case class BroadcastOk() derives JsonEncoder
+case class ReadOk(messages: Set[Int]) derives JsonEncoder
 case class TopologyOk() derives JsonEncoder
 // }
 
@@ -62,7 +60,6 @@ object Main extends MaelstromNode {
         updateState(_.addNeighbours(neighbours)) // (5)!
           *> reply(TopologyOk()) // (6)!
           *> startGossip.forkScoped.unit // (7)!
-      // .forkScoped adds a `Scope` requirement in the environment
 
       case Gossip(gossipMessages) => updateState(_.addGossip(gossipMessages)) // (8)!
     }

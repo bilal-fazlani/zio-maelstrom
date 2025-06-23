@@ -31,6 +31,7 @@ Unlike [echo](echo.md), this node has some state which we have modeled using `Re
 <!--/codeinclude-->
 
 1.  `me` method returns the `NodeId` of self node. It's a [context function](https://docs.scala-lang.org/scala3/reference/contextual/context-functions.html) which is only available inside receive block
+2.  `reply` function is another context function that sends a reply to the sender of the message. The correlation between the request and reply is handled by the framework, so we don't need to worry about it
 
 I have used `ZLayer` to inject the state and also to make sure the same `Ref` is used across the codebase in case we want to make the code more modular.
 

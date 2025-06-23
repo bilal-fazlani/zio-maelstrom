@@ -21,13 +21,12 @@ Here, we define the protocol of the node. It includes messages which the node ca
 [Message definitions](../../examples/echo/src/main/scala/com/example/Main.scala) inside_block:messages
 <!--/codeinclude-->
 
-1.  Every messages that needs an acknowledgement or reply should extend `NeedsReply`
-2.  All input messages need a way to decode them. We use `zio-json` to derive `JsonDecoder`
-3.  Messages that need to be sent out need to extend from `Sendable`. If they are a reply to some other message, they should also extend from `Reply`
-4.  Outgoing messages need `JsonEncoders`
+1.  All input messages need a way to decode them. We use `zio-json` to derive `JsonDecoder`
+2.  Outgoing messages need a `JsonEncoder`. If a message needs to be sent by one node and received by another, it needs a `JsonCodec` instance which combines both `JsonEncoder` and `JsonDecoder`
 
 !!! note
-    Refer to [Maelstrom documentation](https://github.com/jepsen-io/maelstrom/blob/main/doc/protocol.md#message-bodies) for more information on the standard message fields like `msg_id`, `type`, `in_reply_to` etc
+    [Maelstrom documentation](https://github.com/jepsen-io/maelstrom/blob/main/doc/protocol.md#message-bodies) has information about core fields such as `msg_id`, `type` and `in_reply_to`. 
+    We don't need to define these fields in our message classes as they are handled by the framework automatically.
 
 A node is defined by extending the `MaelstromNode` trait and providing a `program` value. The `program` value is a ZIO effect that defines the behavior of the node. The `receive` function is used to define a handler for incoming request messages.
 
@@ -36,9 +35,9 @@ A node is defined by extending the `MaelstromNode` trait and providing a `progra
 <!--/codeinclude-->
 
 1. Note that definition needs to be an `object` for it to be runnable
-2. `reply` is a function that sends a reply to the sender of the message. It takes a `Sendable` & `Reply` message as an argument. You can only call reply on messages that extend `NeedsReply`
+2. `reply` is a function that sends a reply to the sender of the message. The correlation between the request and reply is handled by the framework, so we don't need to worry about it
 
-Using maelstrom DSL functions such as `receive` and `reply` requires `MaelstromRuntime` which is automatically provided my `MaelstromNode`.
+Using maelstrom DSL functions such as `receive` and `reply` requires `MaelstromRuntime` which is automatically provided by `MaelstromNode`.
 
 !!! note
     Source code for this example can be found on [:simple-github: Github](https://github.com/bilal-fazlani/zio-maelstrom/blob/main/examples/echo/src/main/scala/com/example/Main.scala)

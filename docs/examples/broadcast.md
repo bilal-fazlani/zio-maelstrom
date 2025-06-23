@@ -42,19 +42,14 @@ Because there are multiple messages, lets create a sealed trait to represent the
 [Message definitions](../../examples/broadcast/src/main/scala/com/example/Main.scala) inside_block:input_messages
 <!--/codeinclude-->
 
-1.  "type" field is part of standard [Maelstrom message format](https://github.com/jepsen-io/maelstrom/blob/main/doc/protocol.md#message-bodies). It is used to identify the type of message.
-2.  `derive JsonDecoder` will derives decoders for all children of `InMessage` trait
-3.  All the messages that needs a reply should extend from `NeedsReply`
-4.  All messages that need to be sent out from nodes should extend from `Sendable`
-5.  Since `Gossip` message is sent out from nodes, it also needs an Encoder
+1.  `jsonDiscriminator` is required when want to receive multiple types of message. "type" field is part of standard [Maelstrom message format](https://github.com/jepsen-io/maelstrom/blob/main/doc/protocol.md#message-bodies) so we use the same field to differentiate between different messages.
+2.  This derives decoders for all children of `InMessage` trait
+3.  Since `Gossip` message is sent out from nodes, it also needs an Encoder
 
 <!--codeinclude-->
 [Reply messages](../../examples/broadcast/src/main/scala/com/example/Main.scala) inside_block:reply_messages
 reply_messages
 <!--/codeinclude-->
-
-1.  All messages that are replies to some other messages must extend `Sendable` and `Reply`
-2.  All `Sendable` messages require `type` field
 
 <!--codeinclude-->
 [Node state](../../examples/broadcast/src/main/scala/com/example/Main.scala) inside_block:state
