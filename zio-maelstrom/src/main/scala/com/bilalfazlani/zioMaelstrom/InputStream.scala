@@ -9,12 +9,13 @@ import zio.stream.ZPipeline
 import zio.stream.ZStream
 
 import java.nio.file.Path
+import com.bilalfazlani.zioMaelstrom.models.Body
 
 case class InputStream(stream: ZStream[Any, Nothing, String])
 
 object InputStream:
 
-  case class InlineMessage[Body](src: NodeId, message: Body)
+  case class InlineMessage[A](src: NodeId, message: Body[A])
 
   val stdIn: ZLayer[Any, Nothing, InputStream] =
     def stream = ZStream

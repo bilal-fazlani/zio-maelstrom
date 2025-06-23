@@ -1,6 +1,13 @@
 package com.bilalfazlani.zioMaelstrom.services
 
-import com.bilalfazlani.zioMaelstrom.{AskError, ErrorCode, ErrorMessage, MessageIdStore, MessageSender, NodeId}
+import com.bilalfazlani.zioMaelstrom.{
+  AskError,
+  ErrorCode,
+  Error,
+  MessageIdStore,
+  MessageSender,
+  NodeId
+}
 import zio.*
 import zio.json.*
 
@@ -52,26 +59,23 @@ private[zioMaelstrom] trait KvService:
 
 private[zioMaelstrom] class KvImpl(
     private val remote: NodeId,
-    private val sender: MessageSender,
-    private val messageIdStore: MessageIdStore
+    private val sender: MessageSender
 ) extends KvService {
 
   override def read[Key: JsonEncoder, Value: JsonDecoder](
       key: Key,
       timeout: Duration
   ): ZIO[Any, AskError, Value] =
-    messageIdStore.next.flatMap { messageId =>
-      sender
-        .ask[KvRead[Key], KvReadOk[Value]](KvRead(key, messageId), remote, timeout)
-        .map(_.value)
-    }
+    sender
+      .ask[Read[Key], ReadOk[Value]](Read(key), remote, timeout)
+      .map(_.value)
 
   override def readOption[Key: JsonEncoder, Value: JsonDecoder](
       key: Key,
       timeout: Duration
   ): ZIO[Any, AskError, Option[Value]] =
     read[Key, Value](key, timeout).map(Some(_)).catchSome {
-      case ErrorMessage(_, ErrorCode.KeyDoesNotExist, _, _) => ZIO.succeed(None)
+      case Error(ErrorCode.KeyDoesNotExist, _) => ZIO.succeed(None)
     }
 
   override def write[Key: JsonEncoder, Value: JsonEncoder](
@@ -79,26 +83,22 @@ private[zioMaelstrom] class KvImpl(
       value: Value,
       timeout: Duration
   ): ZIO[Any, AskError, Unit] =
-    messageIdStore.next.flatMap { messageId =>
-      sender
-        .ask[KvWrite[Key, Value], KvWriteOk](KvWrite(key, value, messageId), remote, timeout)
-        .unit
-    }
+    sender
+      .ask[Write[Key, Value], WriteOk](Write(key, value), remote, timeout)
+      .unit
 
   override def writeIfNotExists[Key: JsonEncoder, Value: JsonEncoder](
       key: Key,
       value: Value,
       timeout: Duration
   ): ZIO[Any, AskError, Unit] =
-    messageIdStore.next.flatMap { messageId =>
-      sender
-        .ask[CompareAndSwap[Key, Value], CompareAndSwapOk](
-          CompareAndSwap(key, None, value, true, messageId),
-          remote,
-          timeout
-        )
-        .unit
-    }
+    sender
+      .ask[Cas[Key, Value], CasOk](
+        Cas(key, None, value, true),
+        remote,
+        timeout
+      )
+      .unit
 
   private def updateError(key: Any) = ZIO.logDebug(
     s"an attempt to replace value for key $key failed due to a race condition. will attempt again with the new value"
@@ -115,15 +115,15 @@ private[zioMaelstrom] class KvImpl(
       _ <- current match
         case None =>
           writeIfNotExists(key, newVal, timeout)
-            .catchSome { case ErrorMessage(_, ErrorCode.KeyAlreadyExists, _, _) =>
+            .catchSome { case Error(ErrorCode.KeyAlreadyExists, _) =>
               updateError(key) *> update(key, newValue, timeout)
             }
         case Some(value) =>
           cas(key, value, newVal, false, timeout)
             .catchSome {
-              case ErrorMessage(_, ErrorCode.PreconditionFailed, _, _) =>
+              case Error(ErrorCode.PreconditionFailed, _) =>
                 updateError(key) *> update(key, newValue, timeout)
-              case ErrorMessage(_, ErrorCode.KeyDoesNotExist, _, _) =>
+              case Error(ErrorCode.KeyDoesNotExist, _) =>
                 updateError(key) *> update(key, newValue, timeout)
             }
     } yield newVal
@@ -139,15 +139,15 @@ private[zioMaelstrom] class KvImpl(
       _ <- current match
         case None =>
           writeIfNotExists(key, newVal, timeout)
-            .catchSome { case ErrorMessage(_, ErrorCode.KeyAlreadyExists, _, _) =>
+            .catchSome { case Error(ErrorCode.KeyAlreadyExists, _) =>
               updateError(key) *> updateZIO(key, newValue, timeout)
             }
         case Some(value) =>
           cas(key, value, newVal, false, timeout)
             .catchSome {
-              case ErrorMessage(_, ErrorCode.PreconditionFailed, _, _) =>
+              case Error(ErrorCode.PreconditionFailed, _) =>
                 updateError(key) *> updateZIO(key, newValue, timeout)
-              case ErrorMessage(_, ErrorCode.KeyDoesNotExist, _, _) =>
+              case Error(ErrorCode.KeyDoesNotExist, _) =>
                 updateError(key) *> updateZIO(key, newValue, timeout)
             }
     } yield newVal
@@ -159,15 +159,13 @@ private[zioMaelstrom] class KvImpl(
       createIfNotExists: Boolean,
       timeout: Duration
   ): ZIO[Any, AskError, Unit] =
-    messageIdStore.next.flatMap { messageId =>
-      sender
-        .ask[CompareAndSwap[Key, Value], CompareAndSwapOk](
-          CompareAndSwap(key, Some(from), to, createIfNotExists, messageId),
-          remote,
-          timeout
-        )
-        .unit
-    }
+    sender
+      .ask[Cas[Key, Value], CasOk](
+        Cas(key, Some(from), to, createIfNotExists),
+        remote,
+        timeout
+      )
+      .unit
 }
 
 class PartiallyAppliedKvRead[Kv <: KvService: Tag, Value] {

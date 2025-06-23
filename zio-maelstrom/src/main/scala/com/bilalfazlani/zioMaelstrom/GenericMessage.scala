@@ -2,6 +2,7 @@ package com.bilalfazlani.zioMaelstrom
 
 import zio.json.ast.Json
 import zio.json.JsonDecoder
+import com.bilalfazlani.zioMaelstrom.models.Body
 
 private[zioMaelstrom] case class GenericDetails(
     messageType: Option[String],
@@ -47,15 +48,16 @@ private[zioMaelstrom] case class GenericMessage(
 
   def isError = isOfType("error")
 
-  def makeError(code: ErrorCode, text: String): Option[Message[ErrorMessage]] =
+  def makeError(code: ErrorCode, text: String): Option[Message[Error]] =
     messageId.map { msgid =>
-      Message[ErrorMessage](
+      Message[Error](
         source = dest,
         destination = src,
-        body = ErrorMessage(
-          in_reply_to = msgid,
-          code = code,
-          text = text
+        body = Body(
+          "error",
+          Error(code, text),
+          None,
+          Some(msgid)
         )
       )
     }
@@ -82,11 +84,11 @@ private[zioMaelstrom] object GenericMessage {
   )
 }
 
-private[zioMaelstrom] trait GenericDecoder[A: JsonDecoder]:
+private[zioMaelstrom] trait GenericDecoder[A]:
   def decode(msg: GenericMessage): Either[String, Message[A]]
 
 private[zioMaelstrom] object GenericDecoder:
-  def apply[A: JsonDecoder](using decoder: GenericDecoder[A]): GenericDecoder[A] = decoder
+  def apply[A](using decoder: GenericDecoder[A]): GenericDecoder[A] = decoder
   given [A: JsonDecoder]: GenericDecoder[A] = new GenericDecoder[A]:
     def decode(msg: GenericMessage): Either[String, Message[A]] =
       for {
@@ -95,7 +97,7 @@ private[zioMaelstrom] object GenericDecoder:
           Message(
             source = msg.src,
             destination = msg.dest,
-            body = a
+            body = Body(msg.messageType.get, a, msg.messageId, msg.inReplyTo)
           )
         }
       } yield message

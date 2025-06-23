@@ -7,39 +7,26 @@ import com.bilalfazlani.zioMaelstrom.*
 // }
 
 // input_messages {
-@jsonDiscriminator("type")                 // (1)!
+@jsonDiscriminator("type") // (1)!
 sealed trait InMessage derives JsonDecoder // (2)!
 
 @jsonHint("topology")
-case class Topology(topology: Map[NodeId, List[NodeId]], msg_id: MessageId)
-    extends InMessage,
-      NeedsReply // (3)!
+case class Topology(topology: Map[NodeId, List[NodeId]]) extends InMessage
 
 @jsonHint("broadcast")
-case class Broadcast(message: Int, msg_id: MessageId) extends InMessage, NeedsReply
+case class Broadcast(message: Int) extends InMessage
 
 @jsonHint("read")
-case class Read(msg_id: MessageId) extends InMessage, NeedsReply
+case class Read() extends InMessage
 
 @jsonHint("gossip")
-case class Gossip(iHaveSeen: Set[Int], `type`: String = "gossip")
-    extends InMessage,
-      Sendable          // (4)!
-    derives JsonEncoder // (5)!
+case class Gossip(iHaveSeen: Set[Int]) extends InMessage derives JsonEncoder // (3)!
 //}
 
 // reply_messages {
-case class BroadcastOk(in_reply_to: MessageId, `type`: String = "broadcast_ok")
-    extends Sendable,
-      Reply derives JsonEncoder // (1)!
-
-case class ReadOk(messages: Set[Int], in_reply_to: MessageId, `type`: String = "read_ok") // (2)!
-    extends Sendable,
-      Reply derives JsonEncoder
-
-case class TopologyOk(in_reply_to: MessageId, `type`: String = "topology_ok")
-    extends Sendable,
-      Reply derives JsonEncoder
+case class BroadcastOk() derives JsonEncoder
+case class ReadOk(messages: Set[Int]) derives JsonEncoder
+case class TopologyOk() derives JsonEncoder
 // }
 
 // state {
@@ -62,23 +49,19 @@ object Main extends MaelstromNode {
 
   val handleMessages: ZIO[MaelstromRuntime & Ref[State] & Scope, Nothing, Unit] =
     receive[InMessage] {
-      case msg @ Broadcast(broadcast, messageId) =>
+      case Broadcast(broadcast) =>
         updateState(_.addBroadcast(broadcast)) *>
-          reply(BroadcastOk(messageId)) // (3)!
+          reply(BroadcastOk()) // (3)!
 
-      case msg @ Read(messageId) =>
-        getState
-          .map(_.messages)
-          .flatMap(messages => reply(ReadOk(messages, messageId)))
+      case Read() => getState.map(_.messages).flatMap(x => reply(ReadOk(x)))
 
-      case msg @ Topology(topology, messageId) =>
+      case Topology(topology) =>
         val neighbours = topology(me).toSet // (4)!
         updateState(_.addNeighbours(neighbours)) // (5)!
-          *> reply(TopologyOk(messageId))        // (6)!
-          *> startGossip.forkScoped.unit         // (7)!
-      // .forkScoped adds a `Scope` requirement in the environment
+          *> reply(TopologyOk()) // (6)!
+          *> startGossip.forkScoped.unit // (7)!
 
-      case msg @ Gossip(gossipMessages, _) => updateState(_.addGossip(gossipMessages)) // (8)!
+      case Gossip(gossipMessages) => updateState(_.addGossip(gossipMessages)) // (8)!
     }
 
   val program =

@@ -7,16 +7,11 @@ import com.bilalfazlani.zioMaelstrom.*
 //}
 
 //messages {
-case class Echo(echo: String, msg_id: MessageId) extends NeedsReply // (1)!
-    derives JsonDecoder // (2)!
-
-case class EchoOk(echo: String, in_reply_to: MessageId, `type`: String = "echo_ok")
-    extends Sendable,
-      Reply             // (3)!
-    derives JsonEncoder // (4)!
+case class Echo(echo: String) derives JsonDecoder // (1)!
+case class EchoOk(echo: String) derives JsonEncoder // (2)!
 //}
 
 object Main extends MaelstromNode { // (1)!
   val program: ZIO[MaelstromRuntime, Nothing, Unit] =
-    receive[Echo](msg => reply(EchoOk(echo = msg.echo, in_reply_to = msg.msg_id))) // (2)!
+    receive[Echo](msg => reply(EchoOk(msg.echo))) // (2)!
 }

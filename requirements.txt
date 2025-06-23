@@ -1,4 +1,4 @@
-git+https://${GH_USERNAME}:${GH_TOKEN}@github.com/${GH_USERNAME}/mkdocs-mat-insider.git@9.5.27-insiders-4.53.11#egg=mkdocs-material
+git+https://${GH_USERNAME}:${GH_TOKEN}@github.com/${GH_USERNAME}/mkdocs-mat-insider.git@9.5.50-insiders-4.53.15#egg=mkdocs-material
 mkdocs-awesome-pages-plugin == 2.9.2
 git+https://github.com/bilal-fazlani/mkdocs-codeinclude-plugin.git@0.2.2#egg=mkdocs-codeinclude-plugin
 mkdocs-autolinks-plugin == 0.7.1

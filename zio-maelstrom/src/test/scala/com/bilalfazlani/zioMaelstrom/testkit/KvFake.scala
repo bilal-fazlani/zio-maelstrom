@@ -5,8 +5,7 @@ import com.bilalfazlani.zioMaelstrom.services.*
 import zio.*
 import zio.json.*
 
-case class KvFake(ref: Ref.Synchronized[Map[Any, Any]], messageIdStore: MessageIdStore)
-    extends KvService:
+case class KvFake(ref: Ref.Synchronized[Map[Any, Any]]) extends KvService:
   override def read[Key: JsonEncoder, Value: JsonDecoder](
       key: Key,
       timeout: Duration
@@ -34,13 +33,10 @@ case class KvFake(ref: Ref.Synchronized[Map[Any, Any]], messageIdStore: MessageI
     ref.updateZIO { map =>
       map.get(key) match {
         case Some(_) =>
-          messageIdStore.next.flatMap(messageId =>
-            ZIO.fail(
-              ErrorMessage(
-                messageId,
-                ErrorCode.PreconditionFailed,
-                s"Value for key $key already exists"
-              )
+          ZIO.fail(
+            Error(
+              ErrorCode.PreconditionFailed,
+              s"Value for key $key already exists"
             )
           )
         case None => ZIO.succeed(map + (key -> value))
@@ -59,17 +55,12 @@ case class KvFake(ref: Ref.Synchronized[Map[Any, Any]], messageIdStore: MessageI
         case Some(`from`)              => ZIO.succeed(map + (key -> to))
         case None if createIfNotExists => ZIO.succeed(map + (key -> to))
         case None =>
-          messageIdStore.next.flatMap(messageId =>
-            ZIO.fail(ErrorMessage(messageId, ErrorCode.KeyDoesNotExist, s"Key $key does not exist"))
-          )
+          ZIO.fail(Error(ErrorCode.KeyDoesNotExist, s"Key $key does not exist"))
         case Some(other) =>
-          messageIdStore.next.flatMap(messageId =>
-            ZIO.fail(
-              ErrorMessage(
-                messageId,
-                ErrorCode.PreconditionFailed,
-                s"Expected $from but found $other"
-              )
+          ZIO.fail(
+            Error(
+              ErrorCode.PreconditionFailed,
+              s"Expected $from but found $other"
             )
           )
       }
@@ -94,7 +85,7 @@ case class KvFake(ref: Ref.Synchronized[Map[Any, Any]], messageIdStore: MessageI
     ref.modifyZIO { map =>
       val current = map.get(key).map(_.asInstanceOf[Value])
       for {
-        newVal  <- newValue(current)
+        newVal <- newValue(current)
       } yield (newVal, map + (key -> newVal))
     }
 
@@ -105,7 +96,6 @@ object KvFake:
   val linKv: ZLayer[Any, Nothing, LinKv] = ZLayer.make[LinKv](
     ZLayer.fromFunction(KvFake.apply),
     mapLayer,
-    MessageIdStore.live,
     ZLayer.fromFunction((fake: KvFake) =>
       new LinKv {
         export fake.*
@@ -116,7 +106,6 @@ object KvFake:
   val seqKv: ZLayer[Any, Nothing, SeqKv] = ZLayer.make[SeqKv](
     ZLayer.fromFunction(KvFake.apply),
     mapLayer,
-    MessageIdStore.live,
     ZLayer.fromFunction((fake: KvFake) =>
       new SeqKv {
         export fake.*
@@ -127,7 +116,6 @@ object KvFake:
   val lwwKv: ZLayer[Any, Nothing, LwwKv] = ZLayer.make[LwwKv](
     ZLayer.fromFunction(KvFake.apply),
     mapLayer,
-    MessageIdStore.live,
     ZLayer.fromFunction((fake: KvFake) =>
       new LwwKv {
         export fake.*

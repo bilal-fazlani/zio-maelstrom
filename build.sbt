@@ -1,7 +1,7 @@
 import sbtwelcome.*
 import scala.sys.process.*
 
-val scala3Version = "3.6.3"
+val scala3Version = "3.7.1"
 
 ThisBuild / scalaVersion     := scala3Version
 ThisBuild / organization     := "com.bilal-fazlani"
@@ -109,7 +109,7 @@ lazy val echo = project
     name                := "echo",
     logo                := "",
     version             := "0.1.0-SNAPSHOT",
-    publish / skip      := isCI,
+    publish / skip      := true,
     Compile / mainClass := Some("com.example.echo.Main")
   )
   .dependsOn(zioMaelstrom)
@@ -120,7 +120,7 @@ lazy val uniqueIds = project
     name                := "unique-ids",
     logo                := "",
     version             := "0.1.0-SNAPSHOT",
-    publish / skip      := isCI,
+    publish / skip      := true,
     Compile / mainClass := Some("com.example.uniqueIds.Main")
   )
   .dependsOn(zioMaelstrom)
@@ -131,7 +131,7 @@ lazy val broadcast = project
     name                := "broadcast",
     logo                := "",
     version             := "0.1.0-SNAPSHOT",
-    publish / skip      := isCI,
+    publish / skip      := true,
     Compile / mainClass := Some("com.example.broadcast.Main")
   )
   .dependsOn(zioMaelstrom)

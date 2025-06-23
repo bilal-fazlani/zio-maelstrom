@@ -32,7 +32,7 @@ ZIO-Maelstrom is a high level Scala driver for Maelstrom which abstracts away th
 Since Maelstrom is Closure program, you will need JVM installed on your machine. This templates makes use of graalvm native image to create OS native executable files for improved node performance. I have used [sdkman](https://sdkman.io) to install java.
 
 ```bash
-sdk install java 22.0.1-graal
+sdk install java 24.0.1-graalce
 ```
 
 ### 2. SBT
@@ -64,11 +64,11 @@ Coursier is the Scala application and artifact manager. You can download it from
 brew install coursier/formulas/coursier
 ```
 
-Verify that it is available in your `PATH` variable and you can running it using `coursier` command
+Verify that it is available in your `PATH` variable and you can run it using `coursier` command
 
 ## Get started using template
 
-The easiest way to get started is to create a new project using zio-maelstrom github template
+The easiest way to get started is to create a new project using zio-maelstrom GitHub template
 
 [View template :simple-github:](https://github.com/bilal-fazlani/gossip-glomers-scala-template){ .md-button .md-button--primary }
 
@@ -82,9 +82,9 @@ The template contains
 Create a new project using the template repository or clone the repository
 
 !!! important warning
-    If you have not installed graalvm using [sdkman](https://sdkman.io), please update "nativeImageGraalHome" in build.sbt to point to your graalvm installation directory. You may have to install `native-image` component using `gu install native-image` command if it is not already installed
+    If you have not installed graalvm using [sdkman](https://sdkman.io), please update "nativeImageGraalHome" in build.sbt to point to your graalvm installation directory. You may have to install `native-image` component if it is not already installed
 
-Echo challenge for example, has `echo/src/main/scala/gossipGlomers/Main.scala` as shown below
+Echo challenge for example, has `1-echo/src/main/scala/gossipGlomers/Main.scala` as shown below
 
 === "Template"
     ```scala
@@ -131,7 +131,7 @@ After writing the solution, we can run the solution using either using a JVM pro
     sbt "echo/bootstrap"
 
     # This command will run maelstraom with appropriate work load arguments
-    ./echo/target/testjar.sh
+    ./1-echo/target/jvm-simulation.sh
     ```
 === "Output"
     ```
@@ -181,7 +181,7 @@ After writing the solution, we can run the solution using either using a JVM pro
     sbt "echo/nativePackage"
 
     # This command will run maelstraom with appropriate work load arguments
-    ./echo/target/test.sh
+    ./1-echo/target/native-simulation.sh
     ```
 === "Output"
     ```
@@ -220,9 +220,14 @@ After writing the solution, we can run the solution using either using a JVM pro
 
 ## Maelstrom reports
 
-To view run results, run
+To view run results, first go the target directory
 
 ```bash
-# This command starts a web server on port 8080 where you can view the results
+cd 1-echo/target
+```
+
+Then run the following command to serve report in browser
+
+```bash
 maelstrom serve
 ```

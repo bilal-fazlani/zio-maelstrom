@@ -1,5 +1,6 @@
 package com.bilalfazlani.zioMaelstrom
 
+import com.bilalfazlani.zioMaelstrom.models.Body
 import zio.*
 import zio.test.*
 import zio.json.*
@@ -8,50 +9,43 @@ import testkit.*
 object RequestHandlerTests extends MaelstromSpec {
 
   val settings                  = Settings()
-  val context                   = Context(NodeId("n1"), Set(NodeId("n2")))
+  val context                   = Context(NodeId("n1"), Set(NodeId("n2"), NodeId("n5")))
   val tRuntime                  = testRuntime(settings, context)
   def sleep(duration: Duration) = live(ZIO.sleep(duration))
 
-  case class Ping(msg_id: MessageId) extends NeedsReply derives JsonCodec
-  case class PingOk(in_reply_to: MessageId, `type`: String = "ping_ok") extends Reply, Sendable
-      derives JsonEncoder
+  case class Ping() derives JsonCodec
+  case class PingOk() derives JsonCodec
 
   // --
-  case class GetNumber(msg_id: MessageId, from: NodeId, `type`: String = "get_number")
-      extends NeedsReply,
-        Sendable derives JsonCodec
-  case class Number(in_reply_to: MessageId, value: Int, `type`: String = "number")
-      extends Reply,
-        Sendable derives JsonCodec
+  case class GetNumber() derives JsonCodec
+  case class Number(value: Int) derives JsonCodec
 
   val spec = suite("RequestHandler Tests")(
     test("successfully send and receive message") {
       (for {
-        fiber  <- receive[Ping](ping => reply(PingOk(ping.msg_id))).fork
-        _      <- inputMessage(Ping(MessageId(1)), NodeId("n2"))
-        pingOk <- getNextMessage
+        fiber  <- receive[Ping](ping => reply(PingOk())).fork
+        _      <- inputSend(Body("ping", Ping(), Some(MessageId(100)), None), NodeId("n2"))
+        pingOk <- getNextMessage[PingOk]
         _      <- fiber.interrupt
-      } yield assertTrue(pingOk == Message(NodeId("n1"), NodeId("n2"), PingOk(MessageId(1)))))
+        expectedMessage = Message(NodeId("n1"), NodeId("n2"), Body("ping_ok", PingOk(), None, Some(MessageId(100))))
+      } yield assertTrue(pingOk == expectedMessage))
         .provide(tRuntime)
     },
     test("receive and ask should work concurrently") {
       (for {
-        fiber <- receive[GetNumber] { case msg @ GetNumber(msg_id, from, _) =>
-          from
-            .ask[Number](GetNumber(MessageId(2), from), 2.seconds)
-            .flatMap(nmber => reply(Number(msg_id, nmber.value)))
+        fiber <- receive[GetNumber] { case GetNumber() =>
+          NodeId("n5")
+            .ask[Number](GetNumber(), 2.seconds)
+            .flatMap(n => reply(n))
             .catchAll(e => ZIO.dieMessage(e.toString))
         }.fork
-        _ <- inputMessage(
-          GetNumber(msg_id = MessageId(1), from = NodeId("n5")),
-          from = NodeId("n2")
-        )
+        _          <- inputSend(Body("number", GetNumber(), Some(MessageId(60)), None), from = NodeId("n2"))
         _          <- sleep(100.millis)
-        n5Response <- getNextMessage
-        _ <- inputMessage(Number(in_reply_to = MessageId(2), value = 5), from = NodeId("n5"))
-        finalOutMessage <- getNextMessage
+        _          <- inputReply(Number(45), from = NodeId("n5"), MessageId(1))
+        _ <- getNextMessage[Number]
+        responseFromNode <- getNextMessage[Number]
       } yield assertTrue(
-        finalOutMessage == Message(NodeId("n1"), NodeId("n2"), Number(MessageId(1), 5))
+        responseFromNode == Message(NodeId("n1"), NodeId("n2"), Body("number", Number(45), None, Some(MessageId(60)))),
       ))
         .provide(tRuntime)
     }

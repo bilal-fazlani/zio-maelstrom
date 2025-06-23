@@ -1,6 +1,6 @@
 package com.bilalfazlani.zioMaelstrom.services
 
-import com.bilalfazlani.zioMaelstrom.{AskError, MessageIdStore, MessageSender, NodeId}
+import com.bilalfazlani.zioMaelstrom.{AskError, MessageSender, NodeId}
 import zio.*
 import zio.json.*
 
@@ -46,12 +46,11 @@ object LinKv:
       timeout: Duration
   ) = ZIO.serviceWithZIO[LinKv](_.writeIfNotExists(key, value, timeout))
 
-  private[zioMaelstrom] val live: ZLayer[MessageSender & MessageIdStore, Nothing, LinKv] =
+  private[zioMaelstrom] val live: ZLayer[MessageSender, Nothing, LinKv] =
     ZLayer(
       for
-        sender         <- ZIO.service[MessageSender]
-        messageIdStore <- ZIO.service[MessageIdStore]
-        kvImpl = KvImpl(NodeId("lin-kv"), sender, messageIdStore)
+        sender <- ZIO.service[MessageSender]
+        kvImpl = KvImpl(NodeId("lin-kv"), sender)
       yield new LinKv:
         export kvImpl.*
     )

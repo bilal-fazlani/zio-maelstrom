@@ -8,8 +8,7 @@ object IODocs:
 
   //format: off        
   object Receive {
-    case class Gossip(msg_id: MessageId, numbers: Seq[Int], `type`: String = "gossip")
-       derives JsonCodec
+    case class Gossip(numbers: Seq[Int]) derives JsonCodec
 
     val messageHandler: ZIO[MaelstromRuntime, Nothing, Unit] = 
       receive[Gossip] { 
@@ -21,8 +20,7 @@ object IODocs:
   }
 
   object Send {
-    case class Gossip(numbers: Seq[Int], `type`: String = "gossip")
-      extends Sendable derives JsonCodec
+    case class Gossip(numbers: Seq[Int]) derives JsonCodec
 
     val messageHandler = 
       receive[Gossip] { 
@@ -34,29 +32,23 @@ object IODocs:
   }
 
   object Reply {
-    case class Gossip(msg_id: MessageId, numbers: Seq[Int], `type`: String = "gossip")
-      extends NeedsReply derives JsonCodec
+    case class Gossip(numbers: Seq[Int]) derives JsonCodec
 
-    case class GossipOk(in_reply_to: MessageId, myNumbers: Seq[Int], `type`: String = "gossip_ok")
-      extends Reply, Sendable derives JsonCodec  
+    case class GossipOk(myNumbers: Seq[Int]) derives JsonCodec  
 
     val messageHandler =  
       receive[Gossip] { 
-        case msg: Gossip => reply(GossipOk(msg.msg_id, Seq(1,2)))
+        case msg: Gossip => reply(GossipOk(Seq(1,2)))
       }
   }
 
   object Ask {
-    case class Gossip(msg_id: MessageId, numbers: Seq[Int], `type`: String = "gossip")
-      extends NeedsReply, Sendable derives JsonCodec
+    case class Gossip(numbers: Seq[Int]) derives JsonCodec
 
-    case class GossipOk(in_reply_to: MessageId, myNumbers: Seq[Int], `type`: String = "gossip_ok")
-      extends Reply derives JsonCodec  
+    case class GossipOk(myNumbers: Seq[Int]) derives JsonCodec  
 
     val gossipResult: ZIO[MaelstromRuntime, AskError, GossipOk] =
-      MessageId.next.flatMap( msgId => //(1)!
-        NodeId("n2").ask[GossipOk](Gossip(msgId, Seq(1,2)), 5.seconds)
-      )
+      NodeId("n2").ask[GossipOk](Gossip(Seq(1,2)), 5.seconds)
   }
 
   //format: on

@@ -149,7 +149,7 @@ Ask error can be one of the following:
 
 1. `Timeout` if the reply was not received within given duration
 2. `DecodingFailure` if the reply could not be decoded into the given type
-3. `ErrorMessage` if the sender sends an error message instead of the reply message. 
+3. `Error` if the sender sends an error message instead of the reply message. 
    
 <!--codeinclude-->
 [Ask error handling](../../examples/echo/src/main/scala/com/example/ErrorDocs.scala) inside_block:GetErrorMessage
@@ -172,10 +172,10 @@ From within `receive` function, you can call `reply` api to send a reply message
 
 ## Error messages
 
-zio-maelstrom has a built in data type for error messages called `ErrorMessage`
+zio-maelstrom has a built in data type for error messages called `Error`
 
 <!--codeinclude-->
-[ErrorMessage](../../zio-maelstrom/src/main/scala/com/bilalfazlani/zioMaelstrom/Protocol.scala) inside_block:errorMessage
+[Error](../../zio-maelstrom/src/main/scala/com/bilalfazlani/zioMaelstrom/Protocol.scala) inside_block:errorMessage
 <!--/codeinclude-->
 
 It supports all the [standard maelstrom error codes](https://github.com/jepsen-io/maelstrom/blob/main/doc/protocol.md#errors) as well as ability to send custom error codes

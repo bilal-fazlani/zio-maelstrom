@@ -3,38 +3,32 @@ package com.bilalfazlani.zioMaelstrom
 import zio.json.*
 import scala.annotation.targetName
 import zio.*
+import com.bilalfazlani.zioMaelstrom.models.Body
 
-private[zioMaelstrom] case class Message[+Body](
+private[zioMaelstrom] case class Message[+A](
     @jsonField("src")
     source: NodeId,
     @jsonField("dest")
     destination: NodeId,
-    body: Body
+    body: Body[A]
 ) derives JsonDecoder,
       JsonEncoder
 
-trait Sendable:
-  val `type`: String
-
-trait NeedsReply:
-  val msg_id: MessageId
-
-trait Reply:
-  val in_reply_to: MessageId
-
 private[zioMaelstrom] case class MaelstromInit(
-    msg_id: MessageId,
     node_id: NodeId,
     node_ids: Set[NodeId]
-) extends NeedsReply
-    derives JsonDecoder
+) derives JsonDecoder
 
 private[zioMaelstrom] object MaelstromInit {
   private def parseInit(msg: GenericMessage): Either[String, Message[MaelstromInit]] =
     if msg.isOfType("init") then
       msg.body.toRight("init body is missing").flatMap { body =>
         JsonDecoder[MaelstromInit].fromJsonAST(body).map { init =>
-          Message(source = msg.src, destination = msg.dest, body = init)
+          Message(
+            source = msg.src,
+            destination = msg.dest,
+            body = Body("init", init, msg.messageId, msg.inReplyTo)
+          )
         }
       }
     else Left("message is not of type 'init'")
@@ -43,19 +37,13 @@ private[zioMaelstrom] object MaelstromInit {
     .getOrElse(throw new Exception("message is not of type 'init'"))
 }
 
-private[zioMaelstrom] case class MaelstromInitOk(in_reply_to: MessageId, `type`: String = "init_ok")
-    extends Sendable
-    with Reply derives JsonEncoder
+private[zioMaelstrom] case class MaelstromInitOk() derives JsonEncoder
 
 // errorMessage {
-case class ErrorMessage(
-    in_reply_to: MessageId,
+case class Error(
     code: ErrorCode,
-    text: String,
-    `type`: String = "error"
-) extends Sendable
-    with Reply
-    derives JsonCodec
+    text: String
+) derives JsonCodec
 // }
 
 opaque type NodeId = String
@@ -87,6 +75,8 @@ object MessageId:
   given JsonFieldEncoder[MessageId] = JsonFieldEncoder.int.contramap(identity)
   given JsonFieldDecoder[MessageId] = JsonFieldDecoder.int.map(MessageId(_))
   val next                          = MessageIdStore.next
+
+  extension (id: MessageId) def toInt: Int = id
 
 // format: off  
  // errorCodes {
