@@ -25,7 +25,7 @@ object InitializationTest extends MaelstromSpec {
         _    <- ZIO.debug("starting test")
         myId <- MaelstromRuntime.me
         _    <- ZIO.debug(myId)
-      yield assertTrue(true)
+      yield assertTrue(myId == NodeId("n1"))
     }.provide(sendInit >>> tRuntime)
   ) @@ TestAspect.timeout(10.seconds) @@ TestAspect.sequential
 }

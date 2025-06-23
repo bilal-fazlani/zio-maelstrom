@@ -31,15 +31,15 @@ object AskTest extends MaelstromSpec {
           "src"  -> Json.Str("n1"),
           "dest" -> Json.Str("n2"),
           "body" -> Json(
+            "msg_id" -> Json.Num(1),
             "type" -> Json.Str("ping"),
             "text" -> Json.Str("Hello")
           )
         )
-        pongExpectedJson = Json(
-          "type" -> Json.Str("pong"),
-          "text" -> Json.Str("World")
-        )
-      } yield assertTrue(true)
+      } yield assertTrue(
+        pingJson == pingExpectedJson,
+        pong == Pong("World")
+      )
     }.provide(tRuntime),
     test("successfully send and receive message with 0 field each") {
       case class Ping() derives JsonCodec
@@ -51,18 +51,19 @@ object AskTest extends MaelstromSpec {
         pingMessage: Message[Ping] <- getNextMessage[Ping]
         _                          <- inputReply(Pong(), NodeId("n2"), MessageId(1))
         pong                       <- pongFiber.join.debug("pong")
-        pingJson                   <- ZIO.from(pingMessage.toJsonAST).debug("pingJson")
+        pingJson                   <- ZIO.from(pingMessage.toJsonAST)
         pingExpectedJson = Json(
           "src"  -> Json.Str("n1"),
           "dest" -> Json.Str("n2"),
           "body" -> Json(
-            "type" -> Json.Str("ping")
+            "type" -> Json.Str("ping"),
+            "msg_id" -> Json.Num(1)
           )
         )
-        pongExpectedJson = Json(
-          "type" -> Json.Str("pong")
-        )
-      } yield assertTrue(true)
+      } yield assertTrue(
+        pingJson == pingExpectedJson,
+        pong == Pong()
+      )
     }.provide(tRuntime),
     test("successfully get and respond to a message with 1 field each") {
       case class Ping(text: String) derives JsonCodec
