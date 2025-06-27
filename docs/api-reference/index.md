@@ -25,71 +25,104 @@ MessageId represents a unique identifier for a message. It is a wrapper (opaque 
 
 ## Protocol
 
-In order to send and receive messages from a node, we need to create data types that extend from one or more of the following traits:
+In order to send and receive messages from a node, we need to create case classes that contain the fields which we need to send or receive. 
+The case classes dont need to contain standard fields defined in [maelstrom protocol](https://github.com/jepsen-io/maelstrom/blob/main/doc/protocol.md) like `src`, `dest`, `type`, `msg_id`, `in_reply_to`, etc. Those are automatically added and parsed by the runtime.
 
-### 1. `Sendable`
+=== "Message on the wire"
 
-If a message needs to be "sent" out of a node, it needs to extend from `Sendable`
+    ```scala
+    case class Echo(text: String) derives JsonCodec
+    ```
 
-```scala
-trait Sendable:
-  val `type`: String
-```
+    ```json
+    {
+        "src" : "c1", // (1)!
+        "dest" : "n1", // (2)!
+        "body" : {
+            "type": "echo", // (3)!
+            "msg_id": 10, // (4)!
+            "in_reply_to": 5, // (5)!
+            "text": "Hello" // (6)!
+        }
+    }
+    ```
 
-`type` identifies the type of message which helps in decoding and handling of the message.  
+    1.  `src` is the `NodeId` of the node that sent the message
+    2.  `dest` is the `NodeId` of the node that received the message
+    3.  `type` is the type of the message (snake case version of the case class name)
+    4.  `msg_id` is automatically added when `ask` api is used
+    5.  `in_reply_to` is automatically added when `reply` api is used
+    6.  These are the fields of the case class (in this case, `text`). Fields can be zero or multiple and nested as well.
 
-### 2. `Reply`
-   
-If we want to "reply" against another message to a node, the reply data class needs to extend from `Reply` trait
+=== "Send serialization"
 
-```scala
-trait Reply:
-  val in_reply_to: MessageId
-```
+    ```scala
+    val echo = Echo("Hello")
+    val nodeId = NodeId("n1")
+    nodeId.send(echo)
+    ```
 
-`in_reply_to` is the `MessageId` of the message that we are replying against. Most of the time, you will have to extend reply messages from `Sendable` as well because replies need to be "sent" out of a node.
+    ```json
+    {
+        "src" : "c1"
+        "dest" : "n1",
+        "body" : {
+            "type": "echo",
+            "text": "Hello"
+        }
+    }
+    ```
 
-### 3. `NeedsReply`
-   
-If we want to "receive" a reply against a message, the message data class needs to extend from `NeedsReply` trait
+=== "Ask serialization"
 
-```scala
-trait NeedsReply:
-  val msg_id: MessageId
-```
+    ```scala
+    val echo = Echo("Hello")
+    val nodeId = NodeId("n1")
+    nodeId.ask[Echo](echo, 5.seconds)
+    ```
 
-This is required to map response messages to request message using the `msg_id` field.
+    ```json
+    {
+        "src" : "c1",
+        "dest" : "n1",
+        "body" : {
+            "type": "echo",
+            "text": "Hello",
+            "msg_id": 10
+        }
+    }
+    ```
 
-## Json SerDe
+=== "Reply serialization"
 
-Besides the traits, any message that needs to be sent as a request to another node or as a response for another message, should have a `zio.json.JsonEncoder` instance. This is required to encode the message into a JSON string which is then sent to the node. Likewise, any message that needs to be received as a request from another node or as a response for another message, should have a `zio.json.JsonDecoder` instance. This is required to decode the JSON string into the message.
+    ```scala
+    val echo = Echo("Hello")
+    reply(echo, 3.seconds)
+    ```
 
-In the unique-ids example, we have defined the following messages:
+    ```json
+    {
+        "src" : "n1",
+        "dest" : "c1",
+        "body" : {
+            "type": "echo",
+            "text": "Hello",
+            "in_reply_to": 10
+        }
+    }
+    ```
 
-<!--codeinclude-->
-[Message definitions](../../examples/unique-ids/src/main/scala/com/example/Main.scala) inside_block:messages
-<!--/codeinclude-->
-
-Here, `Generate` message extends from `NeedsReply` because it expects a reply message. `Generate` message is sent by maelstrom server nodes and not the application nodes. Application nodes just receive the message. Hence it does not need to extend from `Sendable`. `GenerateOk` message is the response for `Generate` and because application node needs to send it, it needs to extend from both `Sendable` and `Reply`.
-
-If a message needs to be sent as well as received, it needs an instance of `zio.json.JsonCodec` which is a combination of `zio.json.JsonEncoder` and `zio.json.JsonDecoder`. 
-
-Usually a node wants to handle more than one type of message. For that, we discriminate messages using the `type` field using `jsonDiscriminator` annotation of zio-json. Here's an example
-
-<!--codeinclude-->
-[Input message definitions](../../examples/echo/src/main/scala/com/example/Calculator.scala) inside_block:in_messages
-<!--/codeinclude-->
-
-Since, the parent trait is deriving a `JsonDecoder`, we don't need to derive it for individual messages. 
-
-However, we need to derive `JsonEncoder` for each outgoing message because there is usually no parent type for outgoing messages.
-
-<!--codeinclude-->
-[Output message definitions](../../examples/echo/src/main/scala/com/example/Calculator.scala) inside_block:out_messages
-<!--/codeinclude-->
 
 !!! note
-    Outgoing message can also extend for input parent trait if they also need to be received by the node. They just need to derive `JsonDecoder` additionally in that case.
+    Keep in mind that if you use `ask` api, framework adds a `msg_id` to the message. If you use `reply` api, framework adds a `in_reply_to` to the message. 
+    
+!!! warning "Caution" 
+    If you try to use `reply` api for a message that does not have a `msg_id` (i.e. sent using `send` api), it will throw an error at runtime.
+
+!!! warning "Caution" 
+    If you use `ask` api, the called will wait for the reply with a timeout. If the reply is not received within the timeout, it will return `Timeout` error.
+
+The idea behind framework design is that when writing solutions to problems, should should not have to think about msg_id and other things. Much like when we write an HTTP/GRPC client or server. 
 
 ## I/O APIs
 
@@ -111,11 +144,10 @@ Here's an example
 2. `me` is the `NodeId` of the node that received the message
 3. `others` is a list of `NodeId` received in the init message at the start of node
 
-`receive` is a context function and it it gives some variables in the context of the handler function. i.e. `me`, `others` and `src`
 
 ### 2. `send`
 
-You can send a message to any `NodeId` using `NodeId.send()` API. It takes a `Sendable` message which has a `zio.json.JsonEncoder` instance.
+You can send a message to any `NodeId` using `NodeId.send()` API. It takes a instance of a case class which has a `zio.json.JsonEncoder`.
 
 <!--codeinclude-->
 [Send](../../examples/echo/src/main/scala/com/example/IODocs.scala) inside_block:Send
@@ -125,19 +157,11 @@ You can send a message to any `NodeId` using `NodeId.send()` API. It takes a `Se
 
 ### 3. `ask`
 
-`ask` api is a combination of `send` and `receive`. It sends a message to a remote node and waits for a reply. It takes a `Sendable` & `Receive` message and returns a `Reply` message. It also takes a timeout argument which is the maximum time to wait for a reply. It expects a `zio.json.JsonDecoder` instance for the reply & a `zio.json.JsonEncoder` instance for the request message. `ask` api can be called from within and outside of `receive` function.
+`ask` api is a combination of `send` and `receive`. It sends a message to a remote node and waits for a reply. It also takes a timeout argument which is the maximum time to wait for a reply. It expects a `zio.json.JsonDecoder` instance for the reply & a `zio.json.JsonEncoder` instance for the request message.
 
 <!--codeinclude-->
 [Ask](../../examples/echo/src/main/scala/com/example/IODocs.scala) inside_block:Ask
 <!--/codeinclude-->
-
-1. `MessageId.next` gives next sequential message id
-
-!!! tip
-    Use `MessageId.next` to generate a new message id. It is a sequential id generator
-
-!!! important danger
-    Make sure to use different message ids for different messages. If you use the same message id for different messages, the receiver will not be able to map the response to the request    
 
 The `ask` api can return either a successful response or an `AskError`
 
@@ -159,16 +183,13 @@ Sender can send an error message if it encounters an error while processing the 
 
 ### 4. `reply`
 
-From within `receive` function, you can call `reply` api to send a reply message to the source of the current message.
+You can call `reply` api to send a reply message to the source of the current message (if the message was sent using `ask` api)
 
 <!--codeinclude-->
 [Reply](../../examples/echo/src/main/scala/com/example/IODocs.scala) inside_block:Reply
 <!--/codeinclude-->
 
-`reply` api takes an instance of `Sendable` & `Reply` message which has a `zio.json.JsonEncoder` instance. 
-
-!!! tip
-    `reply` can be called only inside of receive function. Outside of the `receive` function, you can use `send` api which takes a remote `NodeId` argument.
+`reply` api takes an instance of a case class which has a `zio.json.JsonEncoder`   
 
 ## Error messages
 
@@ -274,11 +295,14 @@ _High level apis are built on top of native apis by combining multiple native ap
 
 `updateZIO`
 
-:   This is a high level api built on top of other apis. It takes a key, a function that takes the current value and returns a `ZIO` that returns a new value. It reads the current value of the key, applies the `ZIO` and writes the new value against the key. If the value has changed in the meantime, it applies the function again and keeps trying until the value does not change. This is very similar to `update` but the function can be a `ZIO` which can do some async operations. When retries happen, the `ZIO` is retried as well, so side effects should be avoided in this function.
+:   This is a high level api built on top of other apis. It takes a key, a function that takes the current value and returns a `ZIO` that returns a new value. It reads the current value of the key, applies the `ZIO` and writes the new value against the key. If the value has changed in the meantime, it applies the function again and keeps trying until the value does not change. This is very similar to `update` but the function can be a `ZIO` which can do some async operations. 
 
     <!--codeinclude-->
     [](../../examples/echo/src/main/scala/com/example/KvStoreDocs.scala) inside_block:UpdateZIO
     <!--/codeinclude--> 
+
+!!! danger "Danger"
+    When retries happen, the `ZIO` is retried as well, so side effects should be avoided in this function.
 
 !!! warning "Important"
     - Because all these apis are built on top of `ask` api, they can return `AskError` which you may need to handle.  According to [maelstrom documentation](https://github.com/jepsen-io/maelstrom/blob/main/doc/workloads.md#rpc-cas), they can return `KeyDoesNotExist` or `PreconditionFailed` error codes.
