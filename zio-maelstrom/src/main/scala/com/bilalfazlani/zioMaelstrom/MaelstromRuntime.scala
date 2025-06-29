@@ -6,14 +6,14 @@ import zio.{Scope, ZIO, ZLayer}
 type Services = LinKv & SeqKv & LwwKv & LinTso
 
 // definition {
-type MaelstromRuntime = Initialisation & RequestHandler & MessageSender & MessageIdStore &
-  Services & Settings
+type MaelstromRuntime = Initialisation & RequestHandler & MessageSender & MessageIdStore & Services & Settings
 // }
 
 object MaelstromRuntime:
 
   def me     = ZIO.serviceWith[Initialisation](_.context.me)
   def others = ZIO.serviceWith[Initialisation](_.context.others)
+  def src    = ZIO.serviceWith[MessageContext](_.remote)
 
   // doc_include {
   private[zioMaelstrom] def live(

@@ -4,6 +4,7 @@ package com.example.broadcast
 import zio.json.*
 import zio.*
 import com.bilalfazlani.zioMaelstrom.*
+import com.bilalfazlani.zioMaelstrom.NodeConfig.default
 // }
 
 // input_messages {
@@ -56,10 +57,13 @@ object Main extends MaelstromNode {
       case Read() => getState.map(_.messages).flatMap(x => reply(ReadOk(x)))
 
       case Topology(topology) =>
-        val neighbours = topology(me).toSet // (4)!
-        updateState(_.addNeighbours(neighbours)) // (5)!
-          *> reply(TopologyOk()) // (6)!
-          *> startGossip.forkScoped.unit // (7)!
+        for {
+          me        <- MaelstromRuntime.me
+          neighbours = topology(me).toSet                       // (4)!
+          _         <- updateState(_.addNeighbours(neighbours)) // (5)!
+          _         <- reply(TopologyOk())                      // (6)!
+          _         <- startGossip.forkScoped.unit              // (7)!
+        } yield ()
 
       case Gossip(gossipMessages) => updateState(_.addGossip(gossipMessages)) // (8)!
     }
