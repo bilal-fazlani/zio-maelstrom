@@ -6,7 +6,7 @@ import zio.Tag
 
 case class MessageContext(remote: NodeId, messageId: Option[MessageId])
 
-type Handler[R, I] = I => ZIO[MaelstromRuntime & R & MessageContext, Nothing, Unit]
+type Handler[R, I] = I => ZIO[MaelstromRuntime & Scope & R & MessageContext, Nothing, Unit]
 
 trait RequestHandler:
   def handle[R: Tag, I: JsonDecoder](handler: Handler[R, I]): ZIO[R & MaelstromRuntime, Nothing, Unit]
@@ -15,7 +15,8 @@ private[zioMaelstrom] object RequestHandler:
   val live: ZLayer[Initialisation & MessageSender & Settings, Nothing, RequestHandler] =
     ZLayer.derive[RequestHandlerLive]
 
-  def handle[R: Tag, I: JsonDecoder](handler: Handler[R, I]) =
+  def handle[R: Tag, I: JsonDecoder](handler: Handler[R, I]): ZIO[R & MaelstromRuntime, Nothing, Unit] =
+    given Tag[MaelstromRuntime & R] = Tag[MaelstromRuntime & R]
     ZIO.serviceWithZIO[RequestHandler](_.handle(handler))
 
 private class RequestHandlerLive(
@@ -46,7 +47,9 @@ private class RequestHandlerLive(
                    .flatMap { message =>
                      given messageContext: MessageContext = MessageContext(genericMessage.src, genericMessage.messageId)
                      val messageContextLayer              = ZLayer.succeed(messageContext)
-                     handler(message.body.payload).provideSome[R & MaelstromRuntime](messageContextLayer)
+                     ZIO.scoped(
+                       handler(message.body.payload).provideSome[R & MaelstromRuntime & Scope](messageContextLayer)
+                     )
                    }
                    .catchAll(handleInvalidInput)
              )

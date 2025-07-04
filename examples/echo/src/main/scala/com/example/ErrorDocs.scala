@@ -8,17 +8,17 @@ object ErrorDocs:
   object ReplyStandardError {
     case class InMessage() derives JsonCodec
 
-    val handler = receive[InMessage] { case msg: InMessage =>
+    val handler = receive[InMessage](_ =>
       reply(Error(ErrorCode.PreconditionFailed, "some text message")) // (1)!
-    }
+    )
   }
 
   object ReplyCustomError {
     case class InMessage() derives JsonCodec
 
-    val handler = receive[InMessage] { case msg: InMessage =>
+    val handler = receive[InMessage](_ =>
       reply(Error(ErrorCode.Custom(1005), "some text message"))
-    }
+    )
   }
 
   object GetErrorMessage {
@@ -36,7 +36,7 @@ object ErrorDocs:
       .catchAll {
         case t: Timeout         => ZIO.logError(s"timeout: ${t.timeout}")
         case d: DecodingFailure => ZIO.logError(s"decoding failure: ${d.error}")
-        case e: Error =>
+        case e: Error           =>
           val code: ErrorCode = e.code
           val text: String    = e.text
           ZIO.logError(s"error code: $code, error text: $text")

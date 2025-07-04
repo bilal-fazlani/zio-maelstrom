@@ -20,8 +20,8 @@ extension (nodeId: NodeId)
 
 def receive[I]: ReceivePartiallyApplied[I] = new ReceivePartiallyApplied[I]
 
-def reply[B: {JsonEncoder, MsgName}](out: B) = 
-  ZIO.serviceWithZIO[MessageContext]{ messageContext =>
+def reply[B: {JsonEncoder, MsgName}](out: B) =
+  ZIO.serviceWithZIO[MessageContext] { messageContext =>
     messageContext.messageId match {
       case Some(messageId) => MessageSender.reply(out, messageContext.remote, messageId)
       case None            =>
@@ -40,7 +40,7 @@ private[zioMaelstrom] final class AskPartiallyApplied[Res](private val remote: N
 }
 
 private[zioMaelstrom] final class ReceivePartiallyApplied[I](private val dummy: Boolean = false) extends AnyVal {
-  def apply[Env: Tag](handler: Handler[Env, I])(using
-      JsonDecoder[I]
-  )= RequestHandler.handle(handler)
+  def apply[R: Tag](handler: Handler[R, I])(using JsonDecoder[I]): ZIO[R & MaelstromRuntime, Nothing, Unit] =
+    given Tag[R & MaelstromRuntime] = Tag[R & MaelstromRuntime]
+    RequestHandler.handle(handler)
 }

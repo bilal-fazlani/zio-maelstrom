@@ -10,7 +10,7 @@ object Main extends MaelstromNode {
 
   case class Pong() derives JsonEncoder
 
-  val program = receive[Ping](ping => reply(Pong()))
+  val program = receive[Ping](_ => reply(Pong()))
 
   override val configure: NodeConfig =
     NodeConfig
