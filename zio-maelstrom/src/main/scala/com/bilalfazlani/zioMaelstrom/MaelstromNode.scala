@@ -76,15 +76,18 @@ trait MaelstromNode extends ZIOAppDefault:
 
   val configure: NodeConfig = NodeConfig.default
 
+  protected given Tag[MessageSender & MessageIdStore & Services & Initialisation & RequestHandler & Settings] =
+    Tag[MessageSender & MessageIdStore & Services & Initialisation & RequestHandler & Settings]
+
   override final val bootstrap =
     Runtime.removeDefaultLoggers >>>
       ZIOMaelstromLogger.install(configure.logFormat, configure.logLevel)
 
-  def program: ZIO[Scope & MaelstromRuntime, Any, Any]
+  def program: ZIO[MaelstromRuntime, Any, Any]
 
   final def run =
     val settings = Settings(concurrency = configure.concurrency)
     configure.inputContext match
       case InputContext.Static(context, input) =>
-        program.provideSome[Scope](MaelstromRuntime.static(settings, input, context))
-      case InputContext.Real => program.provideSome[Scope](MaelstromRuntime.live(settings))
+        program.provide(MaelstromRuntime.static(settings, input, context))
+      case InputContext.Real                   => program.provide(MaelstromRuntime.live(settings))

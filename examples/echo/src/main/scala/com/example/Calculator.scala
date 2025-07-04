@@ -42,7 +42,7 @@ object Calculator extends MaelstromNode:
     case add: Add           => reply(AddOk(add.a + add.b))
     case subtract: Subtract => reply(SubtractOk(subtract.a - subtract.b))
     case multiply: Multiply => reply(MultiplyOk(multiply.a * multiply.b))
-    case divide: Divide =>
+    case divide: Divide     =>
       if divide.b == 0 then reply(Error(ErrorCode.Custom(55), "divide by zero"))
       else reply(DivideOk(divide.a / divide.b))
   }

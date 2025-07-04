@@ -55,18 +55,6 @@ object NodeId:
   given JsonFieldEncoder[NodeId] = JsonFieldEncoder.string.contramap(identity)
   given JsonFieldDecoder[NodeId] = JsonFieldDecoder.string.map(NodeId(_))
 
-private[zioMaelstrom] opaque type MessageSource = NodeId
-
-extension (s: MessageSource)
-  @targetName("messageSourceAsNodeId")
-  private[zioMaelstrom] def nodeId: NodeId = s
-
-object MessageSource:
-  @targetName("messageSourceFromNodeId")
-  def apply(id: NodeId): MessageSource = id
-  given JsonEncoder[MessageSource]     = JsonEncoder.string.contramap(identity)
-  given JsonDecoder[MessageSource]     = JsonDecoder.string.map(MessageSource(_))
-
 opaque type MessageId = Int
 object MessageId:
   def apply(id: Int): MessageId     = id

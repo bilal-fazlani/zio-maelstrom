@@ -1,13 +1,13 @@
 package com.example.broadcast
 
 // imports {
-import zio.json.*
-import zio.*
 import com.bilalfazlani.zioMaelstrom.*
+import zio.*
+import zio.json.*
 // }
 
 // input_messages {
-@jsonDiscriminator("type") // (1)!
+@jsonDiscriminator("type")                 // (1)!
 sealed trait InMessage derives JsonDecoder // (2)!
 
 @jsonHint("topology")
@@ -47,24 +47,23 @@ object Main extends MaelstromNode {
 
   val startGossip = getState.flatMap(gossip).delay(500.millis).forever // (2)!
 
-  val handleMessages: ZIO[MaelstromRuntime & Ref[State] & Scope, Nothing, Unit] =
-    receive[InMessage] {
-      case Broadcast(broadcast) =>
-        updateState(_.addBroadcast(broadcast)) *>
-          reply(BroadcastOk()) // (3)!
+  val program = receive[InMessage] {
+    case Broadcast(broadcast) =>
+      updateState(_.addBroadcast(broadcast)) *>
+        reply(BroadcastOk()) // (3)!
 
-      case Read() => getState.map(_.messages).flatMap(x => reply(ReadOk(x)))
+    case Read() => getState.map(_.messages).flatMap(x => reply(ReadOk(x)))
 
-      case Topology(topology) =>
-        val neighbours = topology(me).toSet // (4)!
-        updateState(_.addNeighbours(neighbours)) // (5)!
-          *> reply(TopologyOk()) // (6)!
-          *> startGossip.forkScoped.unit // (7)!
+    case Topology(topology) =>
+      for {
+        me <- MaelstromRuntime.me // (4)!
+        neighbours = topology(me).toSet
+        _ <- updateState(_.addNeighbours(neighbours)) // (5)!
+        _ <- reply(TopologyOk())                      // (6)!
+        _ <- startGossip.forkScoped.unit              // (7)!
+      } yield ()
 
-      case Gossip(gossipMessages) => updateState(_.addGossip(gossipMessages)) // (8)!
-    }
-
-  val program =
-    handleMessages.provideSome[MaelstromRuntime & Scope](ZLayer(Ref.make(State()))) // (9)!
+    case Gossip(gossipMessages) => updateState(_.addGossip(gossipMessages)) // (8)!
+  }.provideSome[MaelstromRuntime](ZLayer(Ref.make(State()))) // (9)!
 
 }

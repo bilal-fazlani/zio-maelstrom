@@ -9,7 +9,7 @@ ThisBuild / organizationName := "Bilal Fazlani"
 ThisBuild / versionScheme    := Some("semver-spec")
 ThisBuild / scalacOptions ++= Seq("-Wunused:all", "-deprecation")
 
-ThisBuild / scmInfo := Some(
+ThisBuild / scmInfo    := Some(
   ScmInfo(
     url("https://github.com/bilal-fazlani/zio-maelstrom"),
     "https://github.com/bilal-fazlani/zio-maelstrom.git"
@@ -23,9 +23,9 @@ ThisBuild / developers := List(
     url("https://bilal-fazlani.com")
   )
 )
-ThisBuild / licenses :=
+ThisBuild / licenses   :=
   List("MIT License" -> url("https://github.com/bilal-fazlani/zio-maelstrom/blob/main/LICENSE"))
-ThisBuild / homepage := Some(url("https://zio-maelstrom.bilal-fazlani.com/"))
+ThisBuild / homepage   := Some(url("https://zio-maelstrom.bilal-fazlani.com/"))
 
 logo := {
   if (isCI) ""

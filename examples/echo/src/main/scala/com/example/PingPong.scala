@@ -11,7 +11,7 @@ object PingPong extends MaelstromNode:
 
   val timeout = (for {
     pong: Pong <- NodeId("c4").ask[Pong](Ping(), 3.seconds)
-    _ <- ZIO.logInfo(s"PONG RECEIVED")
+    _          <- ZIO.logInfo(s"PONG RECEIVED: $pong")
   } yield ())
     .catchAll { (e: AskError) =>
       ZIO.logError(s"pong error: $e") *>
@@ -20,7 +20,7 @@ object PingPong extends MaelstromNode:
 
   val program = for {
     _ <- NodeId("c4")
-      .ask[Pong](Ping(), 5.seconds)
-      .disconnect raceFirst (ZIO.fail("boom").delay(1.second).disconnect)
+           .ask[Pong](Ping(), 5.seconds)
+           .disconnect raceFirst (ZIO.fail("boom").delay(1.second).disconnect)
     _ <- ZIO.logInfo(s"PONG RECEIVED")
   } yield ()
