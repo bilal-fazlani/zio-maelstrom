@@ -191,6 +191,27 @@ You can call `reply` api to send a reply message to the source of the current me
 
 `reply` api takes an instance of a case class which has a `zio.json.JsonEncoder`   
 
+## Context APIs
+
+`MaelstromRuntime.me`
+
+:   returns the `NodeId` of the current node
+
+    Signature: `ZIO[MaelstromRuntime, Nothing, NodeId]`
+
+`MaelstromRuntime.others`
+
+:   returns a list of `NodeId` of all other nodes in the cluster
+
+    Signature: `ZIO[MaelstromRuntime, Nothing, Set[NodeId]]`
+
+`MaelstromRuntime.src`
+
+:   returns the `NodeId` of the source of the current message
+
+    Signature: `ZIO[MessageContext, Nothing, NodeId]`
+
+
 ## Error messages
 
 zio-maelstrom has a built in data type for error messages called `Error`

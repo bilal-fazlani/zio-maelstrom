@@ -7,7 +7,7 @@ import zio.json.*
 // }
 
 // input_messages {
-@jsonDiscriminator("type") // (1)!
+@jsonDiscriminator("type")                 // (1)!
 sealed trait InMessage derives JsonDecoder // (2)!
 
 @jsonHint("topology")
@@ -56,11 +56,11 @@ object Main extends MaelstromNode {
 
     case Topology(topology) =>
       for {
-        me        <- MaelstromRuntime.me
-        neighbours = topology(me).toSet                       // (4)!
-        _         <- updateState(_.addNeighbours(neighbours)) // (5)!
-        _         <- reply(TopologyOk())                      // (6)!
-        _         <- startGossip.forkScoped.unit              // (7)!
+        me <- MaelstromRuntime.me // (4)!
+        neighbours = topology(me).toSet
+        _ <- updateState(_.addNeighbours(neighbours)) // (5)!
+        _ <- reply(TopologyOk())                      // (6)!
+        _ <- startGossip.forkScoped.unit              // (7)!
       } yield ()
 
     case Gossip(gossipMessages) => updateState(_.addGossip(gossipMessages)) // (8)!

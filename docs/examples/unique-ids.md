@@ -30,13 +30,12 @@ Unlike [echo](echo.md), this node has some state which we have modeled using `Re
 [Node application](../../examples/unique-ids/src/main/scala/com/example/Main.scala) block:Main
 <!--/codeinclude-->
 
-1.  `me` method returns the `NodeId` of self node. It's a [context function](https://docs.scala-lang.org/scala3/reference/contextual/context-functions.html) which is only available inside receive block
-2.  `reply` function is another context function that sends a reply to the sender of the message. The correlation between the request and reply is handled by the framework, so we don't need to worry about it
-
-I have used `ZLayer` to inject the state and also to make sure the same `Ref` is used across the codebase in case we want to make the code more modular.
+1.  `MaelstromRuntime.me` returns the `NodeId` of self node.
+2.  `reply` sends a reply to the sender of the message. The correlation between the request and reply is automatically handled by the framework using the `messageId`
 
 !!! tip
-    Note the use of `.provideSome` to provide `Ref[Int]` layer to the program. This method provides all the layers except `MaelstromRuntime`.
+    - `ZLayer` is used to inject the state
+    - `.provideSome` is used to provide `Ref[Int]` layer to the program. This method provides all the layers except `MaelstromRuntime`
 
 !!! note
     Source code for this example can be found on [:simple-github: Github](https://github.com/bilal-fazlani/zio-maelstrom/blob/main/examples/unique-ids/src/main/scala/com/example/Main.scala)
