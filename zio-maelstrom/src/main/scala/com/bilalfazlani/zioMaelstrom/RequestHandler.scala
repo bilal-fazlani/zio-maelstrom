@@ -1,8 +1,7 @@
 package com.bilalfazlani.zioMaelstrom
 
-import zio.*
+import zio.{Tag, ZIO, *}
 import zio.json.*
-import zio.Tag
 
 case class MessageContext(remote: NodeId, messageId: Option[MessageId])
 
@@ -38,22 +37,49 @@ private class RequestHandlerLive(
   def handle[R: Tag, I: JsonDecoder](handler: Handler[R, I]): ZIO[R & MaelstromRuntime, Nothing, Unit] =
     for {
       _ <- initialisation.inputs.messageStream
-             // process messages in parallel
-             .mapZIOPar(settings.concurrency)(genericMessage =>
-               ZIO.logDebug(processingMessageLog(genericMessage)) *>
-                 ZIO
-                   .fromEither(GenericDecoder[I].decode(genericMessage))
-                   .mapError(e => InvalidInput(genericMessage, e))
-                   .flatMap { message =>
-                     given messageContext: MessageContext = MessageContext(genericMessage.src, genericMessage.messageId)
-                     val messageContextLayer              = ZLayer.succeed(messageContext)
-                     ZIO.scoped(
-                       handler(message.body.payload).provideSome[R & MaelstromRuntime & Scope](messageContextLayer)
-                     )
-                   }
-                   .catchAll(handleInvalidInput)
-             )
-             .runDrain
+        // process messages in parallel
+        .mapZIOPar(settings.concurrency)(genericMessage =>
+          ZIO.logDebug(processingMessageLog(genericMessage)) *>
+            ZIO
+              .fromEither(GenericDecoder[I].decode(genericMessage))
+              .mapError(e => InvalidInput(genericMessage, e))
+              .flatMap { message =>
+                given messageContext: MessageContext = MessageContext(genericMessage.src, genericMessage.messageId)
+                val messageContextLayer              = ZLayer.succeed(messageContext)
+                ZIO.scoped(
+                  ZIO
+                    .attempt(
+                      handler(message.body.payload).provideSome[R & MaelstromRuntime & Scope](messageContextLayer)
+                    )
+                    .flatten
+                )
+              }
+              .catchAll {
+                case t: Throwable    => handleThrowable(t, genericMessage)
+                case i: InvalidInput => handleInvalidInput(i)
+              }
+        )
+        .runDrain
+    } yield ()
+
+  private def handleThrowable(t: Throwable, input: GenericMessage): ZIO[Any, Nothing, Unit] =
+    val maybeResponse: Option[Error] = input.messageId.map { _ =>
+      Error(
+        code = ErrorCode.Crash,
+        text = s"handler crashed due to unhandled error: ${t.getMessage}"
+      )
+    }
+    for {
+      _ <- ZIO.logError(s"handler crashed: ${t.getMessage}")
+      _ <- ZIO.logError(t.getStackTrace.mkString("\n"))
+      _ <- maybeResponse match {
+        case Some(errorMessageBody) =>
+          messageSender
+            .reply(errorMessageBody, input.src, input.messageId.get)
+            .ignore
+        case None => ZIO.unit // if there was no msg id in msg, we can't send a reply
+      }
+      _ <- ZIO.die(t)
     } yield ()
 
   private def handleInvalidInput(invalidInput: InvalidInput): ZIO[Any, Nothing, Unit] =
@@ -66,10 +92,10 @@ private class RequestHandlerLive(
     for {
       _ <- ZIO.logError(s"invalid input: $invalidInput")
       _ <- maybeResponse match {
-             case Some(errorMessageBody) =>
-               messageSender
-                 .reply(errorMessageBody, invalidInput.input.src, invalidInput.input.messageId.get)
-                 .ignore
-             case None                   => ZIO.unit // if there was no msg id in msg, we can't send a reply
-           }
+        case Some(errorMessageBody) =>
+          messageSender
+            .reply(errorMessageBody, invalidInput.input.src, invalidInput.input.messageId.get)
+            .ignore
+        case None => ZIO.unit // if there was no msg id in msg, we can't send a reply
+      }
     } yield ()
