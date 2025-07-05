@@ -25,12 +25,10 @@ object Body:
         .flatMap(_.as[String].toOption)
         .toRight("Missing or invalid 'type' field")
 
-      val msgId     = fields.get("msg_id").map(_.as[MessageId].toOption).flatten
-      val inReplyTo = fields.get("in_reply_to").map(_.as[MessageId].toOption).flatten
+      val msgId     = fields.get("msg_id").flatMap(_.as[MessageId].toOption)
+      val inReplyTo = fields.get("in_reply_to").flatMap(_.as[MessageId].toOption)
 
-      // Remove Body-specific fields to get payload fields
-      val payloadFields = fields - "type" - "msg_id" - "in_reply_to"
-      val payloadJson   = Json.Obj(zio.Chunk.fromIterable(payloadFields))
+      val payloadJson   = Json.Obj(zio.Chunk.fromIterable(fields))
 
       for {
         tpe     <- typeField

@@ -91,8 +91,8 @@ object BodyDecodingTest extends ZIOSpecDefault {
         } yield assertTrue(
           result.`type` == "simple_message",
           result.payload == SimpleMessage("Reply"),
-          result.msg_id == None,
-          result.in_reply_to == Some(MessageId(999))
+          result.msg_id.isEmpty,
+          result.in_reply_to.contains(MessageId(999))
         )
       }
     ),
@@ -149,7 +149,7 @@ object BodyDecodingTest extends ZIOSpecDefault {
         } yield assertTrue(
           result.`type` == "simple_message",
           result.payload == SimpleMessage("Hello"),
-          result.msg_id == None // invalid msg_id should be treated as None
+          result.msg_id.isEmpty // invalid msg_id should be treated as None
         )
       }
     ),
@@ -195,7 +195,7 @@ object BodyDecodingTest extends ZIOSpecDefault {
         } yield assertTrue(
           result.`type` == "simple_message",
           result.payload == SimpleMessage("Hello"),
-          result.msg_id == Some(MessageId(123))
+          result.msg_id.contains(MessageId(123))
         )
       },
       test("handle nested JSON objects in payload") {
@@ -214,6 +214,30 @@ object BodyDecodingTest extends ZIOSpecDefault {
         } yield assertTrue(
           result.`type` == "nested_message",
           result.payload == NestedMessage(Map("key1" -> "value1", "key2" -> "value2"))
+        )
+      }
+    ),
+    suite("MessageHierarchy Discriminator Tests")(
+      test("decode MessageHierarchy from JSON with Case1 discriminator") {
+
+        sealed trait MessageHierarchy derives JsonCodec
+        object MessageHierarchy:
+          case class CaseOk(textEncoded: String) extends MessageHierarchy
+
+        val json = Json.Obj(
+          "type"         -> Json.Str("case_ok"),
+          "text_encoded" -> Json.Str("Hello"),
+          "msg_id"       -> Json.Num(123),
+          "in_reply_to"  -> Json.Num(456)
+        )
+
+        for {
+          result <- JsonDecoder[Body[MessageHierarchy]].decodeJson(json.toString())
+        } yield assertTrue(
+          result.`type` == "case_ok",
+          result.payload == MessageHierarchy.CaseOk("Hello"),
+          result.msg_id.contains(MessageId(123)),
+          result.in_reply_to.contains(MessageId(456))
         )
       }
     )

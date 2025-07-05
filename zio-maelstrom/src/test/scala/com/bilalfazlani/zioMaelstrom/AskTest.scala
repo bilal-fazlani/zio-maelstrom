@@ -1,12 +1,11 @@
 package com.bilalfazlani.zioMaelstrom
 
+import com.bilalfazlani.zioMaelstrom.models.{Body, MsgName}
+import com.bilalfazlani.zioMaelstrom.testkit.*
 import zio.*
-import zio.test.*
 import zio.json.*
-import testkit.*
 import zio.json.ast.Json
-import models.Body
-import com.bilalfazlani.zioMaelstrom.models.MsgName
+import zio.test.*
 
 object AskTest extends MaelstromSpec {
 
@@ -32,8 +31,8 @@ object AskTest extends MaelstromSpec {
           "dest" -> Json.Str("n2"),
           "body" -> Json(
             "msg_id" -> Json.Num(1),
-            "type" -> Json.Str("ping"),
-            "text" -> Json.Str("Hello")
+            "type"   -> Json.Str("ping"),
+            "text"   -> Json.Str("Hello")
           )
         )
       } yield assertTrue(
@@ -56,7 +55,7 @@ object AskTest extends MaelstromSpec {
           "src"  -> Json.Str("n1"),
           "dest" -> Json.Str("n2"),
           "body" -> Json(
-            "type" -> Json.Str("ping"),
+            "type"   -> Json.Str("ping"),
             "msg_id" -> Json.Num(1)
           )
         )
@@ -98,6 +97,27 @@ object AskTest extends MaelstromSpec {
           NodeId("n1"),
           NodeId("n2"),
           Body(MsgName[Pong], Pong(), None, Some(MessageId(1)))
+        )
+      )
+    }.provide(tRuntime),
+    test("successfully get subtype message") {
+      sealed trait Ping derives JsonCodec
+      case class PingPong(textEncoded: String) extends Ping derives JsonEncoder
+
+      case class PingOk() derives JsonEncoder
+
+      for {
+        fiber <- receive[Ping] { case _: PingPong =>
+          reply(PingOk())
+        }.timeout(500.millis).fork
+        _                       <- inputAsk(PingPong("hi"), NodeId("n2"), MessageId(1))
+        _                       <- TestClock.adjust(1.second) zipPar fiber.join.ignore
+        pingOk: Message[PingOk] <- getNextMessage[PingOk]
+      } yield assertTrue(
+        pingOk == Message(
+          NodeId("n1"),
+          NodeId("n2"),
+          Body(MsgName[PingOk], PingOk(), None, Some(MessageId(1)))
         )
       )
     }.provide(tRuntime)
