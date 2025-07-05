@@ -7,20 +7,12 @@ import zio.json.*
 // }
 
 // input_messages {
-@jsonDiscriminator("type")                 // (1)!
-sealed trait InMessage derives JsonDecoder // (2)!
+sealed trait InMessage derives JsonDecoder // (1)!
 
-@jsonHint("topology")
 case class Topology(topology: Map[NodeId, List[NodeId]]) extends InMessage
-
-@jsonHint("broadcast")
-case class Broadcast(message: Int) extends InMessage
-
-@jsonHint("read")
-case class Read() extends InMessage
-
-@jsonHint("gossip")
-case class Gossip(iHaveSeen: Set[Int]) extends InMessage derives JsonEncoder // (3)!
+case class Broadcast(message: Int)                       extends InMessage
+case class Read()                                        extends InMessage
+case class Gossip(iHaveSeen: Set[Int])                   extends InMessage derives JsonEncoder // (2)!
 //}
 
 // reply_messages {

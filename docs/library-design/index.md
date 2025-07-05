@@ -15,7 +15,7 @@ ZIO-Maelstrom follows ZIO idiomatic practices and is functional in nature
 - [x] Handles `Init` message
 - [x] Calls your message handlers concurrently when messages arrive
 - [x] RPC messages - maintains correlation between requests and responses
-- [x] Gives you traits - `Sendable`, `Reply` and `NeedsResponse` to help you define your own protocol
+- [x] Provide smart codecs for case classes for Maelstrom Protocol
 
 **What it doesn't do**
 
