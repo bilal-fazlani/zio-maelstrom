@@ -32,6 +32,12 @@ def reply[B: {JsonEncoder, MsgName}](out: B) =
     }
   }
 
+def replyError(code: ErrorCode, text: String) = reply[Error](Error(code, text))
+
+extension [R, A](effect: ZIO[R, AskError, A])
+  def handleAskErrorWithReply =
+    effect.catchAll(_ => replyError(ErrorCode.Crash, "ask operation failed at remote node for another node"))
+
 private[zioMaelstrom] final class AskPartiallyApplied[Res](private val remote: NodeId) extends AnyVal {
   def apply[Req: {JsonEncoder, MsgName}](body: Req, timeout: Duration)(using
       JsonDecoder[Res]
