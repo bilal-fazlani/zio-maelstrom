@@ -32,6 +32,7 @@ def reply[B: {JsonEncoder, MsgName}](out: B) =
     }
   }
 
+def replyError(code: ErrorCode, text: String) = reply[Error](Error(code, text))
 private[zioMaelstrom] final class AskPartiallyApplied[Res](private val remote: NodeId) extends AnyVal {
   def apply[Req: {JsonEncoder, MsgName}](body: Req, timeout: Duration)(using
       JsonDecoder[Res]
