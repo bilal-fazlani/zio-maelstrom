@@ -37,12 +37,19 @@ object IODocs:
     val result = NodeId("n5") send Gossip(Seq(1,2))
   }
 
-  object Reply {
+  object Reply1 extends MaelstromNode {
     case class Gossip(numbers: Seq[Int]) derives JsonCodec
 
     case class GossipOk(myNumbers: Seq[Int]) derives JsonCodec
 
-    val messageHandler = receive[Gossip] (_ => reply(GossipOk(Seq(1,2))))
+    val program = receive[Gossip] (_ => reply(GossipOk(Seq(1,2))))
+  }
+
+
+  object ErrorReply2 extends MaelstromNode {
+    case class Gossip(numbers: Seq[Int]) derives JsonCodec
+
+    val program = receive[Gossip] (_ => replyError(ErrorCode.PreconditionFailed, "some text message"))
   }
 
   object Ask {

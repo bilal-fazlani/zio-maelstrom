@@ -41,24 +41,28 @@ object ErrorDocs:
       }
   }
 
+  object ReplyErrorAPI extends MaelstromNode {
+    case class Query(id: Int) derives JsonCodec
+
+    val program = receive[Query](_ => replyError(ErrorCode.PreconditionFailed, "some text message"))
+  }
+
+  object FailedZIOEffect extends MaelstromNode {
+    case class Query(id: Int) derives JsonCodec
+
+    val program = receive[Query](_ => ZIO.fail(Error(ErrorCode.PreconditionFailed, "some text message")))
+  }
+
   object DefaultAskErrorHandler extends MaelstromNode {
     case class Query(id: Int) derives JsonCodec
     case class Answer(text: String) derives JsonCodec
 
     private def askResponse(q: Query) = NodeId("g4").ask[Answer](q, 5.seconds)
 
-    val program = receive[Query](askResponse(_).defaultAskHandler.flatMap(reply))
-  }
-
-  object DefaultAskErrorHandler2 extends MaelstromNode {
-    case class Query(id: Int) derives JsonCodec
-    case class Answer(text: String) derives JsonCodec
-
-    private def askResponse(q: Query): ZIO[MessageSender, AskError, Answer] = NodeId("g4").ask[Answer](q, 5.seconds)
-
-    val program = receive[Query]{ q => for
+    val program = receive[Query] { q =>
+      for
         answer <- askResponse(q).defaultAskHandler
-        _ <- reply(answer)
+        _      <- reply(answer)
       yield ()
     }
   }

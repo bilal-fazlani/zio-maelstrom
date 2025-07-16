@@ -179,17 +179,27 @@ Ask error can be one of the following:
 [Ask error handling](../../examples/echo/src/main/scala/com/example/ErrorDocs.scala) inside_block:GetErrorMessage
 <!--/codeinclude-->
 
-Sender can send an error message if it encounters an error while processing the request message or when request is invalid. You can read more about error messages in the [error messages section](#error-messages)
+Sender can send an error message if it encounters an error while processing the request message or when request is invalid. You can read more about error messages in the [error messages section](#error-messages) and [error handling section](#error-handling)
 
 ### 4. `reply`
 
 You can call `reply` api to send a reply message to the source of the current message (if the message was sent using `ask` api)
 
 <!--codeinclude-->
-[Reply](../../examples/echo/src/main/scala/com/example/IODocs.scala) inside_block:Reply
+[Reply](../../examples/echo/src/main/scala/com/example/IODocs.scala) inside_block:Reply1
 <!--/codeinclude-->
 
 `reply` api takes an instance of a case class which has a `zio.json.JsonEncoder`   
+
+### 5. `replyError`
+
+You can call `replyError` api to send an error message to the source of the current message (if the message was sent using `ask` api)
+
+<!--codeinclude-->
+[Reply Error](../../examples/echo/src/main/scala/com/example/IODocs.scala) inside_block:ErrorReply2
+<!--/codeinclude--> 
+
+See [error handling](#error-handling) for more details.
 
 ## Context APIs
 
@@ -211,10 +221,9 @@ You can call `reply` api to send a reply message to the source of the current me
 
     Signature: `ZIO[MessageContext, Nothing, NodeId]`
 
-
 ## Error messages
 
-zio-maelstrom has a built in data type for error messages called `Error`
+zio-maelstrom has a built-in data type for error messages called `Error`
 
 <!--codeinclude-->
 [Error](../../zio-maelstrom/src/main/scala/com/bilalfazlani/zioMaelstrom/Protocol.scala) inside_block:errorMessage
@@ -238,6 +247,59 @@ You can send an error message to any node id as a reply to another message. Here
 <!--codeinclude-->
 [Send custom error](../../examples/echo/src/main/scala/com/example/ErrorDocs.scala) inside_block:ReplyCustomError
 <!--/codeinclude-->
+
+## Error handling
+
+When you use `ask` api, it can return an `AskError` which can be one of the following:
+
+1. `Timeout` if the reply was not received within given duration
+2. `DecodingFailure` if the reply could not be decoded into the given type
+3. `Error` if the sender sends an error message instead of the reply message.
+
+The error is returned via a failed ZIO effect. 
+You can handle it using `ZIO.fold` or `ZIO.catchAll` or any 
+other [error handling method supported by ZIO](https://zio.dev/reference/error-management/).
+
+When handling an `AskError`, you can either 
+
+1. recover from the error by [retrying the ask operation](https://zio.dev/reference/schedule/retrying/)
+2. ignore the error and continue the handler execution
+3. [log the error](#logging)
+4. convert it to a `Error` and return it to the sender
+
+or all of the above.
+
+Note that default logging happens in the framework already. So you don't need to log the error again unless you want custom logging.
+
+### Returning an error to the sender
+
+There is an api called `replyError` that can be used to return an instance of `Error` to the sender.
+
+<!--codeinclude-->
+[Reply Error](../../examples/echo/src/main/scala/com/example/ErrorDocs.scala) inside_block:ReplyErrorAPI
+<!--/codeinclude-->
+
+Alternatively, you can fail the ZIO effect with an `Error` type and the framework will automatically return that error to the sender if there is a `msg_id` in the request message.
+
+!!! info
+    One key difference between `replyError` and `ZIO.fail` is that `replyError` allows you to continue the handler execution after returning the error. While `ZIO.fail` will immediately stop handler execution for the current message.
+
+<!--codeinclude-->
+[Failed ZIO Effect](../../examples/echo/src/main/scala/com/example/ErrorDocs.scala) inside_block:FailedZIOEffect
+<!--/codeinclude-->
+
+There is a very easy way to convert any AskError to an `Error` response to the sender.
+
+<!--codeinclude-->
+[Convert AskError to Error](../../examples/echo/src/main/scala/com/example/ErrorDocs.scala) inside_block:DefaultAskErrorHandler
+<!--/codeinclude-->
+
+`defaultAskHandler` is an extension method that converts `ZIO[R, AskError, A]` to `ZIO[R, Error, A]`. 
+
+!!! warning "Important"
+    Note that it does not retain the original code and message. Regardless of the original error, it will always return `Crash` error code.
+
+The above code will not compile if you remove the `defaultAskHandler` call. This is to force you to handle the error explicitly.
 
 ## Maelstrom services
 
