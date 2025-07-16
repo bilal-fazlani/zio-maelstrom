@@ -31,7 +31,7 @@ case class NodeConfig private (
   def withConcurrency(concurrency: Int) = copy(concurrency = concurrency)
 
   // customize mocking
-  def withStaticInput[A: JsonEncoder: Tag](
+  def withStaticInput[A: {JsonEncoder, Tag}](
       me: NodeId,
       others: Set[NodeId],
       messages: InlineMessage[A]*
@@ -62,7 +62,7 @@ object NodeConfig:
   def withConcurrency(concurrency: Int) = default.withConcurrency(concurrency)
 
   // customize mocking
-  def withStaticInput[A: JsonEncoder: Tag](
+  def withStaticInput[A: {JsonEncoder, Tag}](
       me: NodeId,
       others: Set[NodeId],
       messages: InlineMessage[A]*

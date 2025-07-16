@@ -5,23 +5,21 @@ import zio.*
 import com.bilalfazlani.zioMaelstrom.*
 
 object ErrorDocs:
-  object ReplyStandardError {
+  object ReplyStandardError extends MaelstromNode {
     case class InMessage() derives JsonCodec
 
-    val handler = receive[InMessage](_ =>
-      reply(Error(ErrorCode.PreconditionFailed, "some text message")) // (1)!
+    val program = receive[InMessage](_ =>
+      replyError(ErrorCode.PreconditionFailed, "some text message") // (1)!
     )
   }
 
-  object ReplyCustomError {
+  object ReplyCustomError extends MaelstromNode {
     case class InMessage() derives JsonCodec
 
-    val handler = receive[InMessage](_ =>
-      reply(Error(ErrorCode.Custom(1005), "some text message"))
-    )
+    val program = receive[InMessage](_ => replyError(ErrorCode.Custom(1005), "some text message"))
   }
 
-  object GetErrorMessage {
+  object GetErrorMessage extends MaelstromNode {
 
     case class Query(id: Int) derives JsonCodec
 
@@ -32,7 +30,7 @@ object ErrorDocs:
       _      <- ZIO.logInfo(s"answer: $answer")
     yield ()
 
-    askResponse
+    val program = askResponse
       .catchAll {
         case t: Timeout         => ZIO.logError(s"timeout: ${t.timeout}")
         case d: DecodingFailure => ZIO.logError(s"decoding failure: ${d.error}")
@@ -41,4 +39,26 @@ object ErrorDocs:
           val text: String    = e.text
           ZIO.logError(s"error code: $code, error text: $text")
       }
+  }
+
+  object DefaultAskErrorHandler extends MaelstromNode {
+    case class Query(id: Int) derives JsonCodec
+    case class Answer(text: String) derives JsonCodec
+
+    private def askResponse(q: Query) = NodeId("g4").ask[Answer](q, 5.seconds)
+
+    val program = receive[Query](askResponse(_).defaultAskHandler.flatMap(reply))
+  }
+
+  object DefaultAskErrorHandler2 extends MaelstromNode {
+    case class Query(id: Int) derives JsonCodec
+    case class Answer(text: String) derives JsonCodec
+
+    private def askResponse(q: Query): ZIO[MessageSender, AskError, Answer] = NodeId("g4").ask[Answer](q, 5.seconds)
+
+    val program = receive[Query]{ q => for
+        answer <- askResponse(q).defaultAskHandler
+        _ <- reply(answer)
+      yield ()
+    }
   }

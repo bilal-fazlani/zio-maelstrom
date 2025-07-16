@@ -17,7 +17,7 @@ case class DecodingFailure(error: String, message: GenericMessage)
 trait MessageSender:
   def send[A: {MsgName, JsonEncoder}](payload: A, to: NodeId): UIO[Unit]
 
-  def reply[A: {MsgName, JsonEncoder}](payload: A, to: NodeId, messageId: MessageId): UIO[Unit]
+  def reply[A: {MsgName, JsonEncoder}](payload: A): ZIO[MessageContext, Nothing, Unit]
 
   private[zioMaelstrom] def sendRaw[A: {MsgName, JsonEncoder}](
       body: Body[A],
@@ -43,11 +43,9 @@ private[zioMaelstrom] object MessageSender:
     .serviceWithZIO[MessageSender](_.send(payload, to))
 
   def reply[A: {MsgName, JsonEncoder}](
-      payload: A,
-      to: NodeId,
-      messageId: MessageId
-  ): URIO[MessageSender, Unit] = ZIO
-    .serviceWithZIO[MessageSender](_.reply(payload, to, messageId))
+      payload: A
+  ): ZIO[MessageContext & MessageSender, Nothing, Unit] = ZIO
+    .serviceWithZIO[MessageSender](_.reply(payload))
 
   private[zioMaelstrom] def sendRaw[A: {MsgName, JsonEncoder}](
       body: Body[A],
@@ -73,9 +71,21 @@ private class MessageSenderLive(
     val body: Body[A] = Body(MsgName[A], payload, msg_id = None, in_reply_to = None)
     sendRaw(body, to)
 
-  def reply[A: {MsgName, JsonEncoder}](payload: A, to: NodeId, messageId: MessageId): UIO[Unit] = {
-    val body: Body[A] = Body(MsgName[A], payload, msg_id = None, in_reply_to = Some(messageId))
-    sendRaw(body, to)
+  def reply[A: {MsgName, JsonEncoder}](
+      payload: A
+  ): ZIO[MessageContext, Nothing, Unit] = {
+    ZIO.serviceWithZIO[MessageContext] { messageContext =>
+      messageContext.messageId match {
+        case Some(messageId) =>
+          val body: Body[A] = Body(MsgName[A], payload, msg_id = None, in_reply_to = Some(messageId))
+          sendRaw(body, messageContext.remote)
+        case None =>
+          ZIO.logWarning(
+            "there is no messageId present in the context, " +
+              s"cannot reply to node ${messageContext.remote} with message type ${MsgName[A]}"
+          )
+      }
+    }
   }
 
   private[zioMaelstrom] def sendRaw[A: {MsgName, JsonEncoder}](
@@ -104,7 +114,7 @@ private class MessageSenderLive(
     msg_id         <- sendWithId(body, to)
     _              <- ZIO.logDebug(s"waiting for reply from $to for message id $msg_id...")
     genericMessage <- ZIO.scoped(callbackRegistry.awaitCallback(msg_id, to, timeout))
-    decoded <-
+    decoded        <-
       if genericMessage.isError then {
         val error = JsonDecoder[Message[Error]]
           .fromJsonAST(genericMessage.raw)
@@ -123,8 +133,6 @@ private class MessageSenderLive(
         ZIO
           .fromEither(JsonDecoder[Message[Res]].fromJsonAST(genericMessage.raw))
           .mapError(e => DecodingFailure(e, genericMessage))
-          .tapError(e =>
-            ZIO.logError(s"decoding failed for response from ${to} for message id ${msg_id}")
-          )
+          .tapError(e => ZIO.logError(s"decoding failed for response from ${to} for message id ${msg_id}"))
       }
   } yield decoded.body.payload
