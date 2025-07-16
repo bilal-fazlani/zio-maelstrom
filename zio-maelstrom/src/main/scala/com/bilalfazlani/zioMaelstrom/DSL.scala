@@ -20,23 +20,13 @@ extension (nodeId: NodeId)
 
 def receive[I]: ReceivePartiallyApplied[I] = new ReceivePartiallyApplied[I]
 
-def reply[B: {JsonEncoder, MsgName}](out: B) =
-  ZIO.serviceWithZIO[MessageContext] { messageContext =>
-    messageContext.messageId match {
-      case Some(messageId) => MessageSender.reply(out, messageContext.remote, messageId)
-      case None            =>
-        ZIO.logWarning(
-          "there is no messageId present in the context, " +
-            s"cannot reply to node ${messageContext.remote} with message type ${MsgName[B]}"
-        )
-    }
-  }
+def reply[B: {JsonEncoder, MsgName}](out: B) = MessageSender.reply(out)
 
 def replyError(code: ErrorCode, text: String) = reply[Error](Error(code, text))
 
 extension [R, A](effect: ZIO[R, AskError, A])
-  def handleAskErrorWithReply =
-    effect.catchAll(_ => replyError(ErrorCode.Crash, "ask operation failed at remote node for another node"))
+  def defaultAskHandler: ZIO[R, Error, A] =
+    effect.orElseFail(Error(ErrorCode.Crash, "ask operation failed at remote node for another node"))
 
 private[zioMaelstrom] final class AskPartiallyApplied[Res](private val remote: NodeId) extends AnyVal {
   def apply[Req: {JsonEncoder, MsgName}](body: Req, timeout: Duration)(using

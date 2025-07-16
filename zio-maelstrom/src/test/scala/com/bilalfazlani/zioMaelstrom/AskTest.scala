@@ -120,6 +120,53 @@ object AskTest extends MaelstromSpec {
           Body(MsgName[PingOk], PingOk(), None, Some(MessageId(1)))
         )
       )
+    }.provide(tRuntime),
+    test("forward response happy path") {
+      case class Question(q: String) derives JsonCodec
+      case class Answer(a: String) derives JsonCodec
+
+      for {
+        fiber <- receive[Question] { (q: Question) =>
+          NodeId("g1").ask[Answer](q, 500.millis).defaultAskHandler.flatMap(reply)
+        }.timeout(200.millis).fork
+        _   <- inputAsk(Question("q"), NodeId("c1"), MessageId(1))
+        _   <- zio.test.live(ZIO.sleep(200.millis))
+        _   <- inputReply(Answer("a"), NodeId("g1"), MessageId(1))
+        _   <- TestClock.adjust(200.millis)
+        _   <- fiber.join.ignore
+        _   <- getNextMessage[Question]
+        ans <- getNextMessage[Answer]
+      } yield assertTrue(
+        ans == Message(NodeId("n1"), NodeId("c1"), Body(MsgName[Answer], Answer("a"), None, Some(MessageId(1))))
+      )
+    }.provide(tRuntime),
+    test("auto reply error when downstream ask fails") {
+      case class Question(q: String) derives JsonCodec
+      case class Answer(a: String) derives JsonCodec
+
+      for {
+        fiber <- receive[Question] { (q: Question) =>
+          NodeId("g1").ask[Answer](q, 500.millis).defaultAskHandler.flatMap(reply)
+        }.timeout(200.millis).fork
+        _   <- inputAsk(Question("q"), NodeId("c1"), MessageId(1))
+        _   <- zio.test.live(ZIO.sleep(200.millis))
+        _   <- inputReply(Error(ErrorCode.KeyDoesNotExist, "boom"), NodeId("g1"), MessageId(1))
+        _   <- TestClock.adjust(200.millis)
+        _   <- fiber.join.ignore
+        _   <- getNextMessage[Question]
+        ans <- getNextMessage[Error]
+      } yield assertTrue(
+        ans == Message(
+          NodeId("n1"),
+          NodeId("c1"),
+          Body(
+            MsgName[Error],
+            Error(ErrorCode.Crash, "ask operation failed at remote node for another node"),
+            None,
+            Some(MessageId(1))
+          )
+        )
+      )
     }.provide(tRuntime)
   ) @@ TestAspect.timeout(10.seconds) @@ TestAspect.sequential
 }
