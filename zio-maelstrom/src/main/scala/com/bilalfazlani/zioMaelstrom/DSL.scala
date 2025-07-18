@@ -29,10 +29,10 @@ extension [R, A](effect: ZIO[R, AskError, A])
     effect.orElseFail(Error(ErrorCode.Crash, "ask operation failed at remote node for another node"))
 
 private[zioMaelstrom] final class AskPartiallyApplied[Res](private val remote: NodeId) extends AnyVal {
-  def apply[Req: {JsonEncoder, MsgName}](body: Req, timeout: Duration)(using
+  def apply[Req: {JsonEncoder, MsgName}](body: Req)(using
       JsonDecoder[Res]
   ): ZIO[MessageSender, AskError, Res] =
-    MessageSender.ask[Req, Res](body, remote, timeout)
+    MessageSender.ask[Req, Res](body, remote)
 }
 
 private[zioMaelstrom] final class ReceivePartiallyApplied[I](private val dummy: Boolean = false) extends AnyVal {
