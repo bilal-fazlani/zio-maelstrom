@@ -5,7 +5,7 @@ import com.bilalfazlani.zioMaelstrom.services.LinTso
 import zio.*
 
 case class LinTsoFake(ref: Ref[Int]) extends LinTso:
-  override def ts(timeout: Duration): ZIO[Any, AskError, Int] =
+  override def ts: ZIO[Any, AskError, Int] =
     ref.updateAndGet(_ + 1)
 
 object LinTsoFake:

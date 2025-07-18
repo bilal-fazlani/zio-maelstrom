@@ -20,7 +20,7 @@ object AskTest extends MaelstromSpec {
       case class Pong(text: String) derives JsonCodec
       for {
         pongFiber <- ZIO
-          .serviceWithZIO[MessageSender](_.ask[Ping, Pong](Ping("Hello"), NodeId("n2"), 1.second))
+          .serviceWithZIO[MessageSender](_.ask[Ping, Pong](Ping("Hello"), NodeId("n2")))
           .fork
         pingMessage: Message[Ping] <- getNextMessage[Ping]
         _                          <- inputReply(Pong("World"), NodeId("n2"), MessageId(1))
@@ -45,7 +45,7 @@ object AskTest extends MaelstromSpec {
       case class Pong() derives JsonCodec
       for {
         pongFiber <- ZIO
-          .serviceWithZIO[MessageSender](_.ask[Ping, Pong](Ping(), NodeId("n2"), 1.second))
+          .serviceWithZIO[MessageSender](_.ask[Ping, Pong](Ping(), NodeId("n2")))
           .fork
         pingMessage: Message[Ping] <- getNextMessage[Ping]
         _                          <- inputReply(Pong(), NodeId("n2"), MessageId(1))
@@ -127,10 +127,10 @@ object AskTest extends MaelstromSpec {
 
       for {
         fiber <- receive[Question] { (q: Question) =>
-          NodeId("g1").ask[Answer](q, 500.millis).defaultAskHandler.flatMap(reply)
+          NodeId("g1").ask[Answer](q).defaultAskHandler.flatMap(reply)
         }.timeout(200.millis).fork
         _   <- inputAsk(Question("q"), NodeId("c1"), MessageId(1))
-        _   <- zio.test.live(ZIO.sleep(200.millis))
+        _   <- zio.test.live(ZIO.sleep(80.millis))
         _   <- inputReply(Answer("a"), NodeId("g1"), MessageId(1))
         _   <- TestClock.adjust(200.millis)
         _   <- fiber.join.ignore
@@ -146,10 +146,10 @@ object AskTest extends MaelstromSpec {
 
       for {
         fiber <- receive[Question] { (q: Question) =>
-          NodeId("g1").ask[Answer](q, 500.millis).defaultAskHandler.flatMap(reply)
+          NodeId("g1").ask[Answer](q).defaultAskHandler.flatMap(reply)
         }.timeout(200.millis).fork
         _   <- inputAsk(Question("q"), NodeId("c1"), MessageId(1))
-        _   <- zio.test.live(ZIO.sleep(200.millis))
+        _   <- zio.test.live(ZIO.sleep(80.millis))
         _   <- inputReply(Error(ErrorCode.KeyDoesNotExist, "boom"), NodeId("g1"), MessageId(1))
         _   <- TestClock.adjust(200.millis)
         _   <- fiber.join.ignore

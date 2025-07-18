@@ -10,46 +10,36 @@ object LwwKv:
   def read[Value] = PartiallyAppliedKvRead[LwwKv, Value]()
 
   def readOption[Key: JsonEncoder, Value: JsonDecoder](
-      key: Key,
-      timeout: Duration
-  ) = ZIO.serviceWithZIO[LwwKv](_.readOption(key, timeout))
+      key: Key
+  ) = ZIO.serviceWithZIO[LwwKv](_.readOption(key))
 
   def write[Key: JsonEncoder, Value: JsonEncoder](
       key: Key,
-      value: Value,
-      timeout: Duration
+      value: Value
   ): ZIO[LwwKv, AskError, Unit] =
-    ZIO.serviceWithZIO[LwwKv](_.write(key, value, timeout))
+    ZIO.serviceWithZIO[LwwKv](_.write(key, value))
 
   def cas[Key: JsonEncoder, Value: JsonEncoder](
       key: Key,
       from: Value,
       to: Value,
-      createIfNotExists: Boolean,
-      timeout: Duration
+      createIfNotExists: Boolean
   ): ZIO[LwwKv, AskError, Unit] =
-    ZIO.serviceWithZIO[LwwKv](_.cas(key, from, to, createIfNotExists, timeout))
+    ZIO.serviceWithZIO[LwwKv](_.cas(key, from, to, createIfNotExists))
 
-  def update[Key, Value](
-      key: Key,
-      timeout: Duration
-  ) = PartiallyAppliedUpdate[LwwKv, Key, Value](key, timeout)
+  def update[Key, Value](key: Key) = PartiallyAppliedUpdate[LwwKv, Key, Value](key)
 
-  def updateZIO[Key, Value](
-      key: Key,
-      timeout: Duration
-  ) = PartiallyAppliedUpdateZIO[LwwKv, Key, Value](key, timeout)
+  def updateZIO[Key, Value](key: Key) = PartiallyAppliedUpdateZIO[LwwKv, Key, Value](key)
 
   def writeIfNotExists[Key: JsonEncoder, Value: JsonEncoder](
       key: Key,
-      value: Value,
-      timeout: Duration
-  ) = ZIO.serviceWithZIO[LwwKv](_.writeIfNotExists(key, value, timeout))
+      value: Value
+  ) = ZIO.serviceWithZIO[LwwKv](_.writeIfNotExists(key, value))
 
   private[zioMaelstrom] val live: ZLayer[MessageSender, Nothing, LwwKv] =
     ZLayer(
       for
-        sender         <- ZIO.service[MessageSender]
+        sender <- ZIO.service[MessageSender]
         kvImpl = KvImpl(NodeId("lww-kv"), sender)
       yield new LwwKv:
         export kvImpl.*
