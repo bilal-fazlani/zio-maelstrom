@@ -20,7 +20,7 @@ object AskTest extends MaelstromSpec {
       case class Pong(text: String) derives JsonCodec
       for {
         pongFiber <- ZIO
-          .serviceWithZIO[MessageSender](_.ask[Ping, Pong](Ping("Hello"), NodeId("n2")))
+          .serviceWithZIO[MessageSender](_.ask[Ping, Pong](Ping("Hello"), NodeId("n2"), None))
           .fork
         pingMessage: Message[Ping] <- getNextMessage[Ping]
         _                          <- inputReply(Pong("World"), NodeId("n2"), MessageId(1))
@@ -45,7 +45,7 @@ object AskTest extends MaelstromSpec {
       case class Pong() derives JsonCodec
       for {
         pongFiber <- ZIO
-          .serviceWithZIO[MessageSender](_.ask[Ping, Pong](Ping(), NodeId("n2")))
+          .serviceWithZIO[MessageSender](_.ask[Ping, Pong](Ping(), NodeId("n2"), None))
           .fork
         pingMessage: Message[Ping] <- getNextMessage[Ping]
         _                          <- inputReply(Pong(), NodeId("n2"), MessageId(1))

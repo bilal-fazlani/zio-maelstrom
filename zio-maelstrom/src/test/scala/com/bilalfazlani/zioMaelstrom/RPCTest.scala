@@ -70,7 +70,7 @@ object RPCTest extends MaelstromSpec {
     },
     test("interruption due to another zio failure should remove callback") {
       (for {
-        fiber <- (NodeId("n2")
+        _ <- (NodeId("n2")
           .ask[Pong](Ping()) zipPar ZIO.fail("fail").delay(80.millis)).fork
         _              <- sleep(80.millis)
         callbackState1 <- getCallbackState

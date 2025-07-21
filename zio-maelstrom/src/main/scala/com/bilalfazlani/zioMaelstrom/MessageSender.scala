@@ -26,7 +26,8 @@ trait MessageSender:
 
   def ask[Req: {JsonEncoder, MsgName}, Res: JsonDecoder](
       body: Req,
-      to: NodeId
+      to: NodeId,
+      timeout: Option[Duration]
   ): IO[AskError, Res]
 
 private[zioMaelstrom] object MessageSender:
@@ -54,9 +55,10 @@ private[zioMaelstrom] object MessageSender:
 
   def ask[Req: {JsonEncoder, MsgName}, Res: JsonDecoder](
       body: Req,
-      to: NodeId
+      to: NodeId,
+      timeout: Option[Duration]
   ): ZIO[MessageSender, AskError, Res] =
-    ZIO.serviceWithZIO[MessageSender](_.ask(body, to))
+    ZIO.serviceWithZIO[MessageSender](_.ask(body, to, timeout))
 
 private class MessageSenderLive(
     init: Initialisation,
@@ -107,11 +109,12 @@ private class MessageSenderLive(
 
   def ask[Req: {JsonEncoder, MsgName}, Res: JsonDecoder](
       body: Req,
-      to: NodeId
+      to: NodeId,
+      timeout: Option[Duration]
   ): IO[AskError, Res] = for {
     msg_id         <- sendWithId(body, to)
     _              <- ZIO.logDebug(s"waiting for reply from $to for message id $msg_id...")
-    genericMessage <- ZIO.scoped(callbackRegistry.awaitCallback(msg_id, to, settings.defaultAskTimeout))
+    genericMessage <- ZIO.scoped(callbackRegistry.awaitCallback(msg_id, to, timeout.getOrElse(settings.defaultAskTimeout)))
     decoded        <-
       if genericMessage.isError then {
         val error = JsonDecoder[Message[Error]]

@@ -32,7 +32,12 @@ private[zioMaelstrom] final class AskPartiallyApplied[Res](private val remote: N
   def apply[Req: {JsonEncoder, MsgName}](body: Req)(using
       JsonDecoder[Res]
   ): ZIO[MessageSender, AskError, Res] =
-    MessageSender.ask[Req, Res](body, remote)
+    MessageSender.ask[Req, Res](body, remote, None)
+
+  def apply[Req: {JsonEncoder, MsgName}](body: Req, timeout: Duration)(using
+      JsonDecoder[Res]
+  ): ZIO[MessageSender, AskError, Res] =
+    MessageSender.ask[Req, Res](body, remote, Some(timeout))
 }
 
 private[zioMaelstrom] final class ReceivePartiallyApplied[I](private val dummy: Boolean = false) extends AnyVal {
