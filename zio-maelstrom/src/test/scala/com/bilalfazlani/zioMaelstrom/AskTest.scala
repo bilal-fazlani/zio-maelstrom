@@ -24,8 +24,8 @@ object AskTest extends MaelstromSpec {
           .fork
         pingMessage: Message[Ping] <- getNextMessage[Ping]
         _                          <- inputReply(Pong("World"), NodeId("n2"), MessageId(1))
-        pong                       <- pongFiber.join.debug("pong")
-        pingJson                   <- ZIO.from(pingMessage.toJsonAST).debug("pingJson")
+        pong                       <- pongFiber.join
+        pingJson                   <- ZIO.from(pingMessage.toJsonAST)
         pingExpectedJson = Json(
           "src"  -> Json.Str("n1"),
           "dest" -> Json.Str("n2"),
@@ -43,13 +43,19 @@ object AskTest extends MaelstromSpec {
     test("successfully send and receive message with 0 field each") {
       case class Ping() derives JsonCodec
       case class Pong() derives JsonCodec
-      for {
+
+      // Create isolated runtime for this test to eliminate resource contention
+      val isolatedSettings = Settings()
+      val isolatedContext  = Context(NodeId("n1"), Set(NodeId("n2")))
+      val isolatedRuntime  = testRuntime(isolatedSettings, isolatedContext)
+
+      (for {
         pongFiber <- ZIO
           .serviceWithZIO[MessageSender](_.ask[Ping, Pong](Ping(), NodeId("n2"), None))
           .fork
         pingMessage: Message[Ping] <- getNextMessage[Ping]
         _                          <- inputReply(Pong(), NodeId("n2"), MessageId(1))
-        pong                       <- pongFiber.join.debug("pong")
+        pong                       <- pongFiber.join
         pingJson                   <- ZIO.from(pingMessage.toJsonAST)
         pingExpectedJson = Json(
           "src"  -> Json.Str("n1"),
@@ -62,12 +68,18 @@ object AskTest extends MaelstromSpec {
       } yield assertTrue(
         pingJson == pingExpectedJson,
         pong == Pong()
-      )
-    }.provide(tRuntime),
+      )).provide(isolatedRuntime)
+    },
     test("successfully get and respond to a message with 1 field each") {
+      // Create isolated runtime for this test to eliminate resource contention
+      val isolatedSettings = Settings()
+      val isolatedContext  = Context(NodeId("n1"), Set(NodeId("n2")))
+      val isolatedRuntime  = testRuntime(isolatedSettings, isolatedContext)
+
       case class Ping(text: String) derives JsonCodec
       case class Pong(text: String) derives JsonCodec
-      for {
+
+      (for {
         fiber <- receive[Ping] { ping =>
           reply(Pong("Hello " + ping.text))
         }.timeout(500.millis).fork
@@ -80,8 +92,8 @@ object AskTest extends MaelstromSpec {
           NodeId("n2"),
           Body(MsgName[Pong], Pong("Hello World"), None, Some(MessageId(1)))
         )
-      )
-    }.provide(tRuntime),
+      )).provide(isolatedRuntime)
+    },
     test("successfully get and respond to a message with 0 field each") {
       case class Ping() derives JsonCodec
       case class Pong() derives JsonCodec
@@ -167,6 +179,45 @@ object AskTest extends MaelstromSpec {
           )
         )
       )
-    }.provide(tRuntime)
+    }.provide(tRuntime),
+    test("ask with custom timeout uses specified timeout instead of default") {
+      case class Ping(text: String) derives JsonCodec
+      case class Pong(text: String) derives JsonCodec
+
+      (for {
+        // Use 50ms custom timeout (shorter than default 100ms)
+        fiber <- NodeId("n2").ask[Pong](Ping("test"), 50.millis).fork
+        _     <- getNextMessage[Ping]
+        _     <- TestClock.adjust(100.millis) // Should trigger 50ms timeout
+        error <- fiber.join.flip
+      } yield assertTrue(error == Timeout(MessageId(1), NodeId("n2"), 50.millis)))
+        .provide(tRuntime)
+    },
+    test("ask without timeout uses default timeout") {
+      case class Ping(text: String) derives JsonCodec
+      case class Pong(text: String) derives JsonCodec
+
+      (for {
+        // Use default timeout (no timeout parameter)
+        fiber <- NodeId("n2").ask[Pong](Ping("test")).fork
+        _     <- getNextMessage[Ping]
+        _     <- TestClock.adjust(200.millis) // Should trigger 100ms default timeout
+        error <- fiber.join.flip
+      } yield assertTrue(error == Timeout(MessageId(1), NodeId("n2"), 100.millis)))
+        .provide(tRuntime)
+    },
+    test("ask with longer custom timeout waits longer than default") {
+      case class Ping(text: String) derives JsonCodec
+      case class Pong(text: String) derives JsonCodec
+
+      (for {
+        // Use 200ms custom timeout (longer than default 100ms)
+        fiber <- NodeId("n2").ask[Pong](Ping("test"), 200.millis).fork
+        _     <- getNextMessage[Ping]
+        _     <- TestClock.adjust(300.millis) // Should trigger 200ms custom timeout
+        error <- fiber.join.flip
+      } yield assertTrue(error == Timeout(MessageId(1), NodeId("n2"), 200.millis)))
+        .provide(tRuntime)
+    }
   ) @@ TestAspect.timeout(10.seconds) @@ TestAspect.sequential
 }
