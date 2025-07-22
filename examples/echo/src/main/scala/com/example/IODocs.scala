@@ -52,13 +52,22 @@ object IODocs:
     val program = receive[Gossip] (_ => replyError(ErrorCode.PreconditionFailed, "some text message"))
   }
 
-  object Ask {
-    case class Gossip(numbers: Seq[Int]) derives JsonCodec
+  object AskDefaultTimeout {
+    case class Ping(text: String) derives JsonCodec
+    case class Pong(text: String) derives JsonCodec
 
-    case class GossipOk(myNumbers: Seq[Int]) derives JsonCodec
+    // Uses default timeout configured in Settings (100ms by default)
+    val pingResult: ZIO[MaelstromRuntime, AskError, Pong] =
+      NodeId("n2").ask[Pong](Ping("Hello"))
+  }
 
-    val gossipResult: ZIO[MaelstromRuntime, AskError, GossipOk] =
-      NodeId("n2").ask[GossipOk](Gossip(Seq(1,2)), 5.seconds)
+  object AskCustomTimeout {
+    case class Ping(text: String) derives JsonCodec
+    case class Pong(text: String) derives JsonCodec
+
+    // Custom timeout overrides the default timeout
+    val pingResult: ZIO[MaelstromRuntime, AskError, Pong] =
+      NodeId("n2").ask[Pong](Ping("Hello"), 5.seconds)
   }
 
   //format: on

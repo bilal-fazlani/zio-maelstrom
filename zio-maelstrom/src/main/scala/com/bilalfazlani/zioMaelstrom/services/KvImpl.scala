@@ -1,38 +1,27 @@
 package com.bilalfazlani.zioMaelstrom.services
 
-import com.bilalfazlani.zioMaelstrom.{
-  AskError,
-  ErrorCode,
-  Error,
-  MessageIdStore,
-  MessageSender,
-  NodeId
-}
+import com.bilalfazlani.zioMaelstrom.*
 import zio.*
 import zio.json.*
 
 private[zioMaelstrom] trait KvService:
-
-  def read[Key: JsonEncoder, Value: JsonDecoder](
-      key: Key,
-      timeout: Duration
-  ): ZIO[Any, AskError, Value]
+  def read[Key: JsonEncoder, Value: JsonDecoder](key: Key, timeout: Option[Duration]): ZIO[Any, AskError, Value]
 
   def readOption[Key: JsonEncoder, Value: JsonDecoder](
       key: Key,
-      timeout: Duration
+      timeout: Option[Duration]
   ): ZIO[Any, AskError, Option[Value]]
 
   def write[Key: JsonEncoder, Value: JsonEncoder](
       key: Key,
       value: Value,
-      timeout: Duration
+      timeout: Option[Duration]
   ): ZIO[Any, AskError, Unit]
 
   def writeIfNotExists[Key: JsonEncoder, Value: JsonEncoder](
       key: Key,
       value: Value,
-      timeout: Duration
+      timeout: Option[Duration]
   ): ZIO[Any, AskError, Unit]
 
   def cas[Key: JsonEncoder, Value: JsonEncoder](
@@ -40,13 +29,13 @@ private[zioMaelstrom] trait KvService:
       from: Value,
       to: Value,
       createIfNotExists: Boolean,
-      timeout: Duration
+      timeout: Option[Duration]
   ): ZIO[Any, AskError, Unit]
 
   def update[Key: JsonEncoder, Value: JsonCodec](
       key: Key,
       newValue: Option[Value] => Value,
-      timeout: Duration
+      timeout: Option[Duration]
   ): ZIO[Any, AskError, Value]
 
   // overall time taken by this method can be more than timeout
@@ -54,7 +43,7 @@ private[zioMaelstrom] trait KvService:
   def updateZIO[Key: JsonEncoder, Value: JsonCodec, R, E](
       key: Key,
       newValue: Option[Value] => ZIO[R, E, Value],
-      timeout: Duration
+      timeout: Option[Duration]
   ): ZIO[R, AskError | E, Value]
 
 private[zioMaelstrom] class KvImpl(
@@ -64,7 +53,7 @@ private[zioMaelstrom] class KvImpl(
 
   override def read[Key: JsonEncoder, Value: JsonDecoder](
       key: Key,
-      timeout: Duration
+      timeout: Option[Duration]
   ): ZIO[Any, AskError, Value] =
     sender
       .ask[Read[Key], ReadOk[Value]](Read(key), remote, timeout)
@@ -72,16 +61,16 @@ private[zioMaelstrom] class KvImpl(
 
   override def readOption[Key: JsonEncoder, Value: JsonDecoder](
       key: Key,
-      timeout: Duration
+      timeout: Option[Duration]
   ): ZIO[Any, AskError, Option[Value]] =
-    read[Key, Value](key, timeout).map(Some(_)).catchSome {
-      case Error(ErrorCode.KeyDoesNotExist, _) => ZIO.succeed(None)
+    read[Key, Value](key, timeout).map(Some(_)).catchSome { case Error(ErrorCode.KeyDoesNotExist, _) =>
+      ZIO.none
     }
 
   override def write[Key: JsonEncoder, Value: JsonEncoder](
       key: Key,
       value: Value,
-      timeout: Duration
+      timeout: Option[Duration]
   ): ZIO[Any, AskError, Unit] =
     sender
       .ask[Write[Key, Value], WriteOk](Write(key, value), remote, timeout)
@@ -90,7 +79,7 @@ private[zioMaelstrom] class KvImpl(
   override def writeIfNotExists[Key: JsonEncoder, Value: JsonEncoder](
       key: Key,
       value: Value,
-      timeout: Duration
+      timeout: Option[Duration]
   ): ZIO[Any, AskError, Unit] =
     sender
       .ask[Cas[Key, Value], CasOk](
@@ -107,7 +96,7 @@ private[zioMaelstrom] class KvImpl(
   override def update[Key: JsonEncoder, Value: JsonCodec](
       key: Key,
       newValue: Option[Value] => Value,
-      timeout: Duration
+      timeout: Option[Duration]
   ): ZIO[Any, AskError, Value] =
     for {
       current <- readOption[Key, Value](key, timeout)
@@ -131,12 +120,12 @@ private[zioMaelstrom] class KvImpl(
   override def updateZIO[Key: JsonEncoder, Value: JsonCodec, R, E](
       key: Key,
       newValue: Option[Value] => ZIO[R, E, Value],
-      timeout: Duration
+      timeout: Option[Duration]
   ): ZIO[R, AskError | E, Value] =
     for {
       current <- readOption[Key, Value](key, timeout)
       newVal  <- newValue(current)
-      _ <- current match
+      _       <- current match
         case None =>
           writeIfNotExists(key, newVal, timeout)
             .catchSome { case Error(ErrorCode.KeyAlreadyExists, _) =>
@@ -157,7 +146,7 @@ private[zioMaelstrom] class KvImpl(
       from: Value,
       to: Value,
       createIfNotExists: Boolean,
-      timeout: Duration
+      timeout: Option[Duration]
   ): ZIO[Any, AskError, Unit] =
     sender
       .ask[Cas[Key, Value], CasOk](
@@ -169,19 +158,24 @@ private[zioMaelstrom] class KvImpl(
 }
 
 class PartiallyAppliedKvRead[Kv <: KvService: Tag, Value] {
+  def apply[Key: JsonEncoder](key: Key)(using
+      JsonDecoder[Value]
+  ): ZIO[Kv, AskError, Value] =
+    ZIO.serviceWithZIO[Kv](_.read[Key, Value](key, None))
+
   def apply[Key: JsonEncoder](key: Key, timeout: Duration)(using
       JsonDecoder[Value]
   ): ZIO[Kv, AskError, Value] =
-    ZIO.serviceWithZIO[Kv](_.read[Key, Value](key, timeout))
+    ZIO.serviceWithZIO[Kv](_.read[Key, Value](key, Some(timeout)))
 }
 
-case class PartiallyAppliedUpdate[Kv <: KvService: Tag, Key, Value](key: Key, timeout: Duration):
+case class PartiallyAppliedUpdate[Kv <: KvService: Tag, Key, Value](key: Key, timeout: Option[Duration]):
   def apply(
       newValue: Option[Value] => Value
   )(using JsonEncoder[Key], JsonCodec[Value]): ZIO[Kv, AskError, Value] =
     ZIO.serviceWithZIO[Kv](_.update(key, newValue, timeout))
 
-case class PartiallyAppliedUpdateZIO[Kv <: KvService: Tag, Key, Value](key: Key, timeout: Duration):
+case class PartiallyAppliedUpdateZIO[Kv <: KvService: Tag, Key, Value](key: Key, timeout: Option[Duration]):
   def apply[R, E](
       newValue: Option[Value] => ZIO[R, E, Value]
   )(using JsonEncoder[Key], JsonCodec[Value]): ZIO[Kv & R, AskError | E, Value] =

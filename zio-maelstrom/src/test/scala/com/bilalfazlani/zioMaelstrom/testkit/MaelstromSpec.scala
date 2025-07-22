@@ -9,9 +9,10 @@ import com.bilalfazlani.zioMaelstrom.models.MsgName
 
 trait MaelstromSpec extends ZIOSpecDefault {
   private def isCI = sys.env.get("CI").contains("true")
+  
+  val logLevel = LogLevel.Error //if isCI then LogLevel.Info else LogLevel.Debug
 
   override val bootstrap =
-    val logLevel = if isCI then LogLevel.Info else LogLevel.Debug
     zio.test.testEnvironment ++ Runtime.removeDefaultLoggers ++ ZIOMaelstromLogger.install(
       LogFormat.Colored,
       logLevel

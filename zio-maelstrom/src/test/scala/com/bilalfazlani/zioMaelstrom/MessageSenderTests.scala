@@ -81,6 +81,48 @@ object MessageSenderTests extends MaelstromSpec {
           )
         )
       } yield assertTrue(outJson == expectedJson)
-    }.provide(tRuntime)
+    }.provide(tRuntime),
+    test("ask with custom timeout parameter") {
+      case class Ping(text: String) derives JsonCodec
+      case class Pong(text: String) derives JsonCodec
+      
+      (for {
+        fiber <- ZIO
+          .serviceWithZIO[MessageSender](_.ask[Ping, Pong](Ping("test"), NodeId("n2"), Some(50.millis)))
+          .fork
+        _     <- getNextMessage[Ping]
+        _     <- TestClock.adjust(100.millis) // Should trigger 50ms timeout
+        error <- fiber.join.flip
+      } yield assertTrue(error == Timeout(MessageId(1), NodeId("n2"), 50.millis)))
+        .provide(tRuntime)
+    },
+    test("ask with None timeout uses default") {
+      case class Ping(text: String) derives JsonCodec
+      case class Pong(text: String) derives JsonCodec
+      
+      (for {
+        fiber <- ZIO
+          .serviceWithZIO[MessageSender](_.ask[Ping, Pong](Ping("test"), NodeId("n2"), None))
+          .fork
+        _     <- getNextMessage[Ping]
+        _     <- TestClock.adjust(200.millis) // Should trigger 100ms default timeout
+        error <- fiber.join.flip
+      } yield assertTrue(error == Timeout(MessageId(1), NodeId("n2"), 100.millis)))
+        .provide(tRuntime)
+    },
+    test("ask with Some timeout overrides default") {
+      case class Ping(text: String) derives JsonCodec
+      case class Pong(text: String) derives JsonCodec
+      
+      (for {
+        fiber <- ZIO
+          .serviceWithZIO[MessageSender](_.ask[Ping, Pong](Ping("test"), NodeId("n2"), Some(200.millis)))
+          .fork
+        _     <- getNextMessage[Ping]
+        _     <- TestClock.adjust(300.millis) // Should trigger 200ms custom timeout
+        error <- fiber.join.flip
+      } yield assertTrue(error == Timeout(MessageId(1), NodeId("n2"), 200.millis)))
+        .provide(tRuntime)
+    }
   ) @@ TestAspect.timeout(10.seconds) @@ TestAspect.sequential
 }
