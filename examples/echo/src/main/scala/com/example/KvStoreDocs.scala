@@ -39,4 +39,17 @@ object SeqKvExample {
   val increasedValueZIO: ZIO[SeqKv, AskError, Int] =
     SeqKv.updateZIO("counter")(getNewNumber)
   // }
+
+  // ReadCustomTimeout {
+  // Custom timeout overrides the default timeout
+  val counterValueCustom: ZIO[SeqKv, AskError, Int] = SeqKv.read("counter", 30.millis)
+  // }
+
+  // WriteCustomTimeout {
+  val _: ZIO[SeqKv, AskError, Unit] = SeqKv.write("counter", 1, 50.millis)
+  // }
+
+  // CasCustomTimeout {
+  val _: ZIO[SeqKv, AskError, Unit] = SeqKv.cas("counter", 1, 3, createIfNotExists = true, 75.millis)
+  // }
 }

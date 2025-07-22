@@ -14,7 +14,8 @@ case class NodeConfig private (
     inputContext: InputContext = InputContext.Real,
     concurrency: Int = 1024,
     logLevel: LogLevel = LogLevel.Info,
-    logFormat: LogFormat = LogFormat.Colored
+    logFormat: LogFormat = LogFormat.Colored,
+    askTimeout: Option[Duration] = None
 ) {
   // customize log level
   def withLogLevelDebug             = copy(logLevel = LogLevel.Debug)
@@ -29,6 +30,9 @@ case class NodeConfig private (
 
   // customize concurrency
   def withConcurrency(concurrency: Int) = copy(concurrency = concurrency)
+
+  // customize ask timeout
+  def withAskTimeout(timeout: Duration) = copy(askTimeout = Some(timeout))
 
   // customize mocking
   def withStaticInput[A: {JsonEncoder, Tag}](
@@ -61,6 +65,9 @@ object NodeConfig:
   // customize concurrency
   def withConcurrency(concurrency: Int) = default.withConcurrency(concurrency)
 
+  // customize ask timeout
+  def withAskTimeout(timeout: Duration) = default.withAskTimeout(timeout)
+
   // customize mocking
   def withStaticInput[A: {JsonEncoder, Tag}](
       me: NodeId,
@@ -86,8 +93,10 @@ trait MaelstromNode extends ZIOAppDefault:
   def program: ZIO[MaelstromRuntime, Any, Any]
 
   final def run =
-    val settings = Settings(concurrency = configure.concurrency)
+    var settings = Settings(concurrency = configure.concurrency)
+    configure.askTimeout.foreach(t => settings = settings.copy(defaultAskTimeout = t))
+
     configure.inputContext match
       case InputContext.Static(context, input) =>
         program.provide(MaelstromRuntime.static(settings, input, context))
-      case InputContext.Real                   => program.provide(MaelstromRuntime.live(settings))
+      case InputContext.Real => program.provide(MaelstromRuntime.live(settings))

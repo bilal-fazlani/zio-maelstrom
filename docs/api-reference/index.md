@@ -157,11 +157,25 @@ You can send a message to any `NodeId` using `NodeId.send()` API. It takes a ins
 
 ### 3. `ask`
 
-`ask` api is a combination of `send` and `receive`. It sends a message to a remote node and waits for a reply. It also takes a timeout argument which is the maximum time to wait for a reply. It expects a `zio.json.JsonDecoder` instance for the reply & a `zio.json.JsonEncoder` instance for the request message.
+`ask` api is a combination of `send` and `receive`. It sends a message to a remote node and waits for a reply. It expects a `zio.json.JsonDecoder` instance for the reply & a `zio.json.JsonEncoder` instance for the request message.
 
-<!--codeinclude-->
-[Ask](../../examples/echo/src/main/scala/com/example/IODocs.scala) inside_block:Ask
-<!--/codeinclude-->
+You can either use the default timeout (configured in [Settings](#settings)) or provide a custom timeout for the operation.
+
+=== "Default timeout"
+
+    Uses the default timeout configured in Settings (100ms by default)
+    
+    <!--codeinclude-->
+    [Ask with default timeout](../../examples/echo/src/main/scala/com/example/IODocs.scala) inside_block:AskDefaultTimeout
+    <!--/codeinclude-->
+
+=== "Custom timeout"
+
+    Override the default timeout for this specific operation
+
+    <!--codeinclude-->
+    [Ask with custom timeout](../../examples/echo/src/main/scala/com/example/IODocs.scala) inside_block:AskCustomTimeout
+    <!--/codeinclude-->
 
 The `ask` api can return either a successful response or an `AskError`
 
@@ -320,29 +334,59 @@ ZIO-Maelstrom provides `LinkKv`, `LwwKv`, `SeqKv` & `LinTso` clients to interact
 
 _Native apis are provided by the maelstrom services_
 
+All KV operations support timeout configuration. You can either use the default timeout (configured in [Settings](#settings)) or provide a custom timeout for specific operations.
+
 `read`
 
 :   Takes a key and returns the value of the key. If the value does not exist, it returns `KeyDoesNotExist` error code.
 
-    <!--codeinclude-->
-    [](../../examples/echo/src/main/scala/com/example/KvStoreDocs.scala) inside_block:read
-    <!--/codeinclude--> 
+    === "Default timeout"
+
+        Uses the default timeout configured in Settings (100ms by default)
+
+        <!--codeinclude-->
+        [KV read with default timeout](../../examples/echo/src/main/scala/com/example/KvStoreDocs.scala) inside_block:read
+        <!--/codeinclude-->
+
+    === "Custom timeout"
+
+        Override the default timeout for this specific read operation
+
+        <!--codeinclude-->
+        [KV read with custom timeout](../../examples/echo/src/main/scala/com/example/KvStoreDocs.scala) inside_block:ReadCustomTimeout
+        <!--/codeinclude-->
 
 `write`
 
 :   Takes a key and a value and writes the value against the key. If a value already exists against the key, it is overwritten.
 
-    <!--codeinclude-->
-    [](../../examples/echo/src/main/scala/com/example/KvStoreDocs.scala) inside_block:write
-    <!--/codeinclude--> 
+    === "Default timeout"
+
+        <!--codeinclude-->
+        [KV write with default timeout](../../examples/echo/src/main/scala/com/example/KvStoreDocs.scala) inside_block:write
+        <!--/codeinclude-->
+
+    === "Custom timeout"
+
+        <!--codeinclude-->
+        [KV write with custom timeout](../../examples/echo/src/main/scala/com/example/KvStoreDocs.scala) inside_block:WriteCustomTimeout
+        <!--/codeinclude-->
 
 `cas`
 
 :   CAS stands for `compare-and-swap`. It takes a key, a value and an expected value. It writes the value against the key only if the expected value matches the current value of the key. If the value is different, then it returns `PreconditionFailed` error code. If the key does not exist, it returns `KeyDoesNotExist` error code. If you set `createIfNotExists` to true, it will create the key if it does not exist.
 
-    <!--codeinclude-->
-    [](../../examples/echo/src/main/scala/com/example/KvStoreDocs.scala) inside_block:cas
-    <!--/codeinclude--> 
+    === "Default timeout"
+
+        <!--codeinclude-->
+        [KV CAS with default timeout](../../examples/echo/src/main/scala/com/example/KvStoreDocs.scala) inside_block:cas
+        <!--/codeinclude-->
+
+    === "Custom timeout"
+
+        <!--codeinclude-->
+        [KV CAS with custom timeout](../../examples/echo/src/main/scala/com/example/KvStoreDocs.scala) inside_block:CasCustomTimeout
+        <!--/codeinclude-->
 
     Above example will write `3` to `counter` only if the current value of `counter` is `1`. If the current value is different, it will return `PreconditionFailed` error code.
 
@@ -399,11 +443,35 @@ _High level apis are built on top of native apis by combining multiple native ap
 
 ### TSO APIs
 
-[`LinTso`](https://github.com/jepsen-io/maelstrom/blob/main/doc/services.md#lin-tso) is a linearizable timestamp oracle. It has the following api
+[`LinTso`](https://github.com/jepsen-io/maelstrom/blob/main/doc/services.md#lin-tso) is a linearizable timestamp oracle. It supports timeout configuration like other Maelstrom services.
 
-<!--codeinclude-->
-[Linearizable timestamp oracle](../../examples/echo/src/main/scala/com/example/TsoDocs.scala) inside_block:TsoExample
-<!--/codeinclude-->
+`ts`
+
+:   Returns a unique, monotonically increasing timestamp from the linearizable timestamp oracle.
+
+    === "Default timeout"
+
+        Uses the default timeout configured in Settings (100ms by default)
+
+        <!--codeinclude-->
+        [TSO with default timeout](../../examples/echo/src/main/scala/com/example/TsoDocs.scala) inside_block:TsoExample
+        <!--/codeinclude-->
+
+    === "Custom timeout"
+
+        Override the default timeout for this specific timestamp operation
+
+        <!--codeinclude-->
+        [TSO with custom timeout](../../examples/echo/src/main/scala/com/example/TsoDocs.scala) inside_block:TsoCustomTimeout
+        <!--/codeinclude-->
+
+
+!!! note "Timeout Behavior"
+    All operations that communicate with remote nodes (`ask`, KV operations, and TSO operations) support timeout configuration:
+    
+    - **Default behavior**: Uses the timeout configured in [Settings](#settings) (100ms by default)
+    - **Custom timeout**: You can override the default timeout for specific operations
+    - **Error handling**: When timeout occurs, operations return a `Timeout` error that you can handle using ZIO error management
 
 ## Settings
 
@@ -423,6 +491,13 @@ Below are the settings that can be configured for a node
 
     This is the concurrency level for processing messages. Default is 1024. 
     This means 1024 request messages(receive api) + 1024 response messages (ask api) = 2048 messages can be processed in parallel.
+
+4. **Default Timeout**
+
+    The default timeout for `ask` operations and all KV store operations. Default is 100 milliseconds.
+    This timeout is used when no explicit timeout is provided to `ask()` or KV operations like `read()`, `write()`, `cas()`.
+    
+    You can override this globally for all operations, or provide operation-specific timeouts when needed.
 
 <!--codeinclude-->
 [Default example](../../examples/echo/src/main/scala/com/example/SettingsDocs.scala) inside_block:DefaultSettingsDocs

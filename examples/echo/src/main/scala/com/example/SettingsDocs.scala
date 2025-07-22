@@ -16,6 +16,7 @@ object CustomSettingsDocs {
       .withConcurrency(100)
       .withLogLevelDebug
       .withPlaintextLog
+      .withAskTimeout(1.second)
 
     val program = ZIO.logDebug("Starting node...")
   }

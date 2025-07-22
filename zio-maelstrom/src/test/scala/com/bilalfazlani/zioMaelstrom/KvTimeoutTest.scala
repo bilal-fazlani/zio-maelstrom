@@ -45,7 +45,7 @@ object KvTimeoutTest extends MaelstromSpec {
       test("read with timeout vs without timeout") {
         (for {
           // Test read with custom 50ms timeout
-          fiber1 <- SeqKv.read[String](50.millis)("test-key").fork
+          fiber1 <- SeqKv.read[String]("test-key", 50.millis).fork
           _      <- TestClock.adjust(100.millis) // Should trigger 50ms timeout
           error1 <- fiber1.join.flip
 
@@ -115,7 +115,7 @@ object KvTimeoutTest extends MaelstromSpec {
       test("LinKv read with timeout vs without timeout") {
         (for {
           // Test LinKv read with custom 60ms timeout
-          fiber1 <- LinKv.read[String](60.millis)("test-key").fork
+          fiber1 <- LinKv.read[String]("test-key", 60.millis).fork
           _      <- TestClock.adjust(100.millis) // Should trigger 60ms timeout
           error1 <- fiber1.join.flip
 
@@ -151,7 +151,7 @@ object KvTimeoutTest extends MaelstromSpec {
       test("LwwKv operations with timeout vs without timeout") {
         (for {
           // Test LwwKv read with custom 45ms timeout
-          fiber1 <- LwwKv.read[String](45.millis)("test-key").fork
+          fiber1 <- LwwKv.read[String]("test-key", 45.millis).fork
           _      <- TestClock.adjust(90.millis) // Should trigger 45ms timeout
           error1 <- fiber1.join.flip
 
