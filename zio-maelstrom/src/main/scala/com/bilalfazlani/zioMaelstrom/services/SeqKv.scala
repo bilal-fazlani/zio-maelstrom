@@ -9,14 +9,7 @@ trait SeqKv extends KvService
 object SeqKv:
   def read[Value] = PartiallyAppliedKvRead[SeqKv, Value]
 
-  def readOption[Key: JsonEncoder, Value: JsonDecoder](
-      key: Key
-  ) = ZIO.serviceWithZIO[SeqKv](_.readOption(key, None))
-
-  def readOption[Key: JsonEncoder, Value: JsonDecoder](
-      key: Key,
-      timeout: Duration
-  ) = ZIO.serviceWithZIO[SeqKv](_.readOption(key, Some(timeout)))
+  def readOption[Value] = PartiallyAppliedKvReadOption[SeqKv, Value]
 
   def write[Key: JsonEncoder, Value: JsonEncoder](
       key: Key,

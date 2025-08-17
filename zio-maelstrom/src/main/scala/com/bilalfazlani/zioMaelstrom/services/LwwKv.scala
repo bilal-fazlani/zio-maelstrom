@@ -9,14 +9,7 @@ trait LwwKv extends KvService
 object LwwKv:
   def read[Value] = PartiallyAppliedKvRead[LwwKv, Value]
 
-  def readOption[Key: JsonEncoder, Value: JsonDecoder](
-      key: Key
-  ) = ZIO.serviceWithZIO[LwwKv](_.readOption(key, None))
-
-  def readOption[Key: JsonEncoder, Value: JsonDecoder](
-      key: Key,
-      timeout: Duration
-  ) = ZIO.serviceWithZIO[LwwKv](_.readOption(key, Some(timeout)))
+  def readOption[Value] = PartiallyAppliedKvReadOption[LwwKv, Value]
 
   def write[Key: JsonEncoder, Value: JsonEncoder](
       key: Key,
