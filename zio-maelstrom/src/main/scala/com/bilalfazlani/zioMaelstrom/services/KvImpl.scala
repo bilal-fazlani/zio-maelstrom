@@ -169,6 +169,13 @@ class PartiallyAppliedKvRead[Kv <: KvService: Tag, Value] {
     ZIO.serviceWithZIO[Kv](_.read[Key, Value](key, Some(timeout)))
 }
 
+class PartiallyAppliedKvReadOption[Kv <: KvService: Tag, Value]:
+  def apply[Key: JsonEncoder](key: Key)(using JsonDecoder[Value]): ZIO[Kv, AskError, Option[Value]] =
+    ZIO.serviceWithZIO[Kv](_.readOption[Key, Value](key, None))
+
+  def apply[Key: JsonEncoder](key: Key, timeout: Duration)(using JsonDecoder[Value]): ZIO[Kv, AskError, Option[Value]] =
+    ZIO.serviceWithZIO[Kv](_.readOption[Key, Value](key, Some(timeout)))
+
 case class PartiallyAppliedUpdate[Kv <: KvService: Tag, Key, Value](key: Key, timeout: Option[Duration]):
   def apply(
       newValue: Option[Value] => Value
