@@ -1,7 +1,6 @@
 package com.bilalfazlani.zioMaelstrom
 
 import zio.json.*
-import scala.annotation.targetName
 import zio.*
 import com.bilalfazlani.zioMaelstrom.models.Body
 

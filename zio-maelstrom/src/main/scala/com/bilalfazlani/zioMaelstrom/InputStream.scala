@@ -37,7 +37,7 @@ object InputStream:
       .orDie
     ZLayer.succeed(InputStream(stream))
 
-  def inline[A: JsonEncoder: Tag](
+  def inline[A: JsonEncoder](
       messages: Seq[InlineMessage[A]],
       context: Context
   ): ZLayer[Any, Nothing, InputStream] =

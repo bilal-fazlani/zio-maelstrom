@@ -41,7 +41,7 @@ private object TimeSegment:
         new TimeSegment(TimeValue(1), TimeUnit.Hour)
       case (TimeValue(hours), TimeUnit.Hour) if 24 - hours < 0.01 =>
         new TimeSegment(TimeValue(1), TimeUnit.Day)
-      case (TimeValue(hours), unit) =>
+      case (TimeValue(_), unit) =>
         val v = BigDecimal(value.value).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
         new TimeSegment(TimeValue(v), unit)
     }
@@ -59,7 +59,7 @@ extension (duration: Duration)
     val remainingMinutes = TimeValue(minutes.toDouble % 60)
     val remainingHours   = TimeValue(hours.toDouble % 24)
     val remainingDays    = TimeValue(days.toDouble)
-    val parts = List(
+    val parts            = List(
       TimeSegment(remainingDays, TimeUnit.Day),
       TimeSegment(remainingHours, TimeUnit.Hour),
       TimeSegment(remainingMinutes, TimeUnit.Minute),

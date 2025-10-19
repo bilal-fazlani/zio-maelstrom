@@ -16,8 +16,8 @@ private class InputChannelLive(inputStream: InputStream) extends InputChannel:
   val partitionInputs = inputStream.stream
     .tap(str => ZIO.logDebug(s"read: $str"))
     .collectZIO {
-      case str @ Sleep(duration) => Sleep.conditionally(duration) *> ZIO.succeed(None)
-      case str                   => ZIO.succeed(Some(str))
+      case Sleep(duration) => Sleep.conditionally(duration) *> ZIO.succeed(None)
+      case str             => ZIO.succeed(Some(str))
     }
     .collectSome
     .map(str => JsonDecoder[GenericMessage].decodeJson(str).left.map(e => InvalidInput(str, e)))
@@ -25,7 +25,7 @@ private class InputChannelLive(inputStream: InputStream) extends InputChannel:
       case Left(InvalidInput(input, error)) =>
         ZIO.logError(s"could not decode input json message: `${input.trim}`")
           *> ZIO.logWarning(s"${error}")
-      case Right(genericMessage) => ZIO.unit
+      case Right(_) => ZIO.unit
     }
     .collectRight
     .partition(_.isResponse, 1024)

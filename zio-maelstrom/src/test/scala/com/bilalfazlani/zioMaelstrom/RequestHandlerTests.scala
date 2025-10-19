@@ -23,7 +23,7 @@ object RequestHandlerTests extends MaelstromSpec {
   val spec = suite("RequestHandler Tests")(
     test("successfully send and receive message") {
       (for {
-        fiber  <- receive[Ping](ping => reply(PingOk())).fork
+        fiber  <- receive[Ping](_ => reply(PingOk())).fork
         _      <- inputSend(Body("ping", Ping(), Some(MessageId(100)), None), NodeId("n2"))
         pingOk <- getNextMessage[PingOk]
         _      <- fiber.interrupt
@@ -33,19 +33,19 @@ object RequestHandlerTests extends MaelstromSpec {
     },
     test("receive and ask should work concurrently") {
       (for {
-        fiber <- receive[GetNumber] { case GetNumber() =>
+        _ <- receive[GetNumber] { case GetNumber() =>
           NodeId("n5")
             .ask[Number](GetNumber(), 2.seconds)
             .flatMap(n => reply(n))
             .catchAll(e => ZIO.dieMessage(e.toString))
         }.fork
-        _          <- inputSend(Body("number", GetNumber(), Some(MessageId(60)), None), from = NodeId("n2"))
-        _          <- sleep(100.millis)
-        _          <- inputReply(Number(45), from = NodeId("n5"), MessageId(1))
-        _ <- getNextMessage[Number]
+        _                <- inputSend(Body("number", GetNumber(), Some(MessageId(60)), None), from = NodeId("n2"))
+        _                <- sleep(100.millis)
+        _                <- inputReply(Number(45), from = NodeId("n5"), MessageId(1))
+        _                <- getNextMessage[Number]
         responseFromNode <- getNextMessage[Number]
       } yield assertTrue(
-        responseFromNode == Message(NodeId("n1"), NodeId("n2"), Body("number", Number(45), None, Some(MessageId(60)))),
+        responseFromNode == Message(NodeId("n1"), NodeId("n2"), Body("number", Number(45), None, Some(MessageId(60))))
       ))
         .provide(tRuntime)
     }

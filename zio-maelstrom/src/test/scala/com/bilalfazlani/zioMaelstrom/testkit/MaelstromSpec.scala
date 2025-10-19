@@ -8,9 +8,7 @@ import models.Body
 import com.bilalfazlani.zioMaelstrom.models.MsgName
 
 trait MaelstromSpec extends ZIOSpecDefault {
-  private def isCI = sys.env.get("CI").contains("true")
-  
-  val logLevel = LogLevel.Error //if isCI then LogLevel.Info else LogLevel.Debug
+  val logLevel = LogLevel.Error // if isCI then LogLevel.Info else LogLevel.Debug
 
   override val bootstrap =
     zio.test.testEnvironment ++ Runtime.removeDefaultLoggers ++ ZIOMaelstromLogger.install(
@@ -48,45 +46,45 @@ trait MaelstromSpec extends ZIOSpecDefault {
     )
 
   def testRuntime(
-        settings: Settings,
-        inputStream: ZLayer[Any, Nothing, InputStream],
-        inputQueue: ZLayer[Any, Nothing, Queue[String]]
-    ): ZLayer[Any, Nothing, MaelstromTestRuntime] =
-      ZLayer.make[MaelstromTestRuntime](
-        // pure layers
-        ZLayer.succeed(settings),
-        Scope.default,
-        MessageSender.live,
-        RequestHandler.live,
-        ZLayer(Queue.unbounded[Message[Any]]),
-        inputQueue,
-        OutputChannel.queue, // FAKE
-        inputStream,   // FAKE
-        InputChannel.live,
-        CallbackRegistry.live,
-        MessageIdStore.stub, // FAKE
+      settings: Settings,
+      inputStream: ZLayer[Any, Nothing, InputStream],
+      inputQueue: ZLayer[Any, Nothing, Queue[String]]
+  ): ZLayer[Any, Nothing, MaelstromTestRuntime] =
+    ZLayer.make[MaelstromTestRuntime](
+      // pure layers
+      ZLayer.succeed(settings),
+      Scope.default,
+      MessageSender.live,
+      RequestHandler.live,
+      ZLayer(Queue.unbounded[Message[Any]]),
+      inputQueue,
+      OutputChannel.queue, // FAKE
+      inputStream,         // FAKE
+      InputChannel.live,
+      CallbackRegistry.live,
+      MessageIdStore.stub, // FAKE
 
-        // Fake Services
-        KvFake.linKv,
-        KvFake.seqKv,
-        KvFake.lwwKv,
-        LinTsoFake.make,
+      // Fake Services
+      KvFake.linKv,
+      KvFake.seqKv,
+      KvFake.lwwKv,
+      LinTsoFake.make,
 
-        // effectful layers
-        Initialisation.run,
-        ResponseHandler.start
-      )
+      // effectful layers
+      Initialisation.run,
+      ResponseHandler.start
+    )
 
   def inputRawJson(json: String) =
     for {
       queue <- ZIO.service[Queue[String]]
-      _ <- queue.offer(json)
+      _     <- queue.offer(json)
     } yield ()
 
   def inputSend[A: {JsonEncoder, MsgName}](in: A, from: NodeId) =
     for {
       queue <- ZIO.service[Queue[String]]
-      init <- ZIO.service[Initialisation]
+      init  <- ZIO.service[Initialisation]
       body = Body(MsgName[A], in, None, None)
       _ <- queue.offer(Message(from, init.context.me, body).toJson)
     } yield ()
@@ -95,7 +93,7 @@ trait MaelstromSpec extends ZIOSpecDefault {
     for {
       queue <- ZIO.service[Queue[String]]
       init  <- ZIO.service[Initialisation]
-      _ <- queue.offer(Message(from, init.context.me, body).toJson)
+      _     <- queue.offer(Message(from, init.context.me, body).toJson)
     } yield ()
 
   def inputAsk[A: {JsonEncoder, MsgName}](in: A, from: NodeId, messageId: MessageId) =
@@ -120,10 +118,8 @@ trait MaelstromSpec extends ZIOSpecDefault {
   def getNextMessage[A]: ZIO[MaelstromTestRuntime, Nothing, Message[A]] =
     ZIO.serviceWithZIO[Queue[Message[Any]]](_.take).map(_.asInstanceOf[Message[A]])
 
-  def getCallbackState
-      : ZIO[MaelstromTestRuntime, Nothing, Map[CallbackId, Promise[AskError, GenericMessage]]] =
+  def getCallbackState: ZIO[MaelstromTestRuntime, Nothing, Map[CallbackId, Promise[AskError, GenericMessage]]] =
     ZIO.serviceWithZIO[CallbackRegistry](_.getState.map(_.view.mapValues(_.promise).toMap))
 }
 
-type MaelstromTestRuntime = MaelstromRuntime & Queue[Message[Any]] & Queue[String] &
-  CallbackRegistry
+type MaelstromTestRuntime = MaelstromRuntime & Queue[Message[Any]] & Queue[String] & CallbackRegistry

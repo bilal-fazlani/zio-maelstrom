@@ -35,7 +35,7 @@ case class NodeConfig private (
   def withAskTimeout(timeout: Duration) = copy(askTimeout = Some(timeout))
 
   // customize mocking
-  def withStaticInput[A: {JsonEncoder, Tag}](
+  def withStaticInput[A: JsonEncoder](
       me: NodeId,
       others: Set[NodeId],
       messages: InlineMessage[A]*
@@ -69,7 +69,7 @@ object NodeConfig:
   def withAskTimeout(timeout: Duration) = default.withAskTimeout(timeout)
 
   // customize mocking
-  def withStaticInput[A: {JsonEncoder, Tag}](
+  def withStaticInput[A: JsonEncoder](
       me: NodeId,
       others: Set[NodeId],
       messages: InlineMessage[A]*
