@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "zio-maelstrom-metals": {
+      "url": "http://localhost:59376/sse"
+    }
+  }
+}
